@@ -14,6 +14,7 @@ export default function Publications() {
   const { user } = useAuth();
   const [publications, setPublications] = useState<SupabasePublication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAutoFetching, setIsAutoFetching] = useState(false);
   // const [showForm, setShowForm] = useState(false);
   // const [isEditing, setIsEditing] = useState(false)
 
@@ -247,13 +248,59 @@ export default function Publications() {
     }
   }
 
+  async function runCrawler() {
+    try {
+      setIsAutoFetching(true);
+
+      const response = await fetch('/api/run-crawler', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Crawler execution failed:', result);
+        alert(result.message || 'Failed to fetch publications automatically.');
+        return;
+      }
+
+      console.log('Crawler stdout:\n', result.stdout || 'No output');
+      if (result.stderr) {
+        console.warn('Crawler stderr:\n', result.stderr);
+      }
+
+      await fetchPublications();
+
+      const summary = result.summary || {};
+      alert(
+        `Automatic fetch complete. Fetched: ${summary.fetchedPublications || 0}, Added: ${summary.insertedPublications || 0}, Linked to profile: ${summary.linkedPublications || 0}.`
+      );
+    } catch (error) {
+      console.error('Failed to call crawler endpoint:', error);
+      alert('Error running crawler. Check browser console for details.');
+    } finally {
+      setIsAutoFetching(false);
+    }
+  }
+
   return (
     <div className="flex-1 overflow-auto bg-[#0f1117] text-gray-300 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="bg-[#1b1e2b] rounded-lg p-6 border border-gray-700 mt-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-white mb-4">My Publications</h2>
-            <div className="flex gap-2">
+          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <h2 className="text-xl font-semibold text-white">My Publications</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={runCrawler}
+                disabled={isAutoFetching}
+                className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 rounded"
+              >
+                {isAutoFetching ? 'Fetching...' : 'Fetch Publications Automatically'}
+              </button>
               <button
                 onClick={() => {
                   resetForm()
@@ -261,14 +308,6 @@ export default function Publications() {
                 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                 Add Publication
-              </button>
-
-              <button
-                onClick={() => {
-                  console.log("refreshed") // to add crawler functionality here
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                Reload
               </button>
             </div>
           </div>
@@ -303,7 +342,7 @@ export default function Publications() {
               <div className="md:col-span-2 flex gap-3">
                 <button
                   onClick={mode === "edit" ? editPublication : addPublication}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                  className="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
                 >
                   Save
                 </button>

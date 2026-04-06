@@ -21,6 +21,7 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
   const [department, setDepartment] = useState<string | null>(null)
   const [contact_number, setContactNumber] = useState<string | null>(null)
   const [position, setPosition] = useState<string | null>(null)
+  const [scopus_author_id, setScopusAuthorId] = useState<string | null>(null)
 
   const [email, setEmail] = useState<string | null>(null)
   const [signaturePath, setSignaturePath] = useState<string | null>(null)
@@ -42,7 +43,7 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
 
       const { data, error, status } = await supabase
         .from('users')
-        .select(`first_name, middle_name, last_name, email, university, college, department, contact_number, position, signature_path, affiliation_path`)
+        .select(`first_name, middle_name, last_name, email, university, college, department, contact_number, position, signature_path, affiliation_path, scopus_author_id`)
         .eq('id', user?.id)
         .single()
 
@@ -61,6 +62,7 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
         setDepartment(data.department)
         setContactNumber(data.contact_number)
         setPosition(data.position)
+        setScopusAuthorId(data.scopus_author_id)
         
         // Load signature with signed URL if it exists
         if (data.signature_path && user?.id) {
@@ -162,6 +164,7 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
         department: department,
         contact_number: contact_number,
         position: position,
+        scopus_author_id: scopus_author_id,
       }
       
       // Only update signature_path if a new signature was uploaded
@@ -361,6 +364,19 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
               />
             </div>
             <div>
+              <label htmlFor="scopus-id-compact" className="block text-sm text-gray-300 mb-2">
+                Scopus Author ID
+              </label>
+              <input
+                id="scopus-id-compact"
+                type="text"
+                value={scopus_author_id || ''}
+                onChange={(e) => setScopusAuthorId(e.target.value)}
+                placeholder="Enter your Scopus author ID"
+                className="w-full px-4 py-2 bg-[#1b1e2b] border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div>
               <label htmlFor="signature-compact" className="block text-sm text-gray-300 mb-2">
                 Signature (PNG)
               </label>
@@ -469,6 +485,20 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
           type="text"
           value={last_name || ''}
           onChange={(e) => setLastName(e.target.value)}
+          className="w-full px-4 py-2 bg-[#1b1e2b] border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="scopus-id" className="block text-sm font-medium text-gray-300 mb-2">
+          Scopus Author ID
+        </label>
+        <input
+          id="scopus-id"
+          type="text"
+          value={scopus_author_id || ''}
+          onChange={(e) => setScopusAuthorId(e.target.value)}
+          placeholder="Enter your Scopus author ID"
           className="w-full px-4 py-2 bg-[#1b1e2b] border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
         />
       </div>
