@@ -3,10 +3,12 @@
 import { useAuth } from '@/context/AuthContext'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter, usePathname } from "next/navigation";
 
 export default function AdminDashboard() {
   const { user, profile } = useAuth()
   const supabase = createClient()
+  const router = useRouter();
 
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [teachingCount, setTeachingCount] = useState<number>(0);
@@ -44,7 +46,7 @@ export default function AdminDashboard() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
           <p className="text-gray-400">Hello {profile?.first_name || user?.email || 'Admin'}</p>
         </div>
 
