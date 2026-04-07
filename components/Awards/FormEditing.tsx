@@ -51,12 +51,12 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     setIsSubmitting(true);
     try {
 
-      const log: SubmissionLog = {
+      const logs: SubmissionLog[] = [{
         action: 'SUBMITTED',
         remarks: '',
         date: new Date().toLocaleString(),
         actor_name: USER_INFO ? `${USER_INFO.first_name} ${USER_INFO.middle_name} ${USER_INFO.last_name}` : '',
-      };
+      }];
 
       const res = await fetch('/api/submit-award/route', {
         method: 'POST',
@@ -64,7 +64,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
         body: JSON.stringify({
           publicationId: selectedPublication.publication_id,
           awardId: selectedAward.id,
-          log,
+          logs,
           userId,
         }),
       });
