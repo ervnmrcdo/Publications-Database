@@ -10,13 +10,18 @@ type PublicationType = {
   name: string;
 };
 
+type TaggableUser = {
+  id: string;
+  first_name: string;
+  middle_name: string | null;
+  last_name: string;
+};
+
 export default function Publications() {
   const { user } = useAuth();
   const [publications, setPublications] = useState<SupabasePublication[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAutoFetching, setIsAutoFetching] = useState(false);
-  // const [showForm, setShowForm] = useState(false);
-  // const [isEditing, setIsEditing] = useState(false)
 
   type Mode = "view" | "add" | "edit";
   const [mode, setMode] = useState<Mode>("view");
@@ -36,26 +41,32 @@ export default function Publications() {
   const [publicationTypes, setPublicationTypes] = useState<PublicationType[]>([]);
 
   const [selectedPublication, setSelectedPublication] = useState<SupabasePublication | null>(null);
-  const [highlightedPubId, setHighlightedPubId] = useState<number | null>(null)
+  const [highlightedPubId, setHighlightedPubId] = useState<number | null>(null);
+
+  const [taggableUsers, setTaggableUsers] = useState<TaggableUser[]>([]);
+  const [selectedTaggedAuthors, setSelectedTaggedAuthors] = useState<TaggableUser[]>([]);
+  const [tagSearchQuery, setTagSearchQuery] = useState('');
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
 
   const supabase = createClient();
 
   useEffect(() => {
     fetchPublications();
     fetchPublicationTypes();
+    fetchTaggableUsers();
   }, [user]);
 
   const fetchPublicationTypes = async () => {
-  try {
-    const res = await fetch("/api/admin/publication-types/route");
-    if (!res.ok) throw new Error("Failed to fetch types");
+    try {
+      const res = await fetch("/api/admin/publication-types/route");
+      if (!res.ok) throw new Error("Failed to fetch types");
 
-    const data = await res.json();
-    setPublicationTypes(data);
-  } catch (err) {
-    console.error(err);
-  }
-};
+      const data = await res.json();
+      setPublicationTypes(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchPublications = async () => {
     if (!user) {
@@ -94,6 +105,69 @@ export default function Publications() {
     setLoading(false);
   };
 
+  const fetchTaggableUsers = async () => {
+
+    const USER_ID = user?.id
+    if (USER_ID) {
+      try {
+        const res = await fetch(`/api/tag-authors?userId=${USER_ID}`);
+        if (!res.ok) throw new Error('Failed to fetch taggable users');
+        const data = await res.json();
+        setTaggableUsers(data.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const loadExistingTaggedAuthors = async (pubId: number) => {
+    try {
+      const res = await fetch(`/api/fetch-tagged-authors?publicationId=${pubId}&userId=${user?.id}`);
+      if (!res.ok) throw new Error('Failed to fetch tagged authors');
+      const data = await res.json();
+      setSelectedTaggedAuthors(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      setSelectedTaggedAuthors([]);
+    }
+  };
+
+  const saveTaggedAuthors = async (pubId: number) => {
+    if (!user) return;
+    try {
+      const taggedAuthorIds = selectedTaggedAuthors.map(author => author.id);
+      await fetch('/api/tag-authors', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          publicationId: pubId,
+          userId: user.id,
+          taggedAuthors: taggedAuthorIds
+        })
+      });
+    } catch (err) {
+      console.error('Failed to save tagged authors:', err);
+    }
+  };
+
+
+  const addTaggedAuthor = (userToAdd: TaggableUser) => {
+    if (!selectedTaggedAuthors.find(a => a.id === userToAdd.id)) {
+      setSelectedTaggedAuthors([...selectedTaggedAuthors, userToAdd]);
+    }
+    setTagSearchQuery('');
+    setShowTagDropdown(false);
+  };
+
+  const removeTaggedAuthor = (userId: string) => {
+    setSelectedTaggedAuthors(selectedTaggedAuthors.filter(a => a.id !== userId));
+  };
+
+  const resetTaggingState = () => {
+    setSelectedTaggedAuthors([]);
+    setTagSearchQuery('');
+    setShowTagDropdown(false);
+  };
 
   function resetForm() {
     setType('')
@@ -107,6 +181,7 @@ export default function Publications() {
     setJournalName('')
     setDOI('')
     setSelectedPublication(null)
+    resetTaggingState()
   }
 
   const addPublication = async () => {
@@ -141,13 +216,16 @@ export default function Publications() {
 
     const newPub = pubData[0];
 
-    // link publication to current user adding
+    const taggedAuthorIds = selectedTaggedAuthors.map(author => author.id);
+
+    // link publication to current user adding with tagged_authors (includes user's own ID)
     const { error: linkError } = await supabase
       .from('publication_authors')
       .insert([
         {
           publication_id: newPub.publication_id,
           user_id: user.id,
+          tagged_authors: [...taggedAuthorIds, user.id],
         }
       ]);
 
@@ -155,6 +233,17 @@ export default function Publications() {
       setLoading(false);
       alert('Failed to link publication to user.');
       return;
+    }
+
+    // insert rows for each tagged author
+    for (const authorId of taggedAuthorIds) {
+      await supabase
+        .from('publication_authors')
+        .insert([{
+          publication_id: newPub.publication_id,
+          user_id: authorId,
+          tagged_authors: [...taggedAuthorIds, user.id],
+        }]);
     }
 
     await fetchPublications();
@@ -193,6 +282,7 @@ export default function Publications() {
 
       if (error) throw error
 
+      await saveTaggedAuthors(selectedPublication.publication_id);
       await fetchPublications()
       setHighlightedPubId(selectedPublication.publication_id)
 
@@ -318,7 +408,7 @@ export default function Publications() {
                 value={publicationTypeId ?? ''}
                 onChange={(e) => {
                   const value = Number(e.target.value)
-                  const selectedPubType = publicationTypes.find(t=>t.id === value);
+                  const selectedPubType = publicationTypes.find(t => t.id === value);
                   setPublicationTypeId(value)
                   setType(selectedPubType?.name || "")
                 }}
@@ -339,6 +429,68 @@ export default function Publications() {
               <input type="text" value={pageNumbers} onChange={(e) => setPageNumbers(e.target.value)} placeholder="Page Numbers" className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600" />
               <input type="text" value={volumeNumber} onChange={(e) => setVolumeNumber(e.target.value)} placeholder="Volume Number" className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600" />
               <input type="text" value={journalName} onChange={(e) => setJournalName(e.target.value)} placeholder="Journal Name" className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600" />
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-sm mb-2">Tag Authors</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={tagSearchQuery}
+                    onChange={(e) => {
+                      setTagSearchQuery(e.target.value);
+                      setShowTagDropdown(true);
+                    }}
+                    onFocus={() => setShowTagDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowTagDropdown(false), 200)}
+                    placeholder="Search authors to tag..."
+                    className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600"
+                  />
+                  {showTagDropdown && tagSearchQuery && (
+                    <div className="absolute z-10 w-full mt-1 bg-[#252836] border border-gray-600 rounded-md shadow-lg max-h-48 overflow-auto">
+                      {taggableUsers
+                        .filter(user => {
+                          const fullName = `${user.last_name}, ${user.first_name} ${user.middle_name || ''}`.toLowerCase();
+                          return fullName.includes(tagSearchQuery.toLowerCase()) &&
+                            !selectedTaggedAuthors.find(a => a.id === user.id);
+                        })
+                        .slice(0, 10)
+                        .map(user => (
+                          <button
+                            key={user.id}
+                            onClick={() => addTaggedAuthor(user)}
+                            className="w-full text-left px-3 py-2 text-white hover:bg-gray-600 transition"
+                          >
+                            {user.last_name}, {user.first_name} {user.middle_name}
+                          </button>
+                        ))}
+                      {taggableUsers.filter(user => {
+                        const fullName = `${user.last_name}, ${user.first_name} ${user.middle_name || ''}`.toLowerCase();
+                        return fullName.includes(tagSearchQuery.toLowerCase()) &&
+                          !selectedTaggedAuthors.find(a => a.id === user.id);
+                      }).length === 0 && (
+                          <div className="px-3 py-2 text-gray-400">No matching authors found</div>
+                        )}
+                    </div>
+                  )}
+                </div>
+                {selectedTaggedAuthors.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedTaggedAuthors.map(author => (
+                      <span
+                        key={author.id}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-sm rounded"
+                      >
+                        {author.last_name}, {author.first_name} {author.middle_name}
+                        <button
+                          onClick={() => removeTaggedAuthor(author.id)}
+                          className="hover:text-red-300 font-bold"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="md:col-span-2 flex gap-3">
                 <button
                   onClick={mode === "edit" ? editPublication : addPublication}
@@ -382,6 +534,8 @@ export default function Publications() {
                     setPageNumbers(pub.page_numbers || '')
                     setVolumeNumber(pub.volume_number || '')
                     setJournalName(pub.journal_name || '')
+
+                    loadExistingTaggedAuthors(pub.publication_id)
                   }}
                   className={`p-4 rounded-lg border cursor-pointer transition
                     ${highlightedPubId === pub.publication_id
@@ -417,6 +571,21 @@ export default function Publications() {
                   <p><span className="text-gray-400">Pages:</span> {selectedPublication.page_numbers}</p>
                   <p><span className="text-gray-400">Volume:</span> {selectedPublication.volume_number}</p>
                   <p><span className="text-gray-400">Journal:</span> {selectedPublication.journal_name}</p>
+                  {selectedTaggedAuthors.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-gray-400 mb-1">Tagged Authors:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedTaggedAuthors.map(author => (
+                          <span
+                            key={author.id}
+                            className="inline-block px-2 py-1 bg-gray-700 text-white text-sm rounded"
+                          >
+                            {author.last_name}, {author.first_name} {author.middle_name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-between mt-6">
                   <div className="flex gap-3">
