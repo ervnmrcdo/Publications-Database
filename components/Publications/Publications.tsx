@@ -417,6 +417,7 @@ export default function Publications() {
                   <p><span className="text-gray-400">Pages:</span> {selectedPublication.page_numbers}</p>
                   <p><span className="text-gray-400">Volume:</span> {selectedPublication.volume_number}</p>
                   <p><span className="text-gray-400">Journal:</span> {selectedPublication.journal_name}</p>
+                  <p><span className="text-gray-400">DOI:</span> {selectedPublication.doi}</p>
                 </div>
                 <div className="flex justify-between mt-6">
                   <div className="flex gap-3">
