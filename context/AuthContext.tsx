@@ -10,6 +10,7 @@ interface Profile {
   last_name?: string | null
   email?: string | null
   role?: string | null
+  scopus_author_id?: string | null
 }
 
 
@@ -36,9 +37,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(user ?? null)
 
       if (user) {
-        const { data, error } = await supabase.from('users').select('first_name, middle_name, last_name, email, role').eq('id', user.id).single()
+        const { data, error } = await supabase.from('users').select('first_name, middle_name, last_name, email, role, scopus_author_id').eq('id', user.id).single()
         if (!error && data) {
-          setProfile({ first_name: data.first_name, middle_name: data.middle_name, last_name: data.last_name, email: data.email, role: data.role })
+          setProfile({ first_name: data.first_name, middle_name: data.middle_name, last_name: data.last_name, email: data.email, role: data.role, scopus_author_id: data.scopus_author_id })
         } else {
           setProfile(null)
         }
