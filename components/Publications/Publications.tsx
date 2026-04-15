@@ -288,7 +288,9 @@ export default function Publications() {
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-[#0f1117] text-gray-300 p-8">
+    <div className={`flex-1 overflow-auto bg-[#0f1117] text-gray-300 p-8 
+      ${isAutoFetching ? "cursor-wait" : "cursor-default"}`}
+    >
       <div className="max-w-6xl mx-auto">
         <div className="bg-[#1b1e2b] rounded-lg p-6 border border-gray-700 mt-8">
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
