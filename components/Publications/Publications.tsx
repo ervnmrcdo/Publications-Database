@@ -87,7 +87,12 @@ export default function Publications() {
     if (!error && data) {
       const pubs = data
         .map((row: any) => row.publications)
-        .filter((pub: any) => !!pub);
+        .filter((pub: any) => !!pub)
+        .sort((a: any, b: any) => {
+          const aDate = a?.date_published ? new Date(a.date_published).getTime() : Number.NEGATIVE_INFINITY;
+          const bDate = b?.date_published ? new Date(b.date_published).getTime() : Number.NEGATIVE_INFINITY;
+          return bDate - aDate;
+        });
       setPublications(pubs);
     }
 
@@ -393,6 +398,9 @@ export default function Publications() {
                   `}
                 >
                   <div className="font-bold text-lg text-white">{pub.title}</div>
+                  <div className="text-gray-400 text-sm">
+                    Date Published: {pub.date_published || 'N/A'}
+                  </div>
                   <div className="text-gray-400 text-sm">
                     Type: {pub.type}
                   </div>

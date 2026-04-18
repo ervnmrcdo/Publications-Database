@@ -236,6 +236,10 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
               <label className="text-sm text-gray-500 uppercase">Position</label>
               <p className="text-white font-semibold">{position}</p>
             </div>
+            <div>
+              <label className="text-sm text-gray-500 uppercase">Scopus Author ID</label>
+              <p className="text-white font-semibold">{scopus_author_id}</p>
+            </div>
             {signaturePath && (
               <div>
                 <label className="text-sm text-gray-500 uppercase">Signature</label>
