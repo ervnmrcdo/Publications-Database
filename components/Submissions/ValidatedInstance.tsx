@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
+import AttachmentsSection from '@/components/Review/AttachmentsSection';
 
 type Props = {
     data: AcceptedForm;
@@ -368,6 +369,11 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
                     )}
                 </div>
             )}
+            <AttachmentsSection
+                isJournal={!!data.form41_url}
+                journal_attachments={data.journal_attachments}
+                book_attachments={data.book_attachments}
+                />
 
             {(!hasForm41 && !hasForm42 && !hasForm43 && !hasForm44) && (
                 <div className="p-4 bg-[#252836] rounded-lg">

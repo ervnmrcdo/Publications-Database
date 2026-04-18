@@ -5,6 +5,7 @@ import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubmissionsFlow } from "@/context/SubmissionsFlowContext";
+import AttachmentsSection from '@/components/Review/AttachmentsSection';
 
 type Props = {
     data: RejectedForm;
@@ -402,6 +403,12 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                     )}
                 </div>
             )}
+
+            <AttachmentsSection
+                isJournal={!!data.form41_url}
+                journal_attachments={data.journal_attachments}
+                book_attachments={data.book_attachments}
+                />
 
 
             {/* Resubmit Confirmation Dialog */}

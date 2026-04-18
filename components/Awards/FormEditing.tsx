@@ -47,7 +47,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     return formStep;
   };
 
-  const handleFinalSubmit = async () => {
+  const handleFinalSubmit = async (attachments: Record<string, string>) => {
     setIsSubmitting(true);
     try {
 
@@ -66,6 +66,8 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
           awardId: selectedAward.id,
           logs,
           userId,
+          attachments, 
+          isJournal: isJournalType
         }),
       });
 

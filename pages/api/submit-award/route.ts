@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const supabaseAdmin = createServiceRoleClient();
 
-    const { publicationId, awardId, userId, logs } = req.body;
+    const { publicationId, awardId, userId, logs, attachments } = req.body;
 
     if (!publicationId || !awardId || !userId) {
       return res.status(400).json({ error: "publicationId, awardId, and userId are required" });
@@ -70,6 +70,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           status: 'PENDING',
           pdf_json_data: {},
           logs,
+          ...(isJournalType
+            ? { journal_attachments: attachments ?? {} }
+            : { book_attachments: attachments ?? {} }
+          ),
         }
       ])
       .select();
