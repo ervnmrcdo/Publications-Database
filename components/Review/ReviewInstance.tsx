@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useReviewFlow } from "@/context/ReviewFlowContext";
 import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
+import AttachmentsSection from '@/components/Review/AttachmentsSection';
 
 type Props = {
   data: Application;
@@ -539,6 +540,11 @@ export default function ReviewInstance({ data, onBack }: Props) {
         </div>
       )}
 
+      <AttachmentsSection
+        isJournal={data.awardId === 1}
+        journal_attachments={data.journal_attachments}
+        book_attachments={data.book_attachments}
+      />
 
       {
         showErrorDialog && (

@@ -213,6 +213,10 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
               </p>
             </div>
             <div>
+              <label className="text-sm text-gray-500 uppercase">Scopus Author ID</label>
+              <p className="text-white font-semibold">{scopus_author_id}</p>
+            </div>
+            <div>
               <label className="text-sm text-gray-500 uppercase">University</label>
               <p className="text-white font-semibold">{university}</p>
             </div>
@@ -231,6 +235,10 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
             <div>
               <label className="text-sm text-gray-500 uppercase">Position</label>
               <p className="text-white font-semibold">{position}</p>
+            </div>
+            <div>
+              <label className="text-sm text-gray-500 uppercase">Scopus Author ID</label>
+              <p className="text-white font-semibold">{scopus_author_id}</p>
             </div>
             {signaturePath && (
               <div>

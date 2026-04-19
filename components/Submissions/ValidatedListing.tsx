@@ -24,11 +24,13 @@ export default function AcceptedListing({ onSelect }: Props) {
     }
 
     useEffect(() => {
+        if (!user?.id) return;
         fetch("/api/get/accepted-forms", {
             method: 'POST',
             body: JSON.stringify(payload)
         }).then((res) => res.json()).then((result) => {
             console.log(result)
+            const list = Array.isArray(result) ? result : [];
             setAcceptedData(result.map((item: any) => ({
                 submission_id: item.submission_id,
                 // NEW: Use pdfUrl from Supabase Storage instead of attached_files
@@ -36,15 +38,17 @@ export default function AcceptedListing({ onSelect }: Props) {
                 first_name: item.first_name,
                 last_name: item.last_name,
                 date_submitted: item.date_submitted,
-                award_title: item.title,
+                award_title: item.award_title,
                 logs: item.logs,
                 form41_url: item.form41_path,
                 form42_url: item.form42_path,
                 form43_url: item.form43_path,
                 form44_url: item.form44_path,
+                journal_attachments: item.journal_attachments ?? {},
+                book_attachments: item.book_attachments ?? {}, 
             })))
         })
-    }, [])
+    }, [user?.id])
 
     return (<div>
         <div className="bg-[#1b1e2b] rounded-xl shadow p-6 mt-5">

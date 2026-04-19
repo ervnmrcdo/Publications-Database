@@ -39,6 +39,8 @@ export default function ReturnedListing({ onSelect }: Props) {
                 form42_url: item.form42_url,
                 form43_url: item.form43_url,
                 form44_url: item.form44_url,
+                journal_attachments: item.journal_attachments ?? {},
+                book_attachments: item.book_attachments ?? {}, 
             })))
         })
     }, [])

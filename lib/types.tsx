@@ -74,6 +74,9 @@ export type Application = {
   form42Url?: string | null;
   form43Url?: string | null;
   form44Url?: string | null;
+  awardId?: number; 
+  journal_attachments?: Record<string, string>;
+  book_attachments?: Record<string, string>;
 };
 
 export interface AcceptedForm {
@@ -89,6 +92,8 @@ export interface AcceptedForm {
   form43_url?: string;
   form44_url?: string;
   pdfBufferData?: string;
+  journal_attachments?: Record<string, string>;
+  book_attachments?: Record<string, string>;  
 }
 
 export interface RejectedForm {
@@ -109,6 +114,8 @@ export interface RejectedForm {
   form43_url?: string | null;
   form44_url?: string | null;
   isReturned: boolean;
+  journal_attachments?: Record<string, string>;
+  book_attachments?: Record<string, string>;  
 }
 
 export interface DraftForm {

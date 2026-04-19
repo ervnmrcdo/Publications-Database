@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const supabaseAdmin = createServiceRoleClient();
 
-    const { publicationId, awardId, userId, logs } = req.body;
+    const { publicationId, awardId, userId, logs, attachments } = req.body;
 
     if (!publicationId || !awardId || !userId) {
       return res.status(400).json({ error: "publicationId, awardId, and userId are required" });
@@ -61,6 +61,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: "No draft files found to submit" });
     }
 
+<<<<<<< HEAD
+=======
+
+    const { data: submissionData, error: submissionError } = await supabaseAdmin
+      .from("submissions")
+      .insert([
+        {
+          submitter_id: userId,
+          award_id: awardId,
+          publication_id: publicationId,
+          status: 'PENDING',
+          pdf_json_data: {},
+          logs,
+          ...(isJournalType
+            ? { journal_attachments: attachments ?? {} }
+            : { book_attachments: attachments ?? {} }
+          ),
+        }
+      ])
+      .select();
+
+    if (submissionError) {
+      return res.status(400).json({ error: "Failed to create submission: " + submissionError.message });
+    }
+
+    const submission_id = submissionData[0].submission_id;
+
+>>>>>>> update_pubs
     const submissionPaths: Record<string, string> = {};
 
     for (const draftPath of existingPdfFiles) {

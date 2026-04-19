@@ -27,6 +27,9 @@ export default function ListedApplications({ onSelect }: Props) {
             form42Url: item.form42Url || null,
             form43Url: item.form43Url || null,
             form44Url: item.form44Url || null,
+            awardId: item.awardId,
+            journal_attachments: item.journal_attachments ?? {},
+            book_attachments: item.book_attachments ?? {},  
           })),
         );
       });

@@ -98,7 +98,12 @@ export default function Publications() {
     if (!error && data) {
       const pubs = data
         .map((row: any) => row.publications)
-        .filter((pub: any) => !!pub);
+        .filter((pub: any) => !!pub)
+        .sort((a: any, b: any) => {
+          const aDate = a?.date_published ? new Date(a.date_published).getTime() : Number.NEGATIVE_INFINITY;
+          const bDate = b?.date_published ? new Date(b.date_published).getTime() : Number.NEGATIVE_INFINITY;
+          return bDate - aDate;
+        });
       setPublications(pubs);
     }
 
@@ -378,7 +383,9 @@ export default function Publications() {
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-[#0f1117] text-gray-300 p-8">
+    <div className={`flex-1 overflow-auto bg-[#0f1117] text-gray-300 p-8 
+      ${isAutoFetching ? "cursor-wait" : "cursor-default"}`}
+    >
       <div className="max-w-6xl mx-auto">
         <div className="bg-[#1b1e2b] rounded-lg p-6 border border-gray-700 mt-8">
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -546,6 +553,9 @@ export default function Publications() {
                 >
                   <div className="font-bold text-lg text-white">{pub.title}</div>
                   <div className="text-gray-400 text-sm">
+                    Date Published: {pub.date_published || 'N/A'}
+                  </div>
+                  <div className="text-gray-400 text-sm">
                     Type: {pub.type}
                   </div>
                   <div className="text-gray-400 text-sm">
@@ -571,6 +581,7 @@ export default function Publications() {
                   <p><span className="text-gray-400">Pages:</span> {selectedPublication.page_numbers}</p>
                   <p><span className="text-gray-400">Volume:</span> {selectedPublication.volume_number}</p>
                   <p><span className="text-gray-400">Journal:</span> {selectedPublication.journal_name}</p>
+<<<<<<< HEAD
                   {selectedTaggedAuthors.length > 0 && (
                     <div className="mt-3">
                       <p className="text-gray-400 mb-1">Tagged Authors:</p>
@@ -586,6 +597,9 @@ export default function Publications() {
                       </div>
                     </div>
                   )}
+=======
+                  <p><span className="text-gray-400">DOI:</span> {selectedPublication.doi}</p>
+>>>>>>> update_pubs
                 </div>
                 <div className="flex justify-between mt-6">
                   <div className="flex gap-3">

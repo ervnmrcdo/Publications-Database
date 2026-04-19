@@ -18,6 +18,8 @@ export default function PendingAwardsTable() {
     const [isLoadingPending, setIsLoadingPending] = useState(true);
     const { user, profile } = useAuth();
 
+    const [selectedAward, setSelectedAward] = useState<PendingAward | null>(null);
+
     useEffect(() => {
         if (!user || !profile) return;
         const fetchPendingAwards = async () => {
@@ -93,7 +95,8 @@ export default function PendingAwardsTable() {
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {pendingAwards.map((award) => (
-                                    <tr key={award.id} className="hover:bg-gray-700 transition-colors">
+                                    <tr key={award.id} className="hover:bg-gray-700 transition-colors cursor-pointer"
+                                        onClick={() => setSelectedAward(award)}>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                             #{award.id}
                                         </td>
@@ -122,6 +125,33 @@ export default function PendingAwardsTable() {
                 )}
             </div>
 
+            {selectedAward && (
+            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                <div className="bg-[#1b1e2b] p-6 rounded-lg w-full max-w-lg border border-gray-700">
+                <h3 className="text-xl font-bold text-white mb-4">
+                    Submission #{selectedAward.id}
+                </h3>
+
+                <div className="space-y-2 text-gray-300 text-sm">
+                    <p><span className="text-gray-400">Applicant:</span> {selectedAward.name}</p>
+                    <p><span className="text-gray-400">Award Title:</span> {selectedAward.awardTitle}</p>
+                    <p><span className="text-gray-400">Submitter Type:</span> {selectedAward.submitterType}</p>
+                    <p><span className="text-gray-400">Date Submitted:</span> {new Date(selectedAward.dateSubmitted).toLocaleString()}</p>
+                    <p><span className="text-gray-400">Status:</span> {selectedAward.status}</p>
+                </div>
+
+                <div className="flex justify-end mt-6">
+                    <button
+                    onClick={() => setSelectedAward(null)}
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+                    >
+                    Close
+                    </button>
+                </div>
+                </div>
+            </div>
+            )}
         </div>
+        
     )
 }

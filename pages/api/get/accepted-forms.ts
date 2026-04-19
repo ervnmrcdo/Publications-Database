@@ -46,6 +46,8 @@ export default async function RetrieveAcceptedForms(
         form42_path: r.form42_path,
         form43_path: r.form43_path,
         form44_path: r.form44_path,
+        journal_attachments: r.journal_attachments ?? {},
+        book_attachments: r.book_attachments ?? {}, 
       }))
       : [];
 

@@ -94,6 +94,8 @@ export default async function PendingAwards(
         form42Url,
         form43Url,
         form44Url,
+        journal_attachments: r.journal_attachments ?? {},
+        book_attachments: r.book_attachments ?? {}, 
       };
     }));
 
