@@ -25,7 +25,8 @@ export default async function PendingAwards(
       .select(`
         *,
         authors:users!submitter_id(*),
-        awards:awards!award_id(*)
+        awards:awards!award_id(*),
+        publications:publications!publication_id(*)
        `)
       .eq('status', 'PENDING');
 
@@ -82,6 +83,7 @@ export default async function PendingAwards(
       return {
         id: r.submission_id,
         name: `${r.authors.first_name} ${r.authors.last_name}`,
+        publicationTitle: r.publications?.title,
         dateSubmitted: r.date_submitted,
         status: r.status,
         awardId: r.awards.award_id,

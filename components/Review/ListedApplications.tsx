@@ -18,6 +18,7 @@ export default function ListedApplications({ onSelect }: Props) {
           result.map((item: any) => ({
             application_id: item.id,
             name: item.name,
+            publicationTitle: item.publicationTitle,
             role: item.submitterType,
             award: item.awardTitle,
             dateSubmitted: item.dateSubmitted,
@@ -48,8 +49,8 @@ export default function ListedApplications({ onSelect }: Props) {
               onClick={() => onSelect(item)}
             >
               <div>
-                <p className="font-semibold text-lg text-white">{item.name}</p>
-                <p className="text-sm text-gray-300">{item.role}</p>
+                <p className="font-semibold text-lg text-white">{item.publicationTitle}</p>
+                <p className="text-sm text-gray-300">Applicant: {item.name}</p>
                 <p className="text-sm text-gray-300">{item.award}</p>
                 <p className="text-xs text-gray-400">{new Date(item.dateSubmitted).toLocaleString()}</p>
               </div>

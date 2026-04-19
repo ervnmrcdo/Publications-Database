@@ -31,10 +31,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { data: existingDraft } = await supabaseAdmin
       .from('submissions')
-      .select('submission_id')
+      .select('submission_id, status')
       .eq('publication_id', Number(publicationId))
       .eq('award_id', Number(awardId))
-      .eq('status', 'DRAFT')
+      .in('status', ['DRAFT', 'RETURNED'])
       .single();
 
     if (existingDraft) {

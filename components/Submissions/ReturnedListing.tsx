@@ -26,11 +26,13 @@ export default function ReturnedListing({ onSelect }: Props) {
             setReturnedData(result.map((item: any) => ({
                 submission_id: item.submission_id,
                 publication_id: item.publication_id,
-                first_name: item.authors.first_name,
-                last_name: item.authors.last_name,
+                first_name: item.authors?.first_name,
+                last_name: item.authors?.last_name,
                 date_submitted: item.date_submitted,
-                award_title: item.awards.title,
-                award_id: item.awards.award_id,
+                award_title: item.awards?.title,
+                publication_title: item.publication_title,
+                tagged_authors: item.tagged_authors,
+                award_id: item.awards?.award_id,
                 remarks: item.remarks,
                 logs: item.logs,
                 form41_url: item.form41_url,
@@ -56,9 +58,9 @@ export default function ReturnedListing({ onSelect }: Props) {
                         onClick={() => { onSelect(item) }}
                     >
                         <div>
-                            <p className="font-semibold text-lg text-white">{item.first_name + ' ' + item.last_name}</p>
+                            <p className="font-semibold text-lg text-white">{item.publication_title}</p>
+                            <p className="text-sm text-gray-300">Applicant: {item.first_name} {item.last_name}</p>
                             <p className="text-sm text-gray-300">{item.award_title}</p>
-                            {/* <p className="text-xs text-gray-400">{item.date_submitted}</p> */}
                             <p className="text-xs text-red-400">{(item.remarks) ? ` ${item.remarks}` : ''}</p>
                         </div>
                         <ChevronRight className="text-gray-400" />
