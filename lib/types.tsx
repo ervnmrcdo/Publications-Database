@@ -108,6 +108,25 @@ export interface RejectedForm {
   isReturned: boolean;
 }
 
+export interface DraftForm {
+  first_name?: string;
+  last_name?: string;
+  submission_id: string;
+  date_submitted: string;
+  award_title?: string;
+  publication_title?: string;
+  tagged_authors?: { id: string; first_name?: string; last_name?: string }[];
+  logs: SubmissionLog[];
+  publication_id?: number;
+  award_id?: number;
+  submitter_id?: string;
+  form41_url?: string | null;
+  form42_url?: string | null;
+  form43_url?: string | null;
+  form44_url?: string | null;
+  status: string;
+}
+
 export interface PendingAward {
   id: number;
   name: string;

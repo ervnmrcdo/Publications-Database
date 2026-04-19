@@ -5,7 +5,7 @@ services:
     ports:
       - "8080:80"
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "host.docker.internal:172.22.0.1"
     environment:
       - JWT_ENABLED=true
       - JWT_SECRET=my_super_secret_key

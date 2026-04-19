@@ -7,54 +7,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const supabaseAdmin = createServiceRoleClient();
+    const { submission_id, user_id, logs } = req.body;
 
-    const { publicationId, awardId, userId, logs } = req.body;
-
-    if (!publicationId || !awardId || !userId) {
-      return res.status(400).json({ error: "publicationId, awardId, and userId are required" });
+    if (!submission_id || !user_id) {
+      return res.status(400).json({ error: "submission_id and user_id are required" });
     }
 
-    const publicationIdNum = Number(publicationId);
-    const awardIdNum = Number(awardId);
+    const supabaseAdmin = createServiceRoleClient();
 
-    const { data: existingDraft, error: draftError } = await supabaseAdmin
+    const { data: existingDraft, error: fetchError } = await supabaseAdmin
       .from("submissions")
-      .select("*")
-      .eq("publication_id", publicationIdNum)
-      .eq("award_id", awardIdNum)
+      .select("*, awards:awards!award_id(*)")
+      .eq("submission_id", submission_id)
       .eq("status", "DRAFT")
       .single();
 
-    if (draftError || !existingDraft) {
-      return res.status(400).json({ error: "No draft found to submit" });
+    if (fetchError || !existingDraft) {
+      return res.status(404).json({ error: "Draft not found" });
     }
 
-    const submissionId = existingDraft.submission_id;
-
-    const formTypes = awardIdNum === 1
-      ? [41, 42, 43]
-      : [44, 43];
+    const { award_id, publication_id } = existingDraft;
+    const isJournalType = award_id === 1;
 
     const existingPdfFiles: string[] = [];
     const existingDocxFiles: string[] = [];
 
-    for (const formType of formTypes) {
-      const fileExt = formType === 41 || formType === 44 ? "pdf" : "docx";
-      const bucket = fileExt === "pdf" ? "drafts-pdf" : "drafts-docx";
-      const filePath = `${submissionId}_form${formType}.${fileExt}`;
-
-      const { data: fileData, error } = await supabaseAdmin.storage
-        .from(bucket)
-        .download(filePath);
-
-      if (!error && fileData) {
-        if (fileExt === "pdf") {
-          existingPdfFiles.push(filePath);
-        } else {
-          existingDocxFiles.push(filePath);
-        }
-      }
+    if (existingDraft.form41_path) {
+      existingPdfFiles.push(existingDraft.form41_path);
+    }
+    if (existingDraft.form44_path) {
+      existingPdfFiles.push(existingDraft.form44_path);
+    }
+    if (existingDraft.form42_path) {
+      existingDocxFiles.push(existingDraft.form42_path);
+    }
+    if (existingDraft.form43_path) {
+      existingDocxFiles.push(existingDraft.form43_path);
     }
 
     if (existingPdfFiles.length === 0 && existingDocxFiles.length === 0) {
@@ -77,9 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const arrayBuffer = await fileData.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-      const newFileName = formType === "41"
-        ? `${submissionId}_form41.pdf`
-        : `${submissionId}_form44.pdf`;
+      const newFileName = `${submission_id}_form${formType}.pdf`;
 
       const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
         .from("submissions-pdf")
@@ -107,9 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const arrayBuffer = await fileData.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-      const newFileName = formType === "42"
-        ? `${submissionId}_form42.docx`
-        : `${submissionId}_form43.docx`;
+      const newFileName = `${submission_id}_form${formType}.docx`;
 
       const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
         .from("submissions-docx")
@@ -124,51 +108,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const updateData: Record<string, unknown> = {
-      status: 'PENDING',
+      status: "PENDING",
       logs: logs || [],
     };
 
-    if (Object.keys(submissionPaths).length > 0) {
-      if (submissionPaths.form41_path) updateData.form41_path = submissionPaths.form41_path;
-      if (submissionPaths.form42_path) updateData.form42_path = submissionPaths.form42_path;
-      if (submissionPaths.form43_path) updateData.form43_path = submissionPaths.form43_path;
-      if (submissionPaths.form44_path) updateData.form44_path = submissionPaths.form44_path;
-    }
+    if (submissionPaths.form41_path) updateData.form41_path = submissionPaths.form41_path;
+    if (submissionPaths.form42_path) updateData.form42_path = submissionPaths.form42_path;
+    if (submissionPaths.form43_path) updateData.form43_path = submissionPaths.form43_path;
+    if (submissionPaths.form44_path) updateData.form44_path = submissionPaths.form44_path;
 
     const { error: updateError } = await supabaseAdmin
       .from("submissions")
       .update(updateData)
-      .eq("submission_id", submissionId);
+      .eq("submission_id", submission_id);
 
     if (updateError) {
-      return res.status(400).json({ error: "Failed to update submission: " + updateError.message });
-    }
-
-    const { error: junctionError } = await supabaseAdmin
-      .from("publication_award_applications")
-      .insert([
-        {
-          publication_id: publicationIdNum,
-          award_id: awardIdNum,
-          submission_id: submissionId,
-        }
-      ]);
-
-    if (junctionError) {
-      if (junctionError.code === '23505') {
-        return res.status(409).json({ error: "This publication has already been applied for this award" });
-      }
-      return res.status(400).json({ error: "Failed to link submission: " + junctionError.message });
+      return res.status(400).json({ error: "Failed to submit draft: " + updateError.message });
     }
 
     return res.status(200).json({
       success: true,
-      submission_id: submissionId,
-      message: "Submission created successfully"
+      submission_id,
+      message: "Draft submitted successfully",
     });
-
   } catch (err) {
-    console.error("Error submitting award:", err);
+    console.error("Error submitting draft:", err);
     return res.status(500).json({ error: `Internal Server Error: ${err}` });
   }
 }

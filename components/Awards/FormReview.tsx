@@ -1,17 +1,21 @@
 'use client';
 
-import { FileText, ChevronLeft, Send, Loader2 } from 'lucide-react';
+import { FileText, ChevronLeft, Send, Loader2, Save } from 'lucide-react';
 import { useAwardsFlow } from '@/context/AwardsFlowContext';
+import { useState } from 'react';
 
 interface FormReviewProps {
   onSubmit: () => void;
+  onSaveDraft: () => void;
   onBack: () => void;
   isJournal: boolean;
   isSubmitting: boolean;
 }
 
-export default function FormReview({ onSubmit, onBack, isJournal, isSubmitting }: FormReviewProps) {
+export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, isSubmitting }: FormReviewProps) {
   const { setFormStep } = useAwardsFlow();
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showSaveDraftConfirm, setShowSaveDraftConfirm] = useState(false);
 
   const handleBack = () => {
     setFormStep('form43');
@@ -99,24 +103,93 @@ export default function FormReview({ onSubmit, onBack, isJournal, isSubmitting }
           Back to Form 4.3
         </button>
         
-        <button
-          onClick={onSubmit}
-          disabled={isSubmitting}
-          className="flex items-center px-8 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Submitting...
-            </>
-          ) : (
-            <>
-              Submit All Forms
-              <Send className="w-4 h-4 ml-2" />
-            </>
-          )}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowSaveDraftConfirm(true)}
+            disabled={isSubmitting}
+            className="flex items-center px-6 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Save as Draft
+          </button>
+          
+          <button
+            onClick={() => setShowSubmitConfirm(true)}
+            disabled={isSubmitting}
+            className="flex items-center px-8 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                Submit All Forms
+                <Send className="w-4 h-4 ml-2" />
+              </>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Save as Draft Confirmation Dialog */}
+      {showSaveDraftConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[#1b1e2b] rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-white">Save as Draft</h3>
+            <p className="text-sm text-gray-300 mb-6">
+              Are you sure you want to save this as a draft? You can continue editing later.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 border rounded-md hover:bg-gray-700"
+                onClick={() => setShowSaveDraftConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
+                onClick={() => {
+                  setShowSaveDraftConfirm(false);
+                  onSaveDraft();
+                }}
+              >
+                Save as Draft
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submit Confirmation Dialog */}
+      {showSubmitConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[#1b1e2b] rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-white">Confirm Submit</h3>
+            <p className="text-sm text-gray-300 mb-6">
+              Are you sure you want to submit this application? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 border rounded-md hover:bg-gray-700"
+                onClick={() => setShowSubmitConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                onClick={() => {
+                  setShowSubmitConfirm(false);
+                  onSubmit();
+                }}
+              >
+                Confirm Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

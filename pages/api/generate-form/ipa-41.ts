@@ -29,21 +29,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const supabase = createPagesServerClient(req, res);
     const supabaseAdmin = createServiceRoleClient();
 
-    const filePath = `${user_id}/${awardId}/${publicationId}/form41.pdf`;
+    const { data: existingDraft } = await supabaseAdmin
+      .from('submissions')
+      .select('submission_id')
+      .eq('publication_id', Number(publicationId))
+      .eq('award_id', Number(awardId))
+      .eq('status', 'DRAFT')
+      .single();
 
-    const { data: urlData } = await supabaseAdmin.storage
-      .from('drafts-pdf')
-      .createSignedUrl(filePath, 3600);
+    if (existingDraft) {
+      const filePath = `${existingDraft.submission_id}_form41.pdf`;
 
+      const { data: urlData } = await supabaseAdmin.storage
+        .from('drafts-pdf')
+        .createSignedUrl(filePath, 3600);
 
-    if (urlData?.signedUrl) {
-      const fileResponse = await fetch(urlData.signedUrl);
-      const fileBuffer = await fileResponse.arrayBuffer();
+      if (urlData?.signedUrl) {
+        const fileResponse = await fetch(urlData.signedUrl);
+        const fileBuffer = await fileResponse.arrayBuffer();
 
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'inline; filename="form41.pdf"');
-      return res.send(Buffer.from(fileBuffer));
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="form41.pdf"');
+        return res.send(Buffer.from(fileBuffer));
+      }
     }
 
     const { data: publication, error: pubError } = await supabase

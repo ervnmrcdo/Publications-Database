@@ -21,6 +21,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (body.status === 2 || body.status === 6) {
+      const publicationIdNum = Number(publicationId);
+      const awardIdNum = Number(awardId);
+
+      const { data: existingDraft, error: fetchDraftError } = await supabaseAdmin
+        .from("submissions")
+        .select("submission_id")
+        .eq("publication_id", publicationIdNum)
+        .eq("award_id", awardIdNum)
+        .eq("status", "DRAFT")
+        .single();
+
+      let submissionId: number;
+
+      if (existingDraft) {
+        submissionId = existingDraft.submission_id;
+      } else {
+        const { data: newDraft, error: createError } = await supabaseAdmin
+          .from("submissions")
+          .insert([
+            {
+              submitter_id: user_id,
+              award_id: awardIdNum,
+              publication_id: publicationIdNum,
+              status: "DRAFT",
+              pdf_json_data: {},
+              logs: [],
+            },
+          ])
+          .select("submission_id")
+          .single();
+
+        if (createError || !newDraft) {
+          console.error("Error creating draft:", createError);
+          return res.status(400).json({ error: "Failed to create draft record" });
+        }
+
+        submissionId = newDraft.submission_id;
+      }
+
       const resp = await fetch(body.url);
       if (!resp.ok) return res.status(500).json({ message: 'Downloading the file failed.' });
 
@@ -30,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const fileExt = formType === "41" || formType === "44" ? "pdf" : "docx";
       const bucket = fileExt === "pdf" ? "drafts-pdf" : "drafts-docx";
 
-      const filePath = `${user_id}/${awardId}/${publicationId}/form${formType}.${fileExt}`;
+      const filePath = `${submissionId}_form${formType}.${fileExt}`;
 
       const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
         .from(bucket)
@@ -47,9 +86,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: uploadError.message });
       }
 
+      const fieldName = `form${formType}_path`;
+      await supabaseAdmin
+        .from("submissions")
+        .update({ [fieldName]: filePath })
+        .eq("submission_id", submissionId);
+
       return res
         .status(200)
-        .json({ error: 0, message: "Draft saved successfully", path: uploadData.path });
+        .json({ error: 0, message: "Draft saved successfully", path: uploadData.path, submission_id: submissionId });
     }
     return res.status(200).json({ error: 0 });
   } catch (err) {

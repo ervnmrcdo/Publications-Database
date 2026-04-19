@@ -29,16 +29,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const fileExt = formType === '41' || formType === '44' ? 'pdf' : 'docx';
   const bucket = fileExt === 'pdf' ? 'drafts-pdf' : 'drafts-docx';
-  const filePath = `${admin_id}/${submission_id}/form${formType}.${fileExt}`;
+  const filePath = `${submission_id}_form${formType}.${fileExt}`;
 
   try {
     const supabase = createServiceRoleClient();
 
     const { data: existingDraft, error: draftError } = await supabase.storage
       .from(bucket)
-      .list(`${admin_id}/${submission_id}`, {
+      .list('', {
         limit: 1,
-        search: `form${formType}.${fileExt}`
+        search: filePath
       });
 
     if (!draftError && existingDraft && existingDraft.length > 0) {

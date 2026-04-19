@@ -18,14 +18,23 @@ export default async function RetrieveReturnedForms(
 
   try {
     const supabase = createServiceRoleClient();
+
+    const taggedPublicationsResult = await supabase
+      .from('publication_authors')
+      .select('publication_id, tagged_authors')
+      .contains('tagged_authors', [id]);
+
+    const taggedPublicationIds =
+      taggedPublicationsResult.data?.map((p) => p.publication_id) || [];
+
     const { data } = await supabase.from('submissions')
       .select(`
           *,
           authors:users!submitter_id(*),
           awards:awards!award_id(*)
            `)
-      .eq('submitter_id', id)
-      .eq('status', 'RETURNED');
+      .eq('status', 'RETURNED')
+      .in('publication_id', taggedPublicationIds.length > 0 ? taggedPublicationIds : [0]);
 
     const dataWithUrls = data
       ? await Promise.all(
