@@ -20,11 +20,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'user_id is required' });
   }
 
-  const awardIdNum = Number(awardId);
-  if (!awardId || awardIdNum !== 1) {
-    return res.status(400).json({ message: 'awardId must be 1 for form 4.1' });
-  }
-
   try {
     const supabase = createPagesServerClient(req, res);
     const supabaseAdmin = createServiceRoleClient();
@@ -62,6 +57,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (pubError || !publication) {
       return res.status(404).json({ message: 'Publication not found' });
+    }
+
+    const aggregation_type = publication.aggregation_type || publication.type || null;
+    const isJournal = (aggregation_type || '').toLowerCase() === 'journal';
+    if (!isJournal) {
+      return res.status(400).json({ message: 'Publication is not classified as journal' });
     }
 
     const { data: pubAuthors, error: authorsError } = await supabase

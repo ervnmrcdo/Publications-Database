@@ -8,6 +8,7 @@ const execFileAsync = promisify(execFile);
 function normalizePublication(pub) {
   return {
     type: pub.publication_type || null,
+    aggregation_type: pub.aggregationType || null,
     title: pub.title || null,
     publisher: pub.publisher || null,
     publication_status: 'Published',
@@ -118,6 +119,14 @@ export default async function handler(req, res) {
       }
 
       let publicationId = await findExistingPublicationId(supabase, normalized);
+
+      if (publicationId && normalized.aggregation_type) {
+        await supabase
+          .from('publications')
+          .update({ aggregation_type: normalized.aggregation_type })
+          .eq('publication_id', publicationId)
+          .is('aggregation_type', null);
+      }
 
       if (!publicationId) {
         const { data: created, error: createError } = await supabase

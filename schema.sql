@@ -223,6 +223,7 @@ ALTER TABLE "public"."publication_type" OWNER TO "postgres";
 CREATE TABLE IF NOT EXISTS "public"."publications" (
     "publication_id" integer NOT NULL,
     "type" character varying(50),
+    "aggregation_type" character varying(50),
     "title" character varying(255) NOT NULL,
     "publisher" character varying(255),
     "publication_status" character varying(50),

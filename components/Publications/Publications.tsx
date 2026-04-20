@@ -29,7 +29,8 @@ export default function Publications() {
   type Mode = "view" | "add" | "edit";
   const [mode, setMode] = useState<Mode>("view");
 
-  const [type, setType] = useState('');
+  const [subType, setSubType] = useState('');
+  const [aggregationType, setAggregationType] = useState('');
   const [publicationTypeId, setPublicationTypeId] = useState<number | null>(null)
   const [title, setTitle] = useState('');
   const [publisher, setPublisher] = useState('');
@@ -172,6 +173,7 @@ export default function Publications() {
           publications (
             publication_id,
             type,
+            aggregation_type,
             publication_type_id,
             title,
             publisher,
@@ -193,7 +195,11 @@ export default function Publications() {
 
       const pubs = (data as PublicationAuthorRow[])
         .flatMap((row) => Array.isArray(row.publications) ? row.publications : [row.publications])
-        .filter((pub): pub is SupabasePublication => Boolean(pub));
+        .filter((pub): pub is SupabasePublication => Boolean(pub))
+        .map((pub) => ({
+          ...pub,
+          subType: pub.subType ?? pub.type ?? null,
+        }));
 
       setPublications(pubs);
     }
@@ -266,7 +272,8 @@ export default function Publications() {
   };
 
   function resetForm() {
-    setType('')
+    setSubType('')
+    setAggregationType('')
     setTitle('')
     setPublisher('')
     setPublicationStatus('')
@@ -288,7 +295,8 @@ export default function Publications() {
       .from('publications')
       .insert([
         {
-          type,
+          type: subType,
+          aggregation_type: aggregationType || null,
           publication_type_id: publicationTypeId,
           title,
           publisher,
@@ -362,7 +370,8 @@ export default function Publications() {
       const { error } = await supabase
         .from('publications')
         .update({
-          type,
+          type: subType,
+          aggregation_type: aggregationType || null,
           publication_type_id: publicationTypeId,
           title,
           publisher,
@@ -522,7 +531,7 @@ export default function Publications() {
                   const value = Number(e.target.value)
                   const selectedPubType = publicationTypes.find(t => t.id === value);
                   setPublicationTypeId(value)
-                  setType(selectedPubType?.name || "")
+                  setSubType(selectedPubType?.name || "")
                 }}
                 className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600"
               >
@@ -541,6 +550,7 @@ export default function Publications() {
               <input type="text" value={pageNumbers} onChange={(e) => setPageNumbers(e.target.value)} placeholder="Page Numbers" className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600" />
               <input type="text" value={volumeNumber} onChange={(e) => setVolumeNumber(e.target.value)} placeholder="Volume Number" className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600" />
               <input type="text" value={journalName} onChange={(e) => setJournalName(e.target.value)} placeholder="Journal Name" className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600" />
+              <input type="text" value={aggregationType} onChange={(e) => setAggregationType(e.target.value)} placeholder="Aggregation Type (e.g., Journal)" className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600" />
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-sm mb-2">Tag Authors</label>
                 <div className="relative">
@@ -637,7 +647,8 @@ export default function Publications() {
                       setSelectedPublication(pub)
                       setMode("view");
 
-                      setType(pub.type || '')
+                      setSubType(pub.subType || pub.type || '')
+                      setAggregationType(pub.aggregation_type || '')
                       setPublicationTypeId(pub.publication_type_id || null)
                       setTitle(pub.title || '')
                       setPublisher(pub.publisher || '')
@@ -662,7 +673,7 @@ export default function Publications() {
                       Date Published: {pub.date_published || 'N/A'}
                     </div>
                     <div className="text-gray-400 text-sm">
-                      Type: {pub.type}
+                      Type: {pub.subType || pub.type || 'N/A'}
                     </div>
                     <div className="text-gray-400 text-sm">
                       Publisher: {pub.publisher}
@@ -715,7 +726,8 @@ export default function Publications() {
                 </h3>
 
                 <div className="space-y-2 text-gray-300 text-sm">
-                  <p><span className="text-gray-400">Type:</span> {selectedPublication.type}</p>
+                  <p><span className="text-gray-400">Type:</span> {selectedPublication.subType || selectedPublication.type || 'N/A'}</p>
+                  <p><span className="text-gray-400">Aggregation Type:</span> {selectedPublication.aggregation_type || 'N/A'}</p>
                   <p><span className="text-gray-400">Publisher:</span> {selectedPublication.publisher}</p>
                   <p><span className="text-gray-400">Date Published:</span> {selectedPublication.date_published}</p>
                   <p><span className="text-gray-400">Issue:</span> {selectedPublication.issue_number}</p>

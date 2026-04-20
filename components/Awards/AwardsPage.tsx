@@ -1,4 +1,4 @@
-import { FC, useState, useMemo } from "react";
+import { FC, useEffect, useState } from "react";
 import Awards from "./Awards";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Loader2 } from "lucide-react";
@@ -24,8 +24,7 @@ const AwardsPageContent: FC = () => {
   const { user } = useAuth();
   const ADMIN_UUID = user?.id;
 
-  // eslint-disable-next-line react-hooks/set-state-in-render
-  useMemo(function() {
+  useEffect(() => {
     if (!user) return;
 
     setIsLoadingAwards(true);
@@ -37,14 +36,19 @@ const AwardsPageContent: FC = () => {
     })
       .then((res) => res.json())
       .then((result) => {
-        setAwardsWithPublications(result);
+        const normalizedAwards = Array.isArray(result)
+          ? result
+          : Array.isArray(result?.awards)
+            ? result.awards
+            : [];
+
+        setAwardsWithPublications(normalizedAwards);
         setIsLoadingAwards(false);
       })
       .catch((err) => {
         console.error("Failed to fetch awards with publications:", err);
         setIsLoadingAwards(false);
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const handleAwardSelect = async (award: Award) => {
@@ -60,6 +64,8 @@ const AwardsPageContent: FC = () => {
       awardData.publication_per_award.forEach((pub: any) => {
         allPublications.push({
           type: pub.type,
+          subType: pub.subType || pub.type,
+          aggregation_type: pub.aggregation_type || null,
           publication_id: String(pub.publication_id),
           users: pub.authors || [],
           title: pub.title,

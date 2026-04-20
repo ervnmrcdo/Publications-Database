@@ -26,8 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: "Draft not found" });
     }
 
-    const { award_id, publication_id } = existingDraft;
-    const isJournalType = award_id === 1;
+    const { publication_id } = existingDraft;
 
     const existingPdfFiles: string[] = [];
     const existingDocxFiles: string[] = [];

@@ -31,7 +31,9 @@ export interface Award {
 }
 
 export interface Publication {
-  type: string;
+  type?: string | null;
+  subType?: string | null;
+  aggregation_type?: string | null;
   publication_id: string;
   users: Author[];
   title: string;
@@ -48,7 +50,9 @@ export interface Publication {
 
 export interface SupabasePublication {
   publication_id: number;
-  type: string;
+  type?: string | null;
+  subType?: string | null;
+  aggregation_type?: string | null;
   publication_type_id: number;
   title: string;
   publisher: string;

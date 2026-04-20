@@ -19,11 +19,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'user_id is required' });
   }
 
-  const awardIdNum = Number(awardId);
-  if (!awardId || awardIdNum !== 1) {
-    return res.status(400).json({ message: 'awardId must be 1 for form 4.2' });
-  }
-
   try {
     const supabase = createPagesServerClient(req, res);
     const supabaseAdmin = createServiceRoleClient();
@@ -51,6 +46,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.setHeader('Content-Disposition', 'inline; filename="form42.docx"');
         return res.send(Buffer.from(fileBuffer));
       }
+    }
+
+    const { data: publication, error: pubError } = await supabase
+      .from('publications')
+      .select('aggregation_type, type')
+      .eq('publication_id', publicationId)
+      .single();
+
+    if (pubError || !publication) {
+      return res.status(404).json({ message: 'Publication not found' });
+    }
+
+    const aggregation_type = publication.aggregation_type || publication.type || null;
+    const isJournal = (aggregation_type || '').toLowerCase() === 'journal';
+    if (!isJournal) {
+      return res.status(400).json({ message: 'Publication is not classified as journal' });
     }
 
     const templatePath = path.join(process.cwd(), 'public', '4.2-template.docx');

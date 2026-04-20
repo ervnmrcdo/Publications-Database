@@ -1,5 +1,4 @@
 import { createPagesServerClient } from "@/lib/supabase/pager-server"
-import { Publication } from "@/lib/types";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function trial(req: NextApiRequest, res: NextApiResponse) {
@@ -27,21 +26,13 @@ export default async function trial(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ error: error.message });
     }
 
-    const formatted: Publication[] = newdata!.map((r: any) => ({
-      type: r.type,
-      publication_id: r.publication_id,
-      users: r.users,
-      title: r.title,
-      date_published: r.date_published,
-      journal_name: r.journal_name,
-      volume_number: r.volume_number,
-      page_numbers: r.page_numbers,
-      publisher: r.publisher,
-      issue_number: r.issue_number,
-      publication_status: r.publication_status,
-    }))
+    const normalized = (newdata || []).map((r: any) => ({
+      ...r,
+      subType: r.subType ?? r.type ?? null,
+      aggregation_type: r.aggregation_type ?? null,
+    }));
 
-    return res.status(200).json(newdata);
+    return res.status(200).json(normalized);
 
   } catch (e) {
     // Casting e as Error to access the message safely

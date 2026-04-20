@@ -10,6 +10,7 @@ interface PublicationTypeRow {
 interface PublicationRow {
   doi: string | null;
   type: string;
+  aggregation_type: string | null;
   title: string;
   publisher: string;
   issue_number: string;
@@ -23,6 +24,24 @@ interface PublicationRow {
   publication_authors?: any[];
   users?: any[];
   publication_award_applications?: any[];
+}
+
+function normalizeAggregationType(value: string | null | undefined) {
+  const normalized = (value || '').toLowerCase();
+
+  if (normalized.includes('journal')) return 'journal';
+  if (normalized.includes('book')) return 'book';
+
+  return normalized || null;
+}
+
+function expectedAwardKind(awardTitle: string) {
+  const normalized = awardTitle.toLowerCase();
+
+  if (normalized.includes('journal')) return 'journal';
+  if (normalized.includes('book')) return 'book';
+
+  return normalized;
 }
 
 export default async function func(req: NextApiRequest, res: NextApiResponse) {
@@ -44,15 +63,6 @@ export default async function func(req: NextApiRequest, res: NextApiResponse) {
     }
 
 
-    const { data: publicationTypesData, error: ptError } = await supabase
-      .from("publication_per_award")
-      .select("*");
-
-    if (ptError) {
-      console.log("Publication types error:", ptError);
-      return res.status(400).json({ error: ptError.message });
-    }
-
     const { data: publicationsData, error: pubsError } = await supabase
       .from("publications")
       .select(`
@@ -73,48 +83,41 @@ export default async function func(req: NextApiRequest, res: NextApiResponse) {
     ) || [];
 
     const result = awardsData.map((award: any) => {
-      const awardPublicationTypes = publicationTypesData.filter(
-        (pt: PublicationTypeRow) => pt.publication_type_id === award.award_id
-      );
+      const awardKind = expectedAwardKind(award.title || '');
 
-      const publicationTypesWithPublications = awardPublicationTypes.map(
-        (pt: PublicationTypeRow) => {
-          const userPubsOfType = filteredPublications
-            .filter((p: PublicationRow) => p.publication_type_id === pt.publication_type_id)
-            .map((p: PublicationRow) => {
-              const authors = p.publication_authors?.map((pa: any) => ({
-                first_name: pa.first_name || pa.users?.first_name || "",
-                last_name: pa.last_name || pa.users?.last_name || "",
-                middle_name: pa.middle_name || pa.users?.middle_name || "",
-                university: pa.university || pa.users?.university || "",
-                college: pa.college || pa.users?.college || "",
-                department: pa.department || pa.users?.department || "",
-                position: pa.position || pa.users?.position || "",
-                contact_number: pa.contact_number || pa.users?.contact_number || "",
-                email_address: pa.email_address || pa.users?.email_address || "",
-              })) || [];
+      const publicationTypesWithPublications = filteredPublications
+        .filter((p: PublicationRow) => normalizeAggregationType(p.aggregation_type) === awardKind)
+        .map((p: PublicationRow) => {
+          const authors = p.publication_authors?.map((pa: any) => ({
+            first_name: pa.first_name || pa.users?.first_name || "",
+            last_name: pa.last_name || pa.users?.last_name || "",
+            middle_name: pa.middle_name || pa.users?.middle_name || "",
+            university: pa.university || pa.users?.university || "",
+            college: pa.college || pa.users?.college || "",
+            department: pa.department || pa.users?.department || "",
+            position: pa.position || pa.users?.position || "",
+            contact_number: pa.contact_number || pa.users?.contact_number || "",
+            email_address: pa.email_address || pa.users?.email_address || "",
+          })) || [];
 
-              return {
-                doi: p.doi,
-                type: p.type,
-                title: p.title,
-                publisher: p.publisher,
-                issue_number: p.issue_number,
-                journal_name: p.journal_name,
-                page_numbers: p.page_numbers,
-                volume_number: p.volume_number,
-                date_published: p.date_published,
-                publication_id: p.publication_id,
-                publication_status: p.publication_status,
-                publication_type_id: p.publication_type_id,
-                authors,
-              };
-            });
-
-
-          return userPubsOfType
-        }
-      ).flat().filter(Boolean);
+          return {
+            doi: p.doi,
+            type: p.type,
+            subType: p.type,
+            aggregation_type: p.aggregation_type,
+            title: p.title,
+            publisher: p.publisher,
+            issue_number: p.issue_number,
+            journal_name: p.journal_name,
+            page_numbers: p.page_numbers,
+            volume_number: p.volume_number,
+            date_published: p.date_published,
+            publication_id: p.publication_id,
+            publication_status: p.publication_status,
+            publication_type_id: p.publication_type_id,
+            authors,
+          };
+        });
 
 
 

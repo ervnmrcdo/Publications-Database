@@ -82,6 +82,7 @@ function extractPublicationFields(pubData) {
     title: core["dc:title"] ?? null,
     date_of_publication: core["prism:coverDate"] ?? null,
     publication_type: core.subtypeDescription ?? null,
+    aggregationType: core["prism:aggregationType"] ?? null,
     journal: core["prism:publicationName"] ?? null,
     publisher: core["dc:publisher"] ?? null,
     volume: core["prism:volume"] ?? null,
@@ -100,6 +101,7 @@ function printPublication(pub, index) {
   console.log(`Title: ${pub.title}`);
   console.log(`Date of Publication: ${pub.date_of_publication}`);
   console.log(`Type: ${pub.publication_type}`);
+  console.log(`Aggregation Type: ${pub.aggregationType}`);
   console.log(`Journal: ${pub.journal}`);
   console.log(`Publisher: ${pub.publisher}`);
   console.log(`Volume: ${pub.volume}`);

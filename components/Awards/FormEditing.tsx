@@ -21,20 +21,22 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
   const USER_INFO = useAuth().profile
   const { formStep, setFormStep, setIsJournal, draftUrls, setDraftUrls, setDraftId } = useAwardsFlow();
 
-  const isJournalType = selectedAward.id === 1;
-  const isBookType = selectedAward.id === 2;
+  const publicationKind = selectedPublication.aggregation_type || selectedPublication.subType || selectedPublication.type || '';
+  const isJournal = (publicationKind || '').toLowerCase() === 'journal';
+  const isJournalType = isJournal;
+  const isBookType = !isJournal;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    setIsJournal(isJournalType);
+    setIsJournal(isJournal);
 
     if (isBookType) {
       setFormStep('form44');
     } else {
       setFormStep('form41');
     }
-  }, [selectedAward.id, isJournalType, isBookType, setFormStep, setIsJournal]);
+  }, [isJournal, isBookType, setFormStep, setIsJournal]);
 
   const getAnimationKey = () => {
     if (isJournalType) {

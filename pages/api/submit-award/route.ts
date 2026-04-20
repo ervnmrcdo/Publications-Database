@@ -18,6 +18,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const publicationIdNum = Number(publicationId);
     const awardIdNum = Number(awardId);
 
+    const { data: publicationInfo } = await supabaseAdmin
+      .from("publications")
+      .select("aggregation_type, type")
+      .eq("publication_id", publicationIdNum)
+      .maybeSingle();
+
+    const aggregation_type = publicationInfo?.aggregation_type || publicationInfo?.type || null;
+    const isJournal = (aggregation_type || "").toLowerCase() === "journal";
+
     const { data: existingDraft, error: draftError } = await supabaseAdmin
       .from("submissions")
       .select("*")
@@ -32,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const submissionId = existingDraft.submission_id;
 
-    const formTypes = awardIdNum === 1
+    const formTypes = isJournal
       ? [41, 42, 43]
       : [44, 43];
 
@@ -137,8 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (submissionPaths.form44_path) updateData.form44_path = submissionPaths.form44_path;
     }
 
-    const isJournalType = awardIdNum === 1;
-    Object.assign(updateData, isJournalType
+    Object.assign(updateData, isJournal
       ? { journal_attachments: attachments ?? {} }
       : { book_attachments: attachments ?? {} }
     );
