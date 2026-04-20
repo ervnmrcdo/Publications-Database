@@ -125,9 +125,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    const existingLogs = existingDraft?.logs || [];
+    const updatedLogs = [...existingLogs, ...logs];
+
     const updateData: Record<string, unknown> = {
       status: 'PENDING',
-      logs: logs || [],
+      logs: updatedLogs,
     };
 
     if (Object.keys(submissionPaths).length > 0) {

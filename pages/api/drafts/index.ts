@@ -39,6 +39,7 @@ async function handleGet(
   }
 
   const basePath = `${userId}/${awardId}/${publicationId}`;
+  const tempPath = `${userId}_${publicationId}_${awardId}_form`;
 
   const { data: pdfFiles } = await supabase.storage
     .from("drafts-pdf")
@@ -48,7 +49,6 @@ async function handleGet(
   const { data: docxFiles } = await supabase.storage
     .from("drafts-docx")
     .list(basePath, { limit: 10 });
-
 
 
   const draftUrls: Record<string, string | null> = {};
@@ -71,6 +71,60 @@ async function handleGet(
     const formType = file.name.replace(".docx", "");
     draftUrls[formType] = urlData?.signedUrl || null;
     draftPaths[`${formType}_path`] = path;
+  }
+
+  // Check temp PDF files individually
+  if (!draftPaths.form41_path) {
+    const tempFile = `${tempPath}41.pdf`;
+    try {
+      const { data: urlData } = await pdfBucket.createSignedUrl(tempFile, 3600);
+      if (urlData?.signedUrl) {
+        draftUrls.form41 = urlData.signedUrl;
+        draftPaths.form41_path = tempFile;
+      }
+    } catch (e) {
+      // File doesn't exist, skip
+    }
+  }
+
+  if (!draftPaths.form44_path) {
+    const tempFile = `${tempPath}44.pdf`;
+    try {
+      const { data: urlData } = await pdfBucket.createSignedUrl(tempFile, 3600);
+      if (urlData?.signedUrl) {
+        draftUrls.form44 = urlData.signedUrl;
+        draftPaths.form44_path = tempFile;
+      }
+    } catch (e) {
+      // File doesn't exist, skip
+    }
+  }
+
+  // Check temp DOCX files individually
+  if (!draftPaths.form42_path) {
+    const tempFile = `${tempPath}42.docx`;
+    try {
+      const { data: urlData } = await docxBucket.createSignedUrl(tempFile, 3600);
+      if (urlData?.signedUrl) {
+        draftUrls.form42 = urlData.signedUrl;
+        draftPaths.form42_path = tempFile;
+      }
+    } catch (e) {
+      // File doesn't exist, skip
+    }
+  }
+
+  if (!draftPaths.form43_path) {
+    const tempFile = `${tempPath}43.docx`;
+    try {
+      const { data: urlData } = await docxBucket.createSignedUrl(tempFile, 3600);
+      if (urlData?.signedUrl) {
+        draftUrls.form43 = urlData.signedUrl;
+        draftPaths.form43_path = tempFile;
+      }
+    } catch (e) {
+      // File doesn't exist, skip
+    }
   }
 
   return res.status(200).json({
@@ -108,8 +162,18 @@ async function handleDelete(
       `${basePath}/form43.docx`,
     ];
 
-    await supabase.storage.from("drafts-pdf").remove(pdfFiles);
-    await supabase.storage.from("drafts-docx").remove(docxFiles);
+    const tempPdfFiles = [
+      `${userId}_${publicationId}_${awardId}_form41.pdf`,
+      `${userId}_${publicationId}_${awardId}_form44.pdf`,
+    ];
+
+    const tempDocxFiles = [
+      `${userId}_${publicationId}_${awardId}_form42.docx`,
+      `${userId}_${publicationId}_${awardId}_form43.docx`,
+    ];
+
+    await supabase.storage.from("drafts-pdf").remove([...pdfFiles, ...tempPdfFiles]);
+    await supabase.storage.from("drafts-docx").remove([...docxFiles, ...tempDocxFiles]);
 
     return res.status(200).json({ message: "Draft deleted successfully" });
   } catch (err) {

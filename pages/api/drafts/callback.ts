@@ -32,42 +32,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .in("status", ["DRAFT", "RETURNED"])
         .single();
 
-      let submissionId: number;
+      let submissionId: number | null = null;
+      let currentStatus: string | null = null;
 
       if (existingDraft) {
         submissionId = existingDraft.submission_id;
-      } else {
-        const { data: newDraft, error: createError } = await supabaseAdmin
-          .from("submissions")
-          .insert([
-            {
-              submitter_id: user_id,
-              award_id: awardIdNum,
-              publication_id: publicationIdNum,
-              status: "DRAFT",
-              pdf_json_data: {},
-              logs: [],
-            },
-          ])
-          .select("submission_id")
-          .single();
-
-        if (createError || !newDraft) {
-          console.error("Error creating draft:", createError);
-          return res.status(400).json({ error: "Failed to create draft record" });
-        }
-
-        submissionId = newDraft.submission_id;
-
-        await supabaseAdmin
-          .from("publication_award_applications")
-          .insert([
-            {
-              publication_id: publicationIdNum,
-              award_id: awardIdNum,
-              submission_id: submissionId,
-            },
-          ]);
+        currentStatus = existingDraft.status;
       }
 
       const resp = await fetch(body.url);
@@ -79,7 +49,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const fileExt = formType === "41" || formType === "44" ? "pdf" : "docx";
       const bucket = fileExt === "pdf" ? "drafts-pdf" : "drafts-docx";
 
-      const filePath = `${submissionId}_form${formType}.${fileExt}`;
+      let filePath: string;
+
+      if (submissionId) {
+        filePath = `${submissionId}_form${formType}.${fileExt}`;
+      } else {
+        filePath = `${user_id}_${publicationIdNum}_${awardIdNum}_form${formType}.${fileExt}`;
+      }
 
       const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
         .from(bucket)
@@ -96,11 +72,53 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: uploadError.message });
       }
 
-      const fieldName = `form${formType}_path`;
-      await supabaseAdmin
+      if (submissionId) {
+        const fieldName = `form${formType}_path`;
+        await supabaseAdmin
+          .from("submissions")
+          .update({ [fieldName]: filePath })
+          .eq("submission_id", submissionId);
+      }
+
+      const { data: submissionData } = await supabaseAdmin
         .from("submissions")
-        .update({ [fieldName]: filePath })
-        .eq("submission_id", submissionId);
+        .select("logs")
+        .eq("submission_id", submissionId)
+        .single();
+
+      const currentLogs = submissionData?.logs || [];
+
+      if (currentLogs.length > 0 && submissionId) {
+        const { data: user } = await supabaseAdmin
+          .from("users")
+          .select("first_name, middle_name, last_name")
+          .eq("id", user_id)
+          .single();
+
+        const actorName = user
+          ? `${user.first_name || ''} ${user.middle_name || ''} ${user.last_name || ''}`.trim()
+          : 'Unknown';
+
+        const newLog = {
+          remarks: submissionId ? `Form 4.${formType} updated (${currentStatus})` : `Form 4.${formType} auto-saved`,
+          date: new Date().toLocaleString(),
+          action: 'DRAFT_EDITED' as const,
+          actor_name: actorName
+        };
+
+        const updatedLogs = [...currentLogs, newLog];
+
+        await supabaseAdmin
+          .from("submissions")
+          .update({ logs: updatedLogs })
+          .eq("submission_id", submissionId);
+      }
+
+      if (!submissionId) {
+        return res
+          .status(200)
+          .json({ error: 0, message: "File saved temporarily", path: uploadData.path, is_temporary: true });
+      }
 
       return res
         .status(200)

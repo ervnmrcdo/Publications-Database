@@ -41,6 +41,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .eq("submission_id", submission_id);
       }
     } else {
+      await supabaseAdmin
+        .from("publication_award_applications")
+        .delete()
+        .eq("publication_id", publicationIdNum)
+        .eq("award_id", awardIdNum);
+
       const { data: newDraft, error: createError } = await supabaseAdmin
         .from("submissions")
         .insert([
@@ -72,6 +78,112 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             submission_id: submission_id,
           },
         ]);
+
+      const tempPdfFiles = [
+        `${user_id}_${publicationIdNum}_${awardIdNum}_form41.pdf`,
+        `${user_id}_${publicationIdNum}_${awardIdNum}_form44.pdf`,
+      ];
+      const tempDocxFiles = [
+        `${user_id}_${publicationIdNum}_${awardIdNum}_form42.docx`,
+        `${user_id}_${publicationIdNum}_${awardIdNum}_form43.docx`,
+      ];
+
+      for (const tempPath of tempPdfFiles) {
+        try {
+          const { data: tempFile } = await supabaseAdmin.storage
+            .from("drafts-pdf")
+            .download(tempPath);
+          
+          if (tempFile) {
+            const formType = tempPath.includes("form41") ? "41" : "44";
+            const newPath = `${submission_id}_form${formType}.pdf`;
+            const fileBuffer = Buffer.from(await tempFile.arrayBuffer());
+            
+            await supabaseAdmin.storage
+              .from("drafts-pdf")
+              .upload(newPath, fileBuffer, { upsert: true });
+            
+            await supabaseAdmin
+              .from("submissions")
+              .update({ [`form${formType}_path`]: newPath })
+              .eq("submission_id", submission_id);
+          }
+        } catch (e) {
+        }
+      }
+
+      for (const tempPath of tempDocxFiles) {
+        try {
+          const { data: tempFile } = await supabaseAdmin.storage
+            .from("drafts-docx")
+            .download(tempPath);
+          
+          if (tempFile) {
+            const formType = tempPath.includes("form42") ? "42" : "43";
+            const newPath = `${submission_id}_form${formType}.docx`;
+            const fileBuffer = Buffer.from(await tempFile.arrayBuffer());
+            
+            await supabaseAdmin.storage
+              .from("drafts-docx")
+              .upload(newPath, fileBuffer, { upsert: true });
+            
+            await supabaseAdmin
+              .from("submissions")
+              .update({ [`form${formType}_path`]: newPath })
+              .eq("submission_id", submission_id);
+          }
+        } catch (e) {
+        }
+      }
+
+      await supabaseAdmin.storage.from("drafts-pdf").remove(tempPdfFiles);
+      await supabaseAdmin.storage.from("drafts-docx").remove(tempDocxFiles);
+
+      const { data: allPdfFiles } = await supabaseAdmin.storage
+        .from("drafts-pdf")
+        .list("", { limit: 100 });
+      
+      const otherPdfTempFiles = allPdfFiles
+        ?.filter(f => f.name.includes(`_${publicationIdNum}_${awardIdNum}_form`) && !f.name.startsWith(user_id))
+        .map(f => f.name) || [];
+
+      if (otherPdfTempFiles.length > 0) {
+        await supabaseAdmin.storage.from("drafts-pdf").remove(otherPdfTempFiles);
+      }
+
+      const { data: allDocxFiles } = await supabaseAdmin.storage
+        .from("drafts-docx")
+        .list("", { limit: 100 });
+      
+      const otherDocxTempFiles = allDocxFiles
+        ?.filter(f => f.name.includes(`_${publicationIdNum}_${awardIdNum}_form`) && !f.name.startsWith(user_id))
+        .map(f => f.name) || [];
+
+      if (otherDocxTempFiles.length > 0) {
+        await supabaseAdmin.storage.from("drafts-docx").remove(otherDocxTempFiles);
+      }
+
+      const { data: user } = await supabaseAdmin
+        .from("users")
+        .select("first_name, middle_name, last_name")
+        .eq("id", user_id)
+        .single();
+
+      const actorName = user
+        ? `${user.first_name || ''} ${user.middle_name || ''} ${user.last_name || ''}`.trim()
+        : 'Unknown';
+
+      const newLog = {
+        remarks: "Saved as draft (DRAFT)",
+        date: new Date().toLocaleString(),
+        action: 'DRAFT_CREATED' as const,
+        actor_name: actorName
+      };
+
+      await supabaseAdmin
+        .from("submissions")
+        .update({ logs: [newLog] })
+        .eq("submission_id", submission_id);
     }
 
     if (attachments) {

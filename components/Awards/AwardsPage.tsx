@@ -104,8 +104,8 @@ const AwardsPageContent: FC = () => {
         const res = await fetch(`/api/drafts?publicationId=${pub.publication_id}&awardId=${selectedAward.id}`);
         const draft = await res.json();
 
-        if (draft) {
-          setDraftId(draft.id);
+        if (draft && (draft.form41 || draft.form42 || draft.form43 || draft.form44)) {
+          setDraftId(draft.id || null);
           setDraftUrls({
             form41: draft.form41 || null,
             form42: draft.form42 || null,

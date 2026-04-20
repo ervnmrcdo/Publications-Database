@@ -107,9 +107,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    const { data: existingSubmission } = await supabaseAdmin
+      .from("submissions")
+      .select("logs")
+      .eq("submission_id", submission_id)
+      .single();
+
+    const existingLogs = existingSubmission?.logs || [];
+    const updatedLogs = [...existingLogs, ...logs];
+
     const updateData: Record<string, unknown> = {
       status: "PENDING",
-      logs: logs || [],
+      logs: updatedLogs,
     };
 
     if (submissionPaths.form41_path) updateData.form41_path = submissionPaths.form41_path;
