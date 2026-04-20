@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from '@/context/AuthContext'
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { SupabasePublication } from '@/lib/types';
 
@@ -16,6 +16,9 @@ type TaggableUser = {
   middle_name: string | null;
   last_name: string;
 };
+
+type PublicationSortOption = 'date_asc' | 'date_desc' | 'title_asc' | 'title_desc';
+const PUBLICATIONS_PER_PAGE = 12;
 
 export default function Publications() {
   const { user } = useAuth();
@@ -42,6 +45,8 @@ export default function Publications() {
 
   const [selectedPublication, setSelectedPublication] = useState<SupabasePublication | null>(null);
   const [highlightedPubId, setHighlightedPubId] = useState<number | null>(null);
+  const [sortOption, setSortOption] = useState<PublicationSortOption>('date_desc');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [taggableUsers, setTaggableUsers] = useState<TaggableUser[]>([]);
   const [selectedTaggedAuthors, setSelectedTaggedAuthors] = useState<TaggableUser[]>([]);
@@ -49,6 +54,92 @@ export default function Publications() {
   const [showTagDropdown, setShowTagDropdown] = useState(false);
 
   const supabase = createClient();
+
+  const sortedPublications = useMemo(() => {
+    const compareByPublicationId = (a: SupabasePublication, b: SupabasePublication) => {
+      return (a.publication_id ?? 0) - (b.publication_id ?? 0);
+    };
+
+    const comparePublications = (a: SupabasePublication, b: SupabasePublication) => {
+      if (sortOption === 'date_asc' || sortOption === 'date_desc') {
+        const aHasDate = Boolean(a?.date_published);
+        const bHasDate = Boolean(b?.date_published);
+
+        // Keep missing dates at the end regardless of direction.
+        if (aHasDate && !bHasDate) return -1;
+        if (!aHasDate && bHasDate) return 1;
+
+        const aDate = aHasDate ? new Date(a.date_published as string).getTime() : Number.NEGATIVE_INFINITY;
+        const bDate = bHasDate ? new Date(b.date_published as string).getTime() : Number.NEGATIVE_INFINITY;
+
+        if (aDate !== bDate) {
+          return sortOption === 'date_asc' ? aDate - bDate : bDate - aDate;
+        }
+
+        return compareByPublicationId(a, b);
+      }
+
+      const aTitle = (a?.title ?? '').trim();
+      const bTitle = (b?.title ?? '').trim();
+      const titleCompare = aTitle.localeCompare(bTitle, undefined, { sensitivity: 'base' });
+
+      if (titleCompare !== 0) {
+        return sortOption === 'title_asc' ? titleCompare : -titleCompare;
+      }
+
+      return compareByPublicationId(a, b);
+    };
+
+    return [...publications].sort(comparePublications);
+  }, [publications, sortOption]);
+
+  const totalItems = sortedPublications.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PUBLICATIONS_PER_PAGE));
+
+  const paginatedPublications = useMemo(() => {
+    const startIndex = (currentPage - 1) * PUBLICATIONS_PER_PAGE;
+    const endIndex = startIndex + PUBLICATIONS_PER_PAGE;
+    return sortedPublications.slice(startIndex, endIndex);
+  }, [sortedPublications, currentPage]);
+
+  const paginationSummary = useMemo(() => {
+    if (totalItems === 0) {
+      return 'Showing 0-0 of 0';
+    }
+
+    const startItem = (currentPage - 1) * PUBLICATIONS_PER_PAGE + 1;
+    const endItem = Math.min(currentPage * PUBLICATIONS_PER_PAGE, totalItems);
+    return `Showing ${startItem}-${endItem} of ${totalItems}`;
+  }, [currentPage, totalItems]);
+
+  const visiblePageNumbers = useMemo(() => {
+    const maxVisible = 5;
+    const halfWindow = Math.floor(maxVisible / 2);
+
+    let startPage = Math.max(1, currentPage - halfWindow);
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    const pages: number[] = [];
+    for (let page = startPage; page <= endPage; page += 1) {
+      pages.push(page);
+    }
+
+    return pages;
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortOption]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   useEffect(() => {
     fetchPublications();
@@ -96,14 +187,14 @@ export default function Publications() {
       .eq('user_id', user.id);
 
     if (!error && data) {
-      const pubs = data
-        .map((row: any) => row.publications)
-        .filter((pub: any) => !!pub)
-        .sort((a: any, b: any) => {
-          const aDate = a?.date_published ? new Date(a.date_published).getTime() : Number.NEGATIVE_INFINITY;
-          const bDate = b?.date_published ? new Date(b.date_published).getTime() : Number.NEGATIVE_INFINITY;
-          return bDate - aDate;
-        });
+      type PublicationAuthorRow = {
+        publications: SupabasePublication | SupabasePublication[] | null;
+      };
+
+      const pubs = (data as PublicationAuthorRow[])
+        .flatMap((row) => Array.isArray(row.publications) ? row.publications : [row.publications])
+        .filter((pub): pub is SupabasePublication => Boolean(pub));
+
       setPublications(pubs);
     }
 
@@ -391,6 +482,20 @@ export default function Publications() {
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <h2 className="text-xl font-semibold text-white">My Publications</h2>
             <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
+                <label htmlFor="publication-sort" className="text-sm text-gray-300">Sort by</label>
+                <select
+                  id="publication-sort"
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value as PublicationSortOption)}
+                  className="p-2 rounded bg-[#252836] text-white border border-gray-600"
+                >
+                  <option value="date_asc">Ascending Date</option>
+                  <option value="date_desc">Descending Date</option>
+                  <option value="title_asc">Name Ascending (A-Z)</option>
+                  <option value="title_desc">Name Descending (Z-A)</option>
+                </select>
+              </div>
               <button
                 onClick={runCrawler}
                 disabled={isAutoFetching}
@@ -520,50 +625,86 @@ export default function Publications() {
 
           {loading ? (
             <p className="text-gray-400">Loading...</p>
-          ) : publications.length === 0 ? (
+          ) : sortedPublications.length === 0 ? (
             <p className="text-gray-400">No publications found.</p>
           ) : (
-            <ul className="space-y-4">
-              {publications.map((pub) => (
-                <li
-                  key={pub.publication_id}
-                  onClick={() => {
-                    setSelectedPublication(pub)
-                    setMode("view");
+            <>
+              <ul className="space-y-4">
+                {paginatedPublications.map((pub) => (
+                  <li
+                    key={pub.publication_id}
+                    onClick={() => {
+                      setSelectedPublication(pub)
+                      setMode("view");
 
-                    setType(pub.type || '')
-                    setPublicationTypeId(pub.publication_type_id || null)
-                    setTitle(pub.title || '')
-                    setPublisher(pub.publisher || '')
-                    setDOI(pub.doi || '')
-                    setDatePublished(pub.date_published || '')
-                    setIssueNumber(pub.issue_number || '')
-                    setPageNumbers(pub.page_numbers || '')
-                    setVolumeNumber(pub.volume_number || '')
-                    setJournalName(pub.journal_name || '')
+                      setType(pub.type || '')
+                      setPublicationTypeId(pub.publication_type_id || null)
+                      setTitle(pub.title || '')
+                      setPublisher(pub.publisher || '')
+                      setDOI(pub.doi || '')
+                      setDatePublished(pub.date_published || '')
+                      setIssueNumber(pub.issue_number || '')
+                      setPageNumbers(pub.page_numbers || '')
+                      setVolumeNumber(pub.volume_number || '')
+                      setJournalName(pub.journal_name || '')
 
-                    loadExistingTaggedAuthors(pub.publication_id)
-                  }}
-                  className={`p-4 rounded-lg border cursor-pointer transition
+                      loadExistingTaggedAuthors(pub.publication_id)
+                    }}
+                    className={`p-4 rounded-lg border cursor-pointer transition
                     ${highlightedPubId === pub.publication_id
-                      ? "bg-green-900 border-green-500"
-                      : "bg-[#23263a] border-gray-600 hover:border-blue-500"
-                    }
+                        ? "bg-green-900 border-green-500"
+                        : "bg-[#23263a] border-gray-600 hover:border-blue-500"
+                      }
                   `}
-                >
-                  <div className="font-bold text-lg text-white">{pub.title}</div>
-                  <div className="text-gray-400 text-sm">
-                    Date Published: {pub.date_published || 'N/A'}
-                  </div>
-                  <div className="text-gray-400 text-sm">
-                    Type: {pub.type}
-                  </div>
-                  <div className="text-gray-400 text-sm">
-                    Publisher: {pub.publisher}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  >
+                    <div className="font-bold text-lg text-white">{pub.title}</div>
+                    <div className="text-gray-400 text-sm">
+                      Date Published: {pub.date_published || 'N/A'}
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Type: {pub.type}
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Publisher: {pub.publisher}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <p className="text-sm text-gray-400">{paginationSummary}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="bg-gray-600 hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-3 py-2 rounded"
+                  >
+                    Prev
+                  </button>
+
+                  {visiblePageNumbers.map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`text-white px-3 py-2 rounded ${page === currentPage
+                        ? 'bg-blue-600 hover:bg-blue-700'
+                        : 'bg-[#252836] hover:bg-gray-700 border border-gray-600'
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="bg-gray-600 hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-3 py-2 rounded"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </>
           )}
 
           {mode === "view" && selectedPublication && (
