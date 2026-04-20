@@ -7,6 +7,23 @@ type Props = {
     onSelect: (data: AcceptedForm) => void;
 }
 
+const STATUS_OPTIONS = [
+    { value: 'VALIDATED', label: 'Validated', color: 'bg-green-900/30 text-green-400' },
+    { value: 'PENDING_SUBMISSION', label: 'Pending Submission', color: 'bg-blue-900/30 text-blue-400' },
+    { value: 'SUBMITTED', label: 'Submitted', color: 'bg-purple-900/30 text-purple-400' },
+    { value: 'PROCESSED', label: 'Processed', color: 'bg-gray-900/30 text-gray-400' },
+];
+
+const getStatusColor = (status: string) => {
+    const option = STATUS_OPTIONS.find(s => s.value === status);
+    return option?.color || 'bg-gray-900/30 text-gray-400';
+};
+
+const getStatusLabel = (status: string) => {
+    const option = STATUS_OPTIONS.find(s => s.value === status);
+    return option?.label || status;
+};
+
 export default function SignedFormsListing({ adminId, onSelect }: Props) {
     const [signedData, setSignedData] = useState<AcceptedForm[]>([])
 
@@ -48,12 +65,19 @@ export default function SignedFormsListing({ adminId, onSelect }: Props) {
                             className="p-4 rounded-lg bg-[#252836] hover:bg-gray-600 cursor-pointer flex justify-between items-center transition"
                             onClick={() => { onSelect(item) }}
                         >
-                            <div>
+                            <div className="flex-1">
                                 <p className="font-semibold text-lg text-white">{item.first_name + ' ' + item.last_name}</p>
                                 <p className="text-sm text-gray-300">{item.award_title}</p>
-                                <p className="text-xs text-gray-400">{item.date_submitted}</p>
+                                <p className="text-xs text-gray-400">{new Date(item.date_submitted).toLocaleString()}</p>
                             </div>
-                            <ChevronRight className="text-gray-400" />
+                            <div className="flex items-center gap-3">
+                                {item.status && (
+                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
+                                        {getStatusLabel(item.status)}
+                                    </span>
+                                )}
+                                <ChevronRight className="text-gray-400" />
+                            </div>
                         </div>
                     ))}
                 </div>
