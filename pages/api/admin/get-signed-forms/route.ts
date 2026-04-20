@@ -48,6 +48,10 @@ export default async function GetSignedForms(
 						title: r.awards?.title,
 						logs: r.logs,
 						status: r.status,
+						form41Url: r.form41_path ? true : null,
+						form42Url: r.form42_path ? true : null,
+						form43Url: r.form43_path ? true : null,
+						form44Url: r.form44_path ? true : null,
 						pdfUrl,
 						attached_files: r.attached_files,
 					};

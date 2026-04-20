@@ -92,6 +92,10 @@ export interface AcceptedForm {
   form42_url?: string;
   form43_url?: string;
   form44_url?: string;
+  form41Url?: string | null;
+  form42Url?: string | null;
+  form43Url?: string | null;
+  form44Url?: string | null;
   pdfBufferData?: string;
   journal_attachments?: Record<string, string>;
   book_attachments?: Record<string, string>;

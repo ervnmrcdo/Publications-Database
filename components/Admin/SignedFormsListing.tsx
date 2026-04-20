@@ -25,7 +25,11 @@ export default function SignedFormsListing({ adminId, onSelect }: Props) {
                 date_submitted: item.date_submitted,
                 award_title: item.title,
                 logs: item.logs,
-                status: item.status
+                status: item.status,
+                form41Url: item.form41Url,
+                form42Url: item.form42Url,
+                form43Url: item.form43Url,
+                form44Url: item.form44Url,
             })))
         })
     }, [adminId])
