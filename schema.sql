@@ -262,7 +262,7 @@ CREATE TABLE IF NOT EXISTS "public"."submissions" (
     "publication_id" integer,
     "reviewed_by_admin_id" "uuid",
     "date_submitted" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    "status" character varying(20) DEFAULT 'pending'::character varying,
+    "status" character varying(30) DEFAULT 'pending'::character varying,
     "remarks" "text",
     "pdf_json_data" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "logs" "jsonb" DEFAULT '[]'::"jsonb",

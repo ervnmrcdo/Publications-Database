@@ -58,6 +58,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         submissionId = newDraft.submission_id;
+
+        await supabaseAdmin
+          .from("publication_award_applications")
+          .insert([
+            {
+              publication_id: publicationIdNum,
+              award_id: awardIdNum,
+              submission_id: submissionId,
+            },
+          ]);
       }
 
       const resp = await fetch(body.url);

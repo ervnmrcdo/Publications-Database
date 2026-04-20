@@ -26,7 +26,7 @@ export default async function RetrieveAcceptedForms(
         authors:users!submitter_id(*),
         awards:awards!award_id(*)
       `)
-      .eq('status', 'VALIDATED')
+      .in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED'])
       .in('publication_id', taggedPublicationIds.length > 0 ? taggedPublicationIds : [0]);
 
     if (error) {
@@ -41,6 +41,7 @@ export default async function RetrieveAcceptedForms(
         date_submitted: r.date_submitted,
         award_title: r.awards?.title,
         logs: r.logs,
+        status: r.status,
         attached_files: r.attached_files,
         form41_path: r.form41_path,
         form42_path: r.form42_path,

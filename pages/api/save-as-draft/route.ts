@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { publicationId, awardId, user_id } = req.body;
+    const { publicationId, awardId, user_id, attachments } = req.body;
 
     if (!publicationId || !awardId || !user_id) {
       return res
@@ -62,6 +62,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       submission_id = newDraft.submission_id;
       isNewDraft = true;
+
+      await supabaseAdmin
+        .from("publication_award_applications")
+        .insert([
+          {
+            publication_id: publicationIdNum,
+            award_id: awardIdNum,
+            submission_id: submission_id,
+          },
+        ]);
+    }
+
+    if (attachments) {
+      const isJournalType = awardIdNum === 1;
+      const attachmentsData = isJournalType
+        ? { journal_attachments: attachments }
+        : { book_attachments: attachments };
+      
+      await supabaseAdmin
+        .from("submissions")
+        .update(attachmentsData)
+        .eq("submission_id", submission_id);
     }
 
     return res.status(200).json({

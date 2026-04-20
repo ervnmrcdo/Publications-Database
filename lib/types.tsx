@@ -87,13 +87,14 @@ export interface AcceptedForm {
   award_title: string;
   logs: SubmissionLog[];
   isReturned: boolean;
+  status?: string;
   form41_url?: string;
   form42_url?: string;
   form43_url?: string;
   form44_url?: string;
   pdfBufferData?: string;
   journal_attachments?: Record<string, string>;
-  book_attachments?: Record<string, string>;  
+  book_attachments?: Record<string, string>;
 }
 
 export interface RejectedForm {
@@ -115,7 +116,7 @@ export interface RejectedForm {
   form44_url?: string | null;
   isReturned: boolean;
   journal_attachments?: Record<string, string>;
-  book_attachments?: Record<string, string>;  
+  book_attachments?: Record<string, string>;
 }
 
 export interface DraftForm {
@@ -134,6 +135,8 @@ export interface DraftForm {
   form42_url?: string | null;
   form43_url?: string | null;
   form44_url?: string | null;
+  journal_attachments?: Record<string, string>;
+  book_attachments?: Record<string, string>;
   status: string;
 }
 
@@ -145,6 +148,24 @@ export interface PendingAward {
   status: string;
   awardId: number;
   awardTitle: string;
+}
+
+export interface PendingForm {
+  submission_id: number;
+  first_name?: string;
+  last_name?: string;
+  name: string;
+  publicationTitle?: string;
+  date_submitted: string;
+  award_title: string;
+  status: string;
+  logs: SubmissionLog[];
+  form41Url?: string | null;
+  form42Url?: string | null;
+  form43Url?: string | null;
+  form44Url?: string | null;
+  journal_attachments?: Record<string, string>;
+  book_attachments?: Record<string, string>;
 }
 
 export interface EditableAwardFormData {

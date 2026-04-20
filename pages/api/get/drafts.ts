@@ -107,6 +107,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           form42_url: form42Url,
           form43_url: form43Url,
           form44_url: form44Url,
+          journal_attachments: r.journal_attachments ?? {},
+          book_attachments: r.book_attachments ?? {},
         };
       })
     );

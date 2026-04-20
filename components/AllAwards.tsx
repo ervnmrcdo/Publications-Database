@@ -94,16 +94,35 @@ export default function AllAwards() {
                                             {new Date(award.dateSubmitted).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            {(award.status === 'VALIDATED') && (<span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900/30 text-green-400">
-                                                {award.status}
-                                            </span>
+                                            {award.status === 'VALIDATED' && (
+                                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900/30 text-green-400">
+                                                    Validated
+                                                </span>
                                             )}
-                                            {award.status === 'PENDING' && (<span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-900/30 text-yellow-400">
-                                                {award.status}
-                                            </span>)}
-                                            {award.status === 'RETURNED' && (<span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-900/30 text-red-400">
-                                                {award.status}
-                                            </span>
+                                            {award.status === 'PENDING' && (
+                                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-900/30 text-yellow-400">
+                                                    Pending
+                                                </span>
+                                            )}
+                                            {award.status === 'RETURNED' && (
+                                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-900/30 text-red-400">
+                                                    Returned
+                                                </span>
+                                            )}
+                                            {award.status === 'PENDING_SUBMISSION' && (
+                                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-900/30 text-blue-400">
+                                                    Pending Submission
+                                                </span>
+                                            )}
+                                            {award.status === 'SUBMITTED' && (
+                                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-900/30 text-purple-400">
+                                                    Submitted
+                                                </span>
+                                            )}
+                                            {award.status === 'PROCESSED' && (
+                                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-900/30 text-gray-400">
+                                                    Processed
+                                                </span>
                                             )}
                                         </td>
                                     </tr>

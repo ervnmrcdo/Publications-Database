@@ -61,34 +61,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: "No draft files found to submit" });
     }
 
-<<<<<<< HEAD
-=======
+    const submission_id = existingDraft.submission_id;
 
-    const { data: submissionData, error: submissionError } = await supabaseAdmin
-      .from("submissions")
-      .insert([
-        {
-          submitter_id: userId,
-          award_id: awardId,
-          publication_id: publicationId,
-          status: 'PENDING',
-          pdf_json_data: {},
-          logs,
-          ...(isJournalType
-            ? { journal_attachments: attachments ?? {} }
-            : { book_attachments: attachments ?? {} }
-          ),
-        }
-      ])
-      .select();
-
-    if (submissionError) {
-      return res.status(400).json({ error: "Failed to create submission: " + submissionError.message });
-    }
-
-    const submission_id = submissionData[0].submission_id;
-
->>>>>>> update_pubs
     const submissionPaths: Record<string, string> = {};
 
     for (const draftPath of existingPdfFiles) {
@@ -163,6 +137,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (submissionPaths.form44_path) updateData.form44_path = submissionPaths.form44_path;
     }
 
+    const isJournalType = awardIdNum === 1;
+    Object.assign(updateData, isJournalType
+      ? { journal_attachments: attachments ?? {} }
+      : { book_attachments: attachments ?? {} }
+    );
+
     const { error: updateError } = await supabaseAdmin
       .from("submissions")
       .update(updateData)
@@ -170,23 +150,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (updateError) {
       return res.status(400).json({ error: "Failed to update submission: " + updateError.message });
-    }
-
-    const { error: junctionError } = await supabaseAdmin
-      .from("publication_award_applications")
-      .insert([
-        {
-          publication_id: publicationIdNum,
-          award_id: awardIdNum,
-          submission_id: submissionId,
-        }
-      ]);
-
-    if (junctionError) {
-      if (junctionError.code === '23505') {
-        return res.status(409).json({ error: "This publication has already been applied for this award" });
-      }
-      return res.status(400).json({ error: "Failed to link submission: " + junctionError.message });
     }
 
     return res.status(200).json({

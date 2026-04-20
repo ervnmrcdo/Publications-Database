@@ -1,7 +1,14 @@
 import { AcceptedForm } from "@/lib/types"
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RotateCcw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
+
+const STATUS_LABELS: Record<string, string> = {
+  'VALIDATED': 'Validated',
+  'PENDING_SUBMISSION': 'Pending Submission',
+  'SUBMITTED': 'Submitted to Higher Offices',
+  'PROCESSED': 'Processed',
+};
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
@@ -41,9 +48,21 @@ export default function SignedFormInstance({ data, onBack }: Props) {
             </button>
 
             <div className="p-4 bg-[#252836] rounded-lg">
-                <p className="font-bold text-lg text-white">{data.first_name + ' ' + data.last_name}</p>
-                <p className="text-sm text-gray-300">{data.award_title}</p>
-                <p className="text-xs text-gray-400">{data.date_submitted}</p>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <p className="font-bold text-lg text-white">{data.first_name + ' ' + data.last_name}</p>
+                        <p className="text-sm text-gray-300">{data.award_title}</p>
+                        <p className="text-xs text-gray-400">{data.date_submitted}</p>
+                    </div>
+                    {data.status && (
+                        <div className="flex items-center gap-2">
+                            <RotateCcw className="w-4 h-4 text-gray-500" />
+                            <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-900/50 text-gray-300">
+                                {STATUS_LABELS[data.status] || data.status}
+                            </span>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="flex gap-3">

@@ -24,7 +24,8 @@ export default function SignedFormsListing({ adminId, onSelect }: Props) {
                 last_name: item.last_name,
                 date_submitted: item.date_submitted,
                 award_title: item.title,
-                logs: item.logs
+                logs: item.logs,
+                status: item.status
             })))
         })
     }, [adminId])

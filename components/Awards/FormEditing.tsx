@@ -66,8 +66,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
           awardId: selectedAward.id,
           logs,
           userId,
-          attachments, 
-          isJournal: isJournalType
+          attachments,
         }),
       });
 
@@ -91,7 +90,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     }
   };
 
-  const handleSaveAsDraft = async () => {
+  const handleSaveAsDraft = async (attachments: Record<string, string>) => {
     setIsSubmitting(true);
     try {
       const draftData = {
@@ -113,6 +112,15 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
           });
         }
       }
+
+      await fetch('/api/save-as-draft/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...draftData,
+          attachments,
+        }),
+      });
 
       alert('Draft saved successfully! You can continue editing later.');
       handleBack();
