@@ -66,8 +66,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
           awardId: selectedAward.id,
           logs,
           userId,
-          attachments, 
-          isJournal: isJournalType
+          attachments,
         }),
       });
 
@@ -86,6 +85,48 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     } catch (err) {
       console.error('Failed to submit:', err);
       alert(err instanceof Error ? err.message : 'Failed to submit application. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveAsDraft = async (attachments: Record<string, string>) => {
+    setIsSubmitting(true);
+    try {
+      const draftData = {
+        publicationId: selectedPublication.publication_id,
+        awardId: selectedAward.id,
+        user_id: userId,
+      };
+
+      for (const [formType, url] of Object.entries(draftUrls)) {
+        if (url) {
+          await fetch('/api/save-as-draft/route', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...draftData,
+              formType,
+              fileUrl: url,
+            }),
+          });
+        }
+      }
+
+      await fetch('/api/save-as-draft/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...draftData,
+          attachments,
+        }),
+      });
+
+      alert('Draft saved successfully! You can continue editing later.');
+      handleBack();
+    } catch (err) {
+      console.error('Failed to save draft:', err);
+      alert(err instanceof Error ? err.message : 'Failed to save draft. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -249,6 +290,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
             >
               <FormReview
                 onSubmit={handleFinalSubmit}
+                onSaveDraft={handleSaveAsDraft}
                 onBack={() => setFormStep('form43')}
                 isJournal={isJournalType}
                 isSubmitting={isSubmitting}

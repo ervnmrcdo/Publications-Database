@@ -1,9 +1,9 @@
 'use client'
 
 import React, { createContext, useContext, useState, Dispatch, SetStateAction } from 'react'
-import { AcceptedForm, RejectedForm } from '@/lib/types'
+import { AcceptedForm, RejectedForm, DraftForm } from '@/lib/types'
 
-export type SubmissionsSelected = AcceptedForm | RejectedForm | null
+export type SubmissionsSelected = AcceptedForm | RejectedForm | DraftForm | null
 
 interface SubmissionsFlowContextValue {
   selected: SubmissionsSelected

@@ -1,28 +1,11 @@
-import { AcceptedForm } from "@/lib/types"
-import { ArrowLeft, ChevronDown, ChevronRight, Link, Edit2, Save, X, RotateCcw } from "lucide-react";
+import { PendingForm } from "@/lib/types"
+import { ArrowLeft, ChevronDown, ChevronRight, Link } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 
-const STATUS_OPTIONS = [
-  { value: 'VALIDATED', label: 'Validated', color: 'bg-green-900/30 text-green-400' },
-  { value: 'PENDING_SUBMISSION', label: 'Pending Submission', color: 'bg-blue-900/30 text-blue-400' },
-  { value: 'SUBMITTED', label: 'Submitted', color: 'bg-purple-900/30 text-purple-400' },
-  { value: 'PROCESSED', label: 'Processed', color: 'bg-gray-900/30 text-gray-400' },
-];
-
-const getStatusColor = (status: string) => {
-  const option = STATUS_OPTIONS.find(s => s.value === status);
-  return option?.color || 'bg-gray-900/30 text-gray-400';
-};
-
-const getStatusLabel = (status: string) => {
-  const option = STATUS_OPTIONS.find(s => s.value === status);
-  return option?.label || status;
-};
-
 type Props = {
-    data: AcceptedForm;
+    data: PendingForm;
     onBack: () => void;
 }
 
@@ -43,7 +26,7 @@ interface DocumentConfig {
     };
 }
 
-export default function AcceptedFormInstance({ data, onBack }: Props) {
+export default function PendingInstance({ data, onBack }: Props) {
     const [docxConfigs, setDocxConfigs] = useState<{
         form42?: { config: DocumentConfig; token: string };
         form43?: { config: DocumentConfig; token: string };
@@ -63,18 +46,6 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
     const [expandedForm43, setExpandedForm43] = useState<boolean>(false);
     const [expandedForm44, setExpandedForm44] = useState<boolean>(false);
 
-    const [status, setStatus] = useState<string>(data.status || 'VALIDATED');
-    const [updatingStatus, setUpdatingStatus] = useState<boolean>(false);
-
-    const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false);
-    const [journalAttachments, setJournalAttachments] = useState<Record<string, string>>(
-        data.journal_attachments || {}
-    );
-    const [bookAttachments, setBookAttachments] = useState<Record<string, string>>(
-        data.book_attachments || {}
-    );
-    const [savingAttachments, setSavingAttachments] = useState<boolean>(false);
-
     const detectedIp = useMemo(() => typeof window !== 'undefined' ? window.location.hostname : '', [])
 
     const generateToken = useCallback(async (config: DocumentConfig) => {
@@ -84,43 +55,12 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
             .sign(secret);
     }, []);
 
-    const handleSaveAttachments = async () => {
-        try {
-            setSavingAttachments(true);
-            
-            const payload = {
-                submission_id: data.submission_id,
-                journal_attachments: journalAttachments,
-                book_attachments: bookAttachments,
-            };
-
-            const response = await fetch('/api/update-attachments/route', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-
-            if (response.ok) {
-                setIsEditingAttachments(false);
-                alert('Attachments saved successfully');
-            } else {
-                const result = await response.json();
-                alert('Failed to save attachments: ' + result.error);
-            }
-        } catch (err) {
-            console.error('Error saving attachments:', err);
-            alert('Failed to save attachments');
-        } finally {
-            setSavingAttachments(false);
-        }
-    };
-
     const generateForm41Config = useCallback(async () => {
         if (!data.submission_id) return;
         setLoadingForm41(true);
         try {
             const baseUrl = `http://host.docker.internal:3000`;
-            const documentUrl = `${baseUrl}/api/admin/get-validated-form/route?submission_id=${data.submission_id}&form_type=41`;
+            const documentUrl = `${baseUrl}/api/admin/get-pending-form/route?submission_id=${data.submission_id}&form_type=41`;
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
@@ -151,7 +91,7 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
         setLoadingForm44(true);
         try {
             const baseUrl = `http://host.docker.internal:3000`;
-            const documentUrl = `${baseUrl}/api/admin/get-validated-form/route?submission_id=${data.submission_id}&form_type=44`;
+            const documentUrl = `${baseUrl}/api/admin/get-pending-form/route?submission_id=${data.submission_id}&form_type=44`;
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
@@ -182,7 +122,7 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
         setLoadingForm42(true);
         try {
             const baseUrl = `http://host.docker.internal:3000`;
-            const documentUrl = `${baseUrl}/api/admin/get-validated-form/route?submission_id=${data.submission_id}&form_type=42`;
+            const documentUrl = `${baseUrl}/api/admin/get-pending-form/route?submission_id=${data.submission_id}&form_type=42`;
             const config: DocumentConfig = {
                 document: {
                     fileType: "docx",
@@ -213,7 +153,7 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
         setLoadingForm43(true);
         try {
             const baseUrl = `http://host.docker.internal:3000`;
-            const documentUrl = `${baseUrl}/api/admin/get-validated-form/route?submission_id=${data.submission_id}&form_type=43`;
+            const documentUrl = `${baseUrl}/api/admin/get-pending-form/route?submission_id=${data.submission_id}&form_type=43`;
             const config: DocumentConfig = {
                 document: {
                     fileType: "docx",
@@ -275,78 +215,36 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
         setExpandedForm43(!expandedForm43);
     };
 
-    const hasForm41 = !!data.form41_url;
-    const hasForm42 = !!data.form42_url;
-    const hasForm43 = !!data.form43_url;
-    const hasForm44 = !!data.form44_url;
+    const hasForm41 = !!data.form41Url;
+    const hasForm42 = !!data.form42Url;
+    const hasForm43 = !!data.form43Url;
+    const hasForm44 = !!data.form44Url;
+
+    const hasJournalAttachments = data.journal_attachments && Object.keys(data.journal_attachments).length > 0;
+    const hasBookAttachments = data.book_attachments && Object.keys(data.book_attachments).length > 0;
 
     const getEditorConfig = useCallback((config: DocumentConfig, token: string) => ({
         ...config,
         token: token,
     }), []);
 
-    const handleStatusChange = async (newStatus: string) => {
-        try {
-            setUpdatingStatus(true);
-            const response = await fetch('/api/update-status/route', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    submission_id: data.submission_id,
-                    status: newStatus,
-                }),
-            });
-
-            if (response.ok) {
-                setStatus(newStatus);
-                alert('Status updated successfully');
-            } else {
-                const result = await response.json();
-                alert('Failed to update status: ' + result.error);
-            }
-        } catch (err) {
-            console.error('Error updating status:', err);
-            alert('Failed to update status');
-        } finally {
-            setUpdatingStatus(false);
-        }
-    };
-
     return (
 
         <div className="bg-[#1b1e2b] rounded-xl shadow p-6 space-y-4">
-            <div className="flex items-center justify-between">
-                <button
-                    onClick={onBack}
-                    className="flex items-center text-gray-400 hover:text-white"
-                >
-                    <ArrowLeft className="mr-2" /> Back
-                </button>
-                <div className="flex items-center gap-2">
-                    <RotateCcw className="w-4 h-4 text-gray-400" />
-                    <select
-                        value={status}
-                        onChange={(e) => {
-                            if (e.target.value !== status && confirm('Change status to ' + getStatusLabel(e.target.value) + '?')) {
-                                handleStatusChange(e.target.value);
-                            }
-                        }}
-                        disabled={updatingStatus}
-                        className={`px-3 py-1 rounded text-sm font-medium border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${getStatusColor(status)}`}
-                    >
-                        {STATUS_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value} className={option.color}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            </div>
+            <button
+                onClick={onBack}
+                className="flex items-center text-gray-400 hover:text-white mb-2"
+            >
+                <ArrowLeft className="mr-2" /> Back
+            </button>
 
             <div className="p-4 bg-[#252836] rounded-lg">
-                <p className="font-bold text-lg text-white">{data.first_name + ' ' + data.last_name}</p>
+                <p className="font-bold text-lg text-white">{data.name}</p>
                 <p className="text-sm text-gray-300">{data.award_title}</p>
                 <p className="text-xs text-gray-400">{new Date(data.date_submitted).toLocaleString()}</p>
+                <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900/30 text-yellow-400">
+                    {data.status}
+                </span>
             </div>
 
             {hasForm41 && (
@@ -476,84 +374,73 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
                     )}
                 </div>
             )}
-            {/* Attachments Section */}
-            <div className="p-4 bg-[#252836] rounded-lg">
-                <div className="flex justify-between items-center mb-4">
-                    <p className="font-bold text-med text-white">
-                        Attachments
+
+            {hasJournalAttachments && (
+                <div className="p-4 bg-[#252836] rounded-lg">
+                    <p className="font-bold text-med text-white mb-4">
+                        Journal Article Attachments
                     </p>
-                    {!isEditingAttachments ? (
-                        <button
-                            onClick={() => setIsEditingAttachments(true)}
-                            className="flex items-center px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                        >
-                            <Edit2 className="w-4 h-4 mr-1" /> Edit
-                        </button>
-                    ) : (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => {
-                                    setJournalAttachments(data.journal_attachments || {});
-                                    setBookAttachments(data.book_attachments || {});
-                                    setIsEditingAttachments(false);
-                                }}
-                                className="flex items-center px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                            >
-                                <X className="w-4 h-4 mr-1" /> Cancel
-                            </button>
-                            <button
-                                onClick={handleSaveAttachments}
-                                disabled={savingAttachments}
-                                className="flex items-center px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50"
-                            >
-                                <Save className="w-4 h-4 mr-1" /> {savingAttachments ? 'Saving...' : 'Save'}
-                            </button>
-                        </div>
-                    )}
-                </div>
-                
-                <div className="space-y-3">
-                    {Object.entries(journalAttachments).map(([key, value]) => (
-                        <div key={key}>
-                            <label className="block text-sm text-gray-300 mb-1 capitalize">
-                                {key.replace(/_/g, ' ')}
-                            </label>
-                            {isEditingAttachments ? (
-                                <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
-                                    <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
-                                    <input
-                                        type="url"
-                                        value={value || ''}
-                                        onChange={(e) => setJournalAttachments(prev => ({ ...prev, [key]: e.target.value }))}
-                                        placeholder="https://..."
-                                        className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
-                                    />
-                                </div>
-                            ) : (
-                                value ? (
-                                    <a 
-                                        href={value} 
-                                        target="_blank" 
+                    <div className="space-y-3">
+                        {Object.entries(data.journal_attachments || {}).map(([key, value]) => (
+                            <div key={key}>
+                                <label className="block text-sm text-gray-300 mb-1 capitalize">
+                                    {key.replace(/_/g, ' ')}
+                                </label>
+                                {value ? (
+                                    <a
+                                        href={value}
+                                        target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-blue-400 hover:underline text-sm break-all"
+                                        className="text-blue-400 hover:underline text-sm break-all flex items-center"
                                     >
+                                        <Link className="w-4 h-4 mr-1" />
                                         {value}
                                     </a>
                                 ) : (
                                     <span className="text-gray-500 text-sm">No link provided</span>
-                                )
-                            )}
-                        </div>
-                    ))}
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {(!hasForm41 && !hasForm42 && !hasForm43 && !hasForm44) && (
+            {hasBookAttachments && (
+                <div className="p-4 bg-[#252836] rounded-lg">
+                    <p className="font-bold text-med text-white mb-4">
+                        Book Chapter Attachments
+                    </p>
+                    <div className="space-y-3">
+                        {Object.entries(data.book_attachments || {}).map(([key, value]) => (
+                            <div key={key}>
+                                <label className="block text-sm text-gray-300 mb-1 capitalize">
+                                    {key.replace(/_/g, ' ')}
+                                </label>
+                                {value ? (
+                                    <a
+                                        href={value}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-400 hover:underline text-sm break-all flex items-center"
+                                    >
+                                        <Link className="w-4 h-4 mr-1" />
+                                        {value}
+                                    </a>
+                                ) : (
+                                    <span className="text-gray-500 text-sm">No link provided</span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {(!hasForm41 && !hasForm42 && !hasForm43 && !hasForm44) && !hasJournalAttachments && !hasBookAttachments && (
                 <div className="p-4 bg-[#252836] rounded-lg">
                     <p className="text-gray-400">No documents attached.</p>
                 </div>
             )}
 
-        </div >
+        </div>
     )
 }

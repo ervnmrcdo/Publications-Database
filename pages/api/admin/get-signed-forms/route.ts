@@ -18,9 +18,9 @@ export default async function GetSignedForms(
 				authors:users!submitter_id(first_name, last_name),
 				awards:awards!award_id(title)
 			`)
-			.eq('reviewed_by_admin_id', adminId)
-			.eq('status', 'VALIDATED')
-			.order('date_submitted', { ascending: false });
+.eq('reviewed_by_admin_id', adminId)
+		.in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED'])
+		.order('date_submitted', { ascending: false });
 
 		if (error) {
 			console.log(error)
@@ -47,6 +47,11 @@ export default async function GetSignedForms(
 						date_submitted: r.date_submitted,
 						title: r.awards?.title,
 						logs: r.logs,
+						status: r.status,
+						form41Url: r.form41_path ? true : null,
+						form42Url: r.form42_path ? true : null,
+						form43Url: r.form43_path ? true : null,
+						form44Url: r.form44_path ? true : null,
 						pdfUrl,
 						attached_files: r.attached_files,
 					};

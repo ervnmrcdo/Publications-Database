@@ -17,29 +17,6 @@ COMMENT ON SCHEMA "public" IS 'standard public schema';
 
 
 
--- ============================================
--- STORAGE BUCKETS
--- ============================================
--- See supabase/migrations/20260331212928_storage.sql for full storage schema dump
--- ============================================
-
--- Create storage buckets
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES
-  ('signatures', 'signatures', false, NULL, NULL),
-  ('pdfs', 'pdfs', false, NULL, NULL),
-  ('submissions-pdf', 'submissions-pdf', true, 52428800, ARRAY['application/pdf']),
-  ('submissions-docx', 'submissions-docx', true, 52428800, ARRAY['application/vnd.openxmlformats-officedocument.wordprocessingml.document']),
-  ('drafts-pdf', 'drafts-pdf', false, NULL, NULL),
-  ('drafts-docx', 'drafts-docx', false, NULL, NULL)
-ON CONFLICT (id) DO NOTHING;
-
-GRANT ALL ON storage.objects TO "anon";
-GRANT ALL ON storage.objects TO "authenticated";
-GRANT ALL ON storage.objects TO "service_role";
-
--- ============================================
-
-
 CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
 
 
@@ -155,7 +132,8 @@ ALTER SEQUENCE "public"."departments_department_id_seq" OWNED BY "public"."depar
 CREATE TABLE IF NOT EXISTS "public"."publication_authors" (
     "publication_id" integer NOT NULL,
     "user_id" "uuid" NOT NULL,
-    "author_rank" integer
+    "author_rank" integer,
+    "authors" "uuid"[]
 );
 
 
@@ -262,7 +240,7 @@ CREATE TABLE IF NOT EXISTS "public"."submissions" (
     "publication_id" integer,
     "reviewed_by_admin_id" "uuid",
     "date_submitted" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    "status" character varying(30) DEFAULT 'pending'::character varying,
+    "status" character varying(20) DEFAULT 'pending'::character varying,
     "remarks" "text",
     "pdf_json_data" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "logs" "jsonb" DEFAULT '[]'::"jsonb",
@@ -318,6 +296,8 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
     "contact_number" character varying,
     "position" character varying,
     "email_address" character varying,
+    "affiliation_path" "text",
+    "scopus_author_id" "text",
     CONSTRAINT "profiles_role_check" CHECK (("role" = ANY (ARRAY['teaching'::"text", 'nonteaching'::"text", 'admin'::"text"])))
 );
 
@@ -381,6 +361,11 @@ ALTER TABLE ONLY "public"."publication_award_applications"
 
 ALTER TABLE ONLY "public"."publication_award_applications"
     ADD CONSTRAINT "publication_award_applications_publication_id_award_id_key" UNIQUE ("publication_id", "award_id");
+
+
+
+ALTER TABLE ONLY "public"."publication_per_award"
+    ADD CONSTRAINT "publication_per_award_award_id_publication_type_id_key" UNIQUE ("award_id", "publication_type_id");
 
 
 

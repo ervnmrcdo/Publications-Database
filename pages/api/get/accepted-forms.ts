@@ -11,6 +11,14 @@ export default async function RetrieveAcceptedForms(
   try {
     const supabase = createServiceRoleClient()
 
+    const taggedPublicationsResult = await supabase
+      .from('publication_authors')
+      .select('publication_id, tagged_authors')
+      .contains('tagged_authors', [id]);
+
+    const taggedPublicationIds =
+      taggedPublicationsResult.data?.map((p) => p.publication_id) || [];
+
     const { data, error } = await supabase
       .from('submissions')
       .select(`
@@ -18,8 +26,8 @@ export default async function RetrieveAcceptedForms(
         authors:users!submitter_id(*),
         awards:awards!award_id(*)
       `)
-      .eq('submitter_id', id)
-      .eq('status', 'VALIDATED');
+      .in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED'])
+      .in('publication_id', taggedPublicationIds.length > 0 ? taggedPublicationIds : [0]);
 
     if (error) {
       return res.status(400).json({ error: error.message });
@@ -33,6 +41,7 @@ export default async function RetrieveAcceptedForms(
         date_submitted: r.date_submitted,
         award_title: r.awards?.title,
         logs: r.logs,
+        status: r.status,
         attached_files: r.attached_files,
         form41_path: r.form41_path,
         form42_path: r.form42_path,

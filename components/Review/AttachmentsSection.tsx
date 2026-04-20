@@ -1,4 +1,8 @@
-import Link from 'next/link';
+type Props = {
+  isJournal: boolean;
+  journal_attachments?: Record<string, string>;
+  book_attachments?: Record<string, string>;
+};
 
 const JOURNAL_LABELS: Record<string, string> = {
   journal_article: 'Copy of the Journal Article',
@@ -12,12 +16,6 @@ const BOOK_LABELS: Record<string, string> = {
   table_of_contents: 'Table of Contents',
   contributors_notes: 'List of Contributors or Contributors Notes',
   proof_of_peer_review: 'Proof of Peer Review Process',
-};
-
-type Props = {
-  isJournal: boolean;
-  journal_attachments?: Record<string, string>;
-  book_attachments?: Record<string, string>;
 };
 
 export default function AttachmentsSection({ isJournal, journal_attachments, book_attachments }: Props) {

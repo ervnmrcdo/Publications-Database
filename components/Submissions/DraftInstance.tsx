@@ -1,4 +1,4 @@
-import { RejectedForm } from "@/lib/types"
+import { DraftForm } from "@/lib/types"
 import { ArrowLeft, ChevronDown, ChevronRight, Link, Edit2, Save, X } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import * as jose from 'jose';
@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useSubmissionsFlow } from "@/context/SubmissionsFlowContext";
 
 type Props = {
-    data: RejectedForm;
+    data: DraftForm;
     onBack: () => void;
 }
 
@@ -31,10 +31,9 @@ interface DocumentConfig {
     };
 }
 
-export default function ReturnedFormInstance({ data, onBack }: Props) {
+export default function DraftInstance({ data, onBack }: Props) {
     const { setSelected } = useSubmissionsFlow()
     const { profile, user } = useAuth()
-
 
     const [docxConfigs, setDocxConfigs] = useState<{
         form42?: { config: DocumentConfig; token: string };
@@ -50,9 +49,9 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
     const [loadingForm43, setLoadingForm43] = useState<boolean>(false);
     const [loadingForm44, setLoadingForm44] = useState<boolean>(false);
 
-    const [showSignConfirmDialog, setShowSignConfirmDialog] = useState<boolean>(false);
+    const [showSubmitConfirmDialog, setShowSubmitConfirmDialog] = useState<boolean>(false);
 
-    const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false);
+const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false);
     const [journalAttachments, setJournalAttachments] = useState<Record<string, string>>(
         data.journal_attachments || {}
     );
@@ -95,6 +94,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
             });
 
             if (response.ok) {
+                const result = await response.json();
                 setIsEditingAttachments(false);
                 alert('Attachments saved successfully');
             } else {
@@ -109,40 +109,37 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
         }
     };
 
-    const handleResubmitForm = async () => {
+    const handleSubmitDraft = async () => {
         try {
-            const resubmissionLog = {
-                action: 'RESUBMITTED',
+            const submissionLog = {
+                action: 'SUBMITTED',
                 remarks: '',
                 date: new Date().toISOString(),
                 actor_name: getActorName(),
             }
 
-            const newLogs = [...data.logs, resubmissionLog]
-
             const payload = {
                 submission_id: submissionId,
-                newLogs,
-                publicationId,
-                awardId,
-                submitterId,
+                user_id: user?.id,
+                logs: [submissionLog],
             }
 
-            const response = await fetch('/api/resubmit-award-from-drafts/route', {
+            const response = await fetch('/api/submit-from-draft/route', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             })
 
             if (response.ok) {
-                alert('Form Resubmitted')
+                alert('Draft submitted successfully')
                 setSelected(null)
             } else {
-                alert('Failed to resubmit form')
+                const result = await response.json()
+                alert('Failed to submit draft: ' + result.error)
             }
         } catch (err) {
-            console.error('Error resubmitting:', err)
-            alert('Failed to resubmit form')
+            console.error('Error submitting draft:', err)
+            alert('Failed to submit draft')
         }
     }
 
@@ -293,22 +290,137 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
             </button>
 
             <div className="p-4 bg-[#252836] rounded-lg">
-                <p className="font-bold text-lg text-white">{data.first_name + ' ' + data.last_name}</p>
+                <p className="font-bold text-lg text-white">{data.publication_title}</p>
                 <p className="text-sm text-gray-300">{data.award_title}</p>
                 <p className="text-xs text-gray-400">{data.date_submitted}</p>
             </div>
 
+            {data.tagged_authors && data.tagged_authors.length > 0 && (
+                <div className="p-4 bg-[#252836] rounded-lg">
+                    <p className="font-bold text-med text-white mb-2">Tagged Authors:</p>
+                    <div className="flex flex-wrap gap-2">
+                        {data.tagged_authors.map((author: any, idx: number) => (
+                            <span key={idx} className="px-2 py-1 bg-gray-700 rounded text-sm text-gray-300">
+                                {author.first_name} {author.last_name}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Attachments Section */}
             <div className="p-4 bg-[#252836] rounded-lg">
-                <p className="font-bold text-med text-white">{`Remarks:`}</p>
-                <p className="text-sm text-gray-300">{data.remarks ?? 'No remarks noted.'}</p>
+                <div className="flex justify-between items-center mb-4">
+                    <p className="font-bold text-med text-white">
+                        {awardId === 1 ? 'Journal Article Attachments' : 'Book Attachments'}
+                    </p>
+                    {!isEditingAttachments ? (
+                        <button
+                            onClick={() => setIsEditingAttachments(true)}
+                            className="flex items-center px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                        >
+                            <Edit2 className="w-4 h-4 mr-1" /> Edit
+                        </button>
+                    ) : (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    setJournalAttachments(data.journal_attachments || {});
+                                    setBookAttachments(data.book_attachments || {});
+                                    setIsEditingAttachments(false);
+                                }}
+                                className="flex items-center px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                            >
+                                <X className="w-4 h-4 mr-1" /> Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveAttachments}
+                                disabled={savingAttachments}
+                                className="flex items-center px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50"
+                            >
+                                <Save className="w-4 h-4 mr-1" /> {savingAttachments ? 'Saving...' : 'Save'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+                
+                <div className="space-y-3">
+                    {awardId === 1 ? (
+                        Object.entries(journalAttachments).map(([key, value]) => (
+                            <div key={key}>
+                                <label className="block text-sm text-gray-300 mb-1 capitalize">
+                                    {key.replace(/_/g, ' ')}
+                                </label>
+                                {isEditingAttachments ? (
+                                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
+                                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
+                                        <input
+                                            type="url"
+                                            value={value || ''}
+                                            onChange={(e) => setJournalAttachments(prev => ({ ...prev, [key]: e.target.value }))}
+                                            placeholder="https://..."
+                                            className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
+                                        />
+                                    </div>
+                                ) : (
+                                    value ? (
+                                        <a 
+                                            href={value} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:underline text-sm break-all"
+                                        >
+                                            {value}
+                                        </a>
+                                    ) : (
+                                        <span className="text-gray-500 text-sm">No link provided</span>
+                                    )
+                                )}
+                            </div>
+                        ))
+                    ) : (
+                        Object.entries(bookAttachments).map(([key, value]) => (
+                            <div key={key}>
+                                <label className="block text-sm text-gray-300 mb-1 capitalize">
+                                    {key.replace(/_/g, ' ')}
+                                </label>
+                                {isEditingAttachments ? (
+                                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
+                                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
+                                        <input
+                                            type="url"
+                                            value={value || ''}
+                                            onChange={(e) => setBookAttachments(prev => ({ ...prev, [key]: e.target.value }))}
+                                            placeholder="https://..."
+                                            className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
+                                        />
+                                    </div>
+                                ) : (
+                                    value ? (
+                                        <a 
+                                            href={value} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:underline text-sm break-all"
+                                        >
+                                            {value}
+                                        </a>
+                                    ) : (
+                                        <span className="text-gray-500 text-sm">No link provided</span>
+                                    )
+                                )}
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
 
             <div className="flex gap-3">
                 <button
-                    className="px-4 py-2 bg-green-500 text-white rounded-md"
-                    onClick={() => setShowSignConfirmDialog(true)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    onClick={() => setShowSubmitConfirmDialog(true)}
                 >
-                    Resubmit
+                    Submit
                 </button>
             </div>
 
@@ -444,137 +556,30 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                 </div>
             )}
 
-            {/* Attachments Section */}
-            <div className="p-4 bg-[#252836] rounded-lg">
-                <div className="flex justify-between items-center mb-4">
-                    <p className="font-bold text-med text-white">
-                        {data.form41_url ? 'Journal Article Attachments' : 'Book Chapter Attachments'}
-                    </p>
-                    {!isEditingAttachments ? (
-                        <button
-                            onClick={() => setIsEditingAttachments(true)}
-                            className="flex items-center px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                        >
-                            <Edit2 className="w-4 h-4 mr-1" /> Edit
-                        </button>
-                    ) : (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => {
-                                    setJournalAttachments(data.journal_attachments || {});
-                                    setBookAttachments(data.book_attachments || {});
-                                    setIsEditingAttachments(false);
-                                }}
-                                className="flex items-center px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                            >
-                                <X className="w-4 h-4 mr-1" /> Cancel
-                            </button>
-                            <button
-                                onClick={handleSaveAttachments}
-                                disabled={savingAttachments}
-                                className="flex items-center px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50"
-                            >
-                                <Save className="w-4 h-4 mr-1" /> {savingAttachments ? 'Saving...' : 'Save'}
-                            </button>
-                        </div>
-                    )}
-                </div>
-                
-                <div className="space-y-3">
-                    {awardId === 1 ? (
-                        Object.entries(journalAttachments).map(([key, value]) => (
-                            <div key={key}>
-                                <label className="block text-sm text-gray-300 mb-1 capitalize">
-                                    {key.replace(/_/g, ' ')}
-                                </label>
-                                {isEditingAttachments ? (
-                                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
-                                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
-                                        <input
-                                            type="url"
-                                            value={value || ''}
-                                            onChange={(e) => setJournalAttachments(prev => ({ ...prev, [key]: e.target.value }))}
-                                            placeholder="https://..."
-                                            className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
-                                        />
-                                    </div>
-                                ) : (
-                                    value ? (
-                                        <a 
-                                            href={value} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline text-sm break-all"
-                                        >
-                                            {value}
-                                        </a>
-                                    ) : (
-                                        <span className="text-gray-500 text-sm">No link provided</span>
-                                    )
-                                )}
-                            </div>
-                        ))
-                    ) : (
-                        Object.entries(bookAttachments).map(([key, value]) => (
-                            <div key={key}>
-                                <label className="block text-sm text-gray-300 mb-1 capitalize">
-                                    {key.replace(/_/g, ' ')}
-                                </label>
-                                {isEditingAttachments ? (
-                                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
-                                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
-                                        <input
-                                            type="url"
-                                            value={value || ''}
-                                            onChange={(e) => setBookAttachments(prev => ({ ...prev, [key]: e.target.value }))}
-                                            placeholder="https://..."
-                                            className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
-                                        />
-                                    </div>
-                                ) : (
-                                    value ? (
-                                        <a 
-                                            href={value} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline text-sm break-all"
-                                        >
-                                            {value}
-                                        </a>
-                                    ) : (
-                                        <span className="text-gray-500 text-sm">No link provided</span>
-                                    )
-                                )}
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
 
-
-            {/* Resubmit Confirmation Dialog */}
-            {showSignConfirmDialog && (
+            {/* Submit Confirmation Dialog */}
+            {showSubmitConfirmDialog && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-[#1b1e2b] rounded-lg p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold mb-4 text-white">Confirm Resubmit</h3>
+                        <h3 className="text-lg font-semibold mb-4 text-white">Confirm Submit</h3>
                         <p className="text-sm text-gray-300 mb-6">
-                            Are you sure you want to resubmit this form? This will finalize your revisions.
+                            Are you sure you want to submit this draft? This action cannot be undone.
                         </p>
                         <div className="flex justify-end gap-3">
                             <button
                                 className="px-4 py-2 border rounded-md hover:bg-gray-700"
-                                onClick={() => setShowSignConfirmDialog(false)}
+                                onClick={() => setShowSubmitConfirmDialog(false)}
                             >
                                 Cancel
                             </button>
                             <button
-                                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                                 onClick={() => {
-                                    setShowSignConfirmDialog(false);
-                                    handleResubmitForm();
+                                    setShowSubmitConfirmDialog(false);
+                                    handleSubmitDraft();
                                 }}
                             >
-                                Confirm Resubmit
+                                Confirm Submit
                             </button>
                         </div>
                     </div>

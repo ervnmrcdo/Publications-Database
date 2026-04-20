@@ -16,8 +16,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const supabaseAdmin = createServiceRoleClient();
 
-    const draftsBasePath = `drafts/${submitterId}/${awardId}/${publicationId}`;
-
     const formTypes = [
       { type: "41", ext: "pdf", bucket: "drafts-pdf" },
       { type: "42", ext: "docx", bucket: "drafts-docx" },
@@ -28,8 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const formPaths: Record<string, string> = {};
 
     for (const form of formTypes) {
-      const draftPath = `${draftsBasePath}/form${form.type}.${form.ext}`;
-      const submissionPath = `submissions/${submission_id}/form${form.type}.${form.ext}`;
+      const draftPath = `${submission_id}_form${form.type}.${form.ext}`;
+      const submissionPath = `submissions/${submission_id}_form${form.type}.${form.ext}`;
       const targetBucket = form.ext === "pdf" ? "submissions-pdf" : "submissions-docx";
 
       try {

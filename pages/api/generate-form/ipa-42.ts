@@ -28,19 +28,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const supabase = createPagesServerClient(req, res);
     const supabaseAdmin = createServiceRoleClient();
 
-    const filePath = `${user_id}/${awardId}/${publicationId}/form42.docx`;
+    const { data: existingDraft } = await supabaseAdmin
+      .from('submissions')
+      .select('submission_id, status')
+      .eq('publication_id', Number(publicationId))
+      .eq('award_id', Number(awardId))
+      .in('status', ['DRAFT', 'RETURNED'])
+      .single();
 
-    const { data: urlData } = await supabaseAdmin.storage
-      .from('drafts-docx')
-      .createSignedUrl(filePath, 3600);
+    if (existingDraft) {
+      const filePath = `${existingDraft.submission_id}_form42.docx`;
 
-    if (urlData?.signedUrl) {
-      const fileResponse = await fetch(urlData.signedUrl);
-      const fileBuffer = await fileResponse.arrayBuffer();
+      const { data: urlData } = await supabaseAdmin.storage
+        .from('drafts-docx')
+        .createSignedUrl(filePath, 3600);
 
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-      res.setHeader('Content-Disposition', 'inline; filename="form42.docx"');
-      return res.send(Buffer.from(fileBuffer));
+      if (urlData?.signedUrl) {
+        const fileResponse = await fetch(urlData.signedUrl);
+        const fileBuffer = await fileResponse.arrayBuffer();
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        res.setHeader('Content-Disposition', 'inline; filename="form42.docx"');
+        return res.send(Buffer.from(fileBuffer));
+      }
     }
 
     const templatePath = path.join(process.cwd(), 'public', '4.2-template.docx');
