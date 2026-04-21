@@ -81,34 +81,7 @@ export default function TeachingDashboard() {
 
   return (
     <div className="flex-1 overflow-auto bg-[#0f1117] text-gray-300 p-8">
-      {showWarning && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[#1b1e2b] p-6 rounded-lg max-w-md border border-yellow-600">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertTriangle className="w-6 h-6 text-yellow-500" />
-              <h3 className="text-lg font-semibold text-white">Existing Applications Found</h3>
-            </div>
-            <p className="text-gray-300 mb-4">
-              You have {completedCount} existing application{completedCount > 1 ? 's' : ''} that have been validated or processed.
-              Are you sure you want to create a new application?
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowWarning(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={proceedWithNewApplication}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Create New Application
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
 
       <div className="max-w-6xl mx-auto">
         {/* Header */}
