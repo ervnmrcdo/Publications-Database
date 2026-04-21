@@ -19,9 +19,10 @@ export const signIn = async (formData: FormData) => {
         return {error: error.message};
     }
 
-    revalidatePath("/", 'layout');
-    redirect("/dashboard");
-
+    return { success: true }
+    // revalidatePath("/", 'layout');
+    // redirect("/dashboard");
+    
 }
 
 export const signUp = async (formData: FormData) => {
@@ -44,8 +45,9 @@ export const signUp = async (formData: FormData) => {
         return {error: error.message};
     }
 
-    revalidatePath("/", 'layout');
-    redirect("/dashboard");
+    return { success: true }
+    // revalidatePath("/", 'layout');
+    // redirect("/dashboard");
 }
 
 export const signOut = async () => {

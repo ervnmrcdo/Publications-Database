@@ -1,6 +1,7 @@
 'use client'
 
-import React, { createContext, useContext, useState, Dispatch, SetStateAction } from 'react'
+import React, { createContext, useContext, useState, Dispatch, SetStateAction, useEffect } from 'react'
+import { useAuth } from '@/context/AuthContext'
 
 export type AwardsStep = 'awards' | 'publications' | 'form'
 
@@ -30,6 +31,16 @@ export function AwardsFlowProvider({ children }: { children: React.ReactNode }) 
   const [draftId, setDraftId] = useState<string | null>(null)
   const [draftUrls, setDraftUrls] = useState<Record<string, string | null>>({})
   const [draftsMap, setDraftsMap] = useState<Record<string, boolean>>({})
+  const { user } = useAuth()
+  
+  useEffect(() => {
+    setStep('awards')
+    setFormStep('form44')
+    setIsJournal(true)
+    setDraftId(null)
+    setDraftUrls({})
+    setDraftsMap({})
+  }, [user?.id])
 
   return (
     <AwardsFlowContext.Provider value={{ step, setStep, formStep, setFormStep, isJournal, setIsJournal, draftId, setDraftId, draftUrls, setDraftUrls, draftsMap, setDraftsMap }}>

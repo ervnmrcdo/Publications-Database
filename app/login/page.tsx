@@ -16,8 +16,7 @@ export default function LoginPage() {
 
     if (result.successPath) {
       // swindow.location.reload()
-      router.push(result.successPath)
-      router.refresh()
+      window.location.href = result.successPath
     } else if (result.error) {
       alert(result.error)
     }

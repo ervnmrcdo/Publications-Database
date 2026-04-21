@@ -1,9 +1,9 @@
 import { useRouter, usePathname } from "next/navigation";
-import { signOut } from "@/app/actions/auth";
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import "../../app/globals.css";
+
 
 type TeachingPage =
   | "Home"
@@ -17,6 +17,7 @@ const TeachingSidebar: React.FC = () => {
   const pathname = usePathname();
   const [completedCount, setCompletedCount] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
+  
 
   useEffect(() => {
     const supabase = createClient();
@@ -66,10 +67,10 @@ const TeachingSidebar: React.FC = () => {
     }`;
 
   const handleLogout = async () => {
-    await signOut();
-    router.push("/login");
-    router.refresh();
-  }
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+}
 
   return (
     <aside className="h-screen w-18 bg-[#1b1e2b] flex flex-col p-8">

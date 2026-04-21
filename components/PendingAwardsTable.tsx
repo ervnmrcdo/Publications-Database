@@ -21,7 +21,14 @@ export default function PendingAwardsTable() {
     const [selectedAward, setSelectedAward] = useState<PendingAward | null>(null);
 
     useEffect(() => {
-        if (!user || !profile) return;
+        setPendingAwards([])
+        setSelectedAward(null)
+        setIsLoadingPending(true)
+
+        if (!user || !profile) {
+            setIsLoadingPending(false)
+            return
+        }
         const fetchPendingAwards = async () => {
             try {
                 let response;
@@ -50,7 +57,7 @@ export default function PendingAwardsTable() {
             }
         };
         fetchPendingAwards();
-    }, [user, profile]);
+    }, [user?.id, profile?.role]);
 
     return (
         <div className="bg-[#1b1e2b] rounded-xl shadow p-6 mt-5">

@@ -1,7 +1,8 @@
 'use client'
 
-import React, { createContext, useContext, useState, Dispatch, SetStateAction } from 'react'
+import React, { createContext, useContext, useState, Dispatch, SetStateAction, useEffect } from 'react'
 import { AcceptedForm, RejectedForm, DraftForm } from '@/lib/types'
+import { useAuth } from '@/context/AuthContext'
 
 export type SubmissionsSelected = AcceptedForm | RejectedForm | DraftForm | null
 
@@ -14,6 +15,11 @@ const SubmissionsFlowContext = createContext<SubmissionsFlowContextValue | undef
 
 export function SubmissionsFlowProvider({ children }: { children: React.ReactNode }) {
   const [selected, setSelected] = useState<SubmissionsSelected>(null)
+  const { user } = useAuth()
+
+  useEffect(() => {
+    setSelected(null)
+  }, [user?.id])
 
   return (
     <SubmissionsFlowContext.Provider value={{ selected, setSelected }}>

@@ -1,6 +1,6 @@
 import { useRouter, usePathname } from "next/navigation";
-import { signOut } from "@/app/actions/auth";
 import "../../app/globals.css";
+import { createClient } from '@/lib/supabase/client'
 
 type Page =
   | "Home"
@@ -41,10 +41,10 @@ const AdminSidebar: React.FC = () => {
     }`;
 
   const handleLogout = async () => {
-    await signOut();
-    router.push("/login");
-    router.refresh();
-  }
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = '/login'
+}
 
   return (
     <aside className="h-screen w-18 bg-[#1b1e2b] flex flex-col p-8">

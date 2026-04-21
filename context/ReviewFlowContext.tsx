@@ -1,7 +1,8 @@
 'use client'
 
-import React, { createContext, useContext, useState, Dispatch, SetStateAction } from 'react'
+import React, { createContext, useContext, useState, Dispatch, SetStateAction, useEffect } from 'react'
 import { Application } from '@/lib/types'
+import { useAuth } from '@/context/AuthContext'
 
 export type ReviewSelected = Application | null
 
@@ -14,6 +15,11 @@ const ReviewFlowContext = createContext<ReviewFlowContextValue | undefined>(unde
 
 export function ReviewFlowProvider({ children }: { children: React.ReactNode }) {
   const [selected, setSelected] = useState<ReviewSelected>(null)
+  const { user } = useAuth()
+
+  useEffect(() => {
+    setSelected(null)
+  }, [user?.id])  
 
   return (
     <ReviewFlowContext.Provider value={{ selected, setSelected }}>

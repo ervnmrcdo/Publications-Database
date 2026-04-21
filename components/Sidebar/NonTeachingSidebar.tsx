@@ -1,6 +1,7 @@
 import { useRouter, usePathname } from "next/navigation";
-import { signOut } from "@/app/actions/auth";
 import "../../app/globals.css";
+import { createClient } from '@/lib/supabase/client'
+
 
 type NonTeachingPage =
   | "Home"
@@ -32,9 +33,9 @@ const NonTeachingSidebar: React.FC = () => {
     }`;
 
   const handleLogout = async () => {
-    await signOut();
-    router.push("/login");
-    router.refresh();
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push('/login')
   }
 
   return (

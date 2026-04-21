@@ -4,60 +4,67 @@ import { useEffect, useState } from "react";
 import { createClient } from '@/lib/supabase/client'
 import { type User } from '@supabase/supabase-js'
 import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { AlertTriangle } from "lucide-react";
 
+const supabase = createClient();
 export default function TeachingDashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null)
-  const [first_name, setFirstName] = useState<string | null>(null)
+  const { user, profile } = useAuth();
 
   const [publicationCount, setPublicationCount] = useState<number>(0);
   const [pendingAppCount, setPendingAppCount] = useState<number>(0);
   const [validCount, setValidCount] = useState<number>(0);
   const [completedCount, setCompletedCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
-    const supabase = createClient();
-    const getUserAndCounts = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+    setPublicationCount(0);
+    setPendingAppCount(0);
+    setValidCount(0);
+    setCompletedCount(0);
+    setShowWarning(false);
 
-      if (user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('first_name')
-          .eq('id', user.id)
-          .single();
-        if (profile) {
-          setFirstName(profile.first_name);
-        }
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+    const fetchCounts = async () => {
+      setIsLoading(true);
+      try {
+        const [
+          { count: pubCount },
+          { count: pendingCount },
+          { data: validatedData }
+        ] = await Promise.all([
+          supabase
+            .from('publication_authors')
+            .select('publication_id', { count: 'exact', head: true })
+            .eq('user_id', user.id),
+          supabase
+            .from('submissions')
+            .select('submission_id', { count: 'exact', head: true })
+            .eq('submitter_id', user.id)
+            .eq('status', 'PENDING'),
+          supabase
+            .from('submissions')
+            .select('submission_id, status')
+            .eq('submitter_id', user.id)
+            .in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED']),
+        ]);
 
-        const { count: pubCount } = await supabase
-          .from('publication_authors')
-          .select('publication_id', { count: 'exact', head: true })
-          .eq('user_id', user.id);
         setPublicationCount(pubCount || 0);
-
-        const { count: pendingCount } = await supabase
-          .from('submissions')
-          .select('submission_id', { count: 'exact', head: true })
-          .eq('submitter_id', user.id)
-          .eq('status', 'PENDING');
         setPendingAppCount(pendingCount || 0);
-
-        const { data: validatedData } = await supabase
-          .from('submissions')
-          .select('submission_id')
-          .eq('submitter_id', user.id)
-          .in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED']);
-        
         setValidCount(validatedData?.filter((s: any) => s.status === 'VALIDATED').length || 0);
         setCompletedCount(validatedData?.length || 0);
+      } finally {
+        setIsLoading(false);
       }
     };
-    getUserAndCounts();
-  }, []);
+
+    fetchCounts();
+  }, [user?.id]);
 
   const handleNewApplication = () => {
     if (completedCount > 0) {
@@ -107,26 +114,26 @@ export default function TeachingDashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-          <p className="text-gray-400">Hello, {first_name || user?.email || 'Faculty'}!</p>
+          <p className="text-gray-400">Hello, {profile?.first_name || user?.email || 'Faculty'}!</p>
         </div>
 
         {/* some stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-[#1b1e2b] rounded-lg p-6 border border-gray-700">
             <h3 className="text-sm text-gray-400 mb-2">My Publications</h3>
-            <p className="text-3xl font-bold text-blue-400">{publicationCount}</p>
+            <p className="text-3xl font-bold text-blue-400">{isLoading ? '—' : publicationCount}</p>
           </div>
           <div className="bg-[#1b1e2b] rounded-lg p-6 border border-gray-700">
             <h3 className="text-sm text-gray-400 mb-2">Pending Applications</h3>
-            <p className="text-3xl font-bold text-green-400">{pendingAppCount}</p>
+            <p className="text-3xl font-bold text-green-400">{isLoading ? '—' : pendingAppCount}</p>
           </div>
           <div className="bg-[#1b1e2b] rounded-lg p-6 border border-gray-700">
             <h3 className="text-sm text-gray-400 mb-2">Validated Submissions</h3>
-            <p className="text-3xl font-bold text-orange-400">{validCount}</p>
+            <p className="text-3xl font-bold text-orange-400">{isLoading ? '—' : validCount}</p>
           </div>
           <div className="bg-[#1b1e2b] rounded-lg p-6 border border-gray-700">
             <h3 className="text-sm text-gray-400 mb-2">Completed Applications</h3>
-            <p className="text-3xl font-bold text-purple-400">{completedCount}</p>
+            <p className="text-3xl font-bold text-purple-400">{isLoading ? '—' : completedCount}</p>
           </div>
         </div>
 
