@@ -53,6 +53,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    const tempPath = `${user_id}_${publicationId}_${awardId}_form44.pdf`;
+    try {
+      const { data: tempUrlData } = await supabaseAdmin.storage
+        .from('drafts-pdf')
+        .createSignedUrl(tempPath, 3600);
+
+      if (tempUrlData?.signedUrl) {
+        const fileResponse = await fetch(tempUrlData.signedUrl);
+        const fileBuffer = await fileResponse.arrayBuffer();
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="form44.pdf"');
+        return res.send(Buffer.from(fileBuffer));
+      }
+    } catch (e) {
+      // Temp file doesn't exist
+    }
+
     const templatePath = path.join(process.cwd(), 'public', '4.4-template.pdf');
     const buffer = fs.readFileSync(templatePath);
 

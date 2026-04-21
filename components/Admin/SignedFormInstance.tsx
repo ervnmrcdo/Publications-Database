@@ -1,14 +1,24 @@
 import { AcceptedForm } from "@/lib/types"
-import { ArrowLeft, RotateCcw, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 
-const STATUS_LABELS: Record<string, string> = {
-  'VALIDATED': 'Validated',
-  'PENDING_SUBMISSION': 'Pending Submission',
-  'SUBMITTED': 'Submitted to Higher Offices',
-  'PROCESSED': 'Processed',
+const STATUS_OPTIONS = [
+  { value: 'VALIDATED', label: 'Validated', color: 'bg-green-900/30 text-green-400' },
+  { value: 'PENDING_SUBMISSION', label: 'Pending Submission', color: 'bg-blue-900/30 text-blue-400' },
+  { value: 'SUBMITTED', label: 'Submitted to Higher Offices', color: 'bg-purple-900/30 text-purple-400' },
+  { value: 'PROCESSED', label: 'Processed', color: 'bg-gray-900/30 text-gray-400' },
+];
+
+const getStatusColor = (status: string) => {
+  const option = STATUS_OPTIONS.find(s => s.value === status);
+  return option?.color || 'bg-gray-900/30 text-gray-400';
+};
+
+const getStatusLabel = (status: string) => {
+  const option = STATUS_OPTIONS.find(s => s.value === status);
+  return option?.label || status;
 };
 
 type Props = {
@@ -249,12 +259,9 @@ export default function SignedFormInstance({ data, onBack }: Props) {
             <p className="text-xs text-gray-400">{data.date_submitted}</p>
           </div>
           {data.status && (
-            <div className="flex items-center gap-2">
-              <RotateCcw className="w-4 h-4 text-gray-500" />
-              <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-900/50 text-gray-300">
-                {STATUS_LABELS[data.status] || data.status}
-              </span>
-            </div>
+            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(data.status)}`}>
+              {getStatusLabel(data.status)}
+            </span>
           )}
         </div>
       </div>

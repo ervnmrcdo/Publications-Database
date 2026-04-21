@@ -188,7 +188,7 @@ export interface RawData {
 export interface SubmissionLog {
   remarks: string;
   date: string;
-  action: 'RETURNED' | 'SUBMITTED' | 'VALIDATED' | 'RESUBMITTED';
+  action: 'RETURNED' | 'SUBMITTED' | 'VALIDATED' | 'RESUBMITTED' | 'DRAFT_CREATED' | 'DRAFT_EDITED';
   actor_name: string;
 }
 

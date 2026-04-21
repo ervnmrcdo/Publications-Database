@@ -53,6 +53,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    const tempPath = `${user_id}_${publicationId}_${awardId}_form43.docx`;
+    try {
+      const { data: tempUrlData } = await supabaseAdmin.storage
+        .from('drafts-docx')
+        .createSignedUrl(tempPath, 3600);
+
+      if (tempUrlData?.signedUrl) {
+        const fileResponse = await fetch(tempUrlData.signedUrl);
+        const fileBuffer = await fileResponse.arrayBuffer();
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        res.setHeader('Content-Disposition', 'inline; filename="form43.docx"');
+        return res.send(Buffer.from(fileBuffer));
+      }
+    } catch (e) {
+      // Temp file doesn't exist
+    }
+
     const templatePath = path.join(process.cwd(), 'public', '4.3-template.docx');
     const buffer = fs.readFileSync(templatePath);
 

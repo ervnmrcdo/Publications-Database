@@ -78,6 +78,7 @@ function SubmissionsPageContent() {
                         transition={{ duration: 0.3 }}
                     >
                         <DraftInstance data={selectedDraft} onBack={() => setSelected(null)} />
+                        {selectedDraft.logs && <SubmissionLogs logs={selectedDraft.logs} />}
                     </motion.div>
                 )}
 

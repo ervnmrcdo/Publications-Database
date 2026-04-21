@@ -54,7 +54,7 @@ export default function DraftsListing({ onSelect }: Props) {
             const response = await fetch('/api/delete-draft/route', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     submission_id: deleteInfo.submissionId,
                     publicationId: deleteInfo.publicationId,
                     awardId: deleteInfo.awardId,
@@ -76,6 +76,7 @@ export default function DraftsListing({ onSelect }: Props) {
         }
     };
 
+    console.log(draftsData)
     return (<div>
         <div className="bg-[#1b1e2b] rounded-xl shadow p-6 mt-5">
             <h1 className="text-2xl font-bold mb-6 text-white">Drafts</h1>
@@ -97,7 +98,7 @@ export default function DraftsListing({ onSelect }: Props) {
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    setShowDeleteConfirm({ 
+                                    setShowDeleteConfirm({
                                         submissionId: Number(item.submission_id),
                                         publicationId: Number(item.publication_id),
                                         awardId: Number(item.award_id),

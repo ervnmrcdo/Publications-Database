@@ -142,6 +142,7 @@ export default async function handler(req, res) {
             {
               publication_id: publicationId,
               user_id: userId,
+              tagged_authors: [userId],
             },
           ],
           { onConflict: 'publication_id,user_id' }
