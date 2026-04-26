@@ -61,6 +61,11 @@ export interface SupabasePublication {
   doi: string;
 }
 
+type AttachmentData = {
+  drive_url?: string;
+  checklist?: string[];
+};
+
 export type Application = {
   application_id: string;
   name: string;
@@ -75,8 +80,8 @@ export type Application = {
   form43Url?: string | null;
   form44Url?: string | null;
   awardId?: number; 
-  journal_attachments?: Record<string, string>;
-  book_attachments?: Record<string, string>;
+  journal_attachments?: AttachmentData;
+  book_attachments?: AttachmentData;
 };
 
 export interface AcceptedForm {
@@ -97,8 +102,8 @@ export interface AcceptedForm {
   form43Url?: string | null;
   form44Url?: string | null;
   pdfBufferData?: string;
-  journal_attachments?: Record<string, string>;
-  book_attachments?: Record<string, string>;
+  journal_attachments?: AttachmentData;
+  book_attachments?: AttachmentData;
 }
 
 export interface RejectedForm {

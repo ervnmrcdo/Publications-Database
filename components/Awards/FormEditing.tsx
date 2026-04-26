@@ -47,7 +47,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     return formStep;
   };
 
-  const handleFinalSubmit = async (attachments: Record<string, string>) => {
+  const handleFinalSubmit = async (attachments: { drive_url: string; checklist: string[] }) => {
     setIsSubmitting(true);
     try {
 
@@ -90,7 +90,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     }
   };
 
-  const handleSaveAsDraft = async (attachments: Record<string, string>) => {
+  const handleSaveAsDraft = async (attachments: { drive_url: string; checklist: string[] }) => {
     setIsSubmitting(true);
     try {
       const draftData = {
