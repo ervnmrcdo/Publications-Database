@@ -5,6 +5,8 @@ import path from 'path';
 import { createPagesServerClient } from '@/lib/supabase/pager-server';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
+const MAX_MAIN_FORM_AUTHORS = 6;
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method Not Allowed' });
@@ -117,7 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ].filter(Boolean);
     const completeCitation = citationParts.join(', ');
 
-    const templatePath = path.join(process.cwd(), 'public', '4.1-template-new.pdf');
+    const templatePath = path.join(process.cwd(), 'public', '4.1-template.pdf');
     const buffer = fs.readFileSync(templatePath);
     const pdfDoc = await PDFDocument.load(buffer);
     const form = pdfDoc.getForm();
@@ -150,8 +152,70 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       form.getTextField('author1-contact').setText(firstAuthor.contact_number || '');
       form.getTextField('author1-position').setText(firstAuthor.position || '');
       form.getTextField('author1-email').setText(firstAuthor.email_address || '');
+
+      for (let i = 1; i < Math.min(totalAuthors, MAX_MAIN_FORM_AUTHORS); i++) {
+        const author = authors[i];
+        if (!author) break;
+
+        const authorName = author.first_name && author.last_name
+          ? `${author.first_name} ${author.middle_name || ''} ${author.last_name}`.replace(/\s+/g, ' ').trim()
+          : '';
+        const authorNameLastFirst = author.last_name && author.first_name
+          ? `${author.last_name}, ${author.first_name}${author.middle_name ? ' ' + author.middle_name : ''}`
+          : '';
+        const authorUniversityAndDept = author.university && author.department
+          ? `${author.university} - ${author.department}`
+          : author.university || '';
+
+        const authorNum = i + 1;
+
+        try {
+          form.getTextField(`author${authorNum}-name-last-first`).setText(authorNameLastFirst);
+          form.getTextField(`author${authorNum}-university-and-dept`).setText(authorUniversityAndDept);
+        } catch (fieldError) {
+          console.warn(`Field for author${authorNum} not found in PDF:`, fieldError);
+        }
+      }
     } catch (fieldError) {
       console.warn("One or more fields were not found in the PDF:", fieldError);
+    }
+
+    if (totalAuthors > MAX_MAIN_FORM_AUTHORS) {
+      try {
+        for (let i = MAX_MAIN_FORM_AUTHORS; i < totalAuthors; i++) {
+          const author = authors[i];
+          if (!author) continue;
+
+          const extraTemplatePath = path.join(process.cwd(), 'public', '4.x-extra-page.pdf');
+          const extraBuffer = fs.readFileSync(extraTemplatePath);
+          const extraPdfDoc = await PDFDocument.load(extraBuffer);
+          const extraForm = extraPdfDoc.getForm();
+
+          const authorNum = i + 1;
+
+          const authorName = author.first_name && author.last_name
+            ? `${author.first_name} ${author.middle_name || ''} ${author.last_name}`.replace(/\s+/g, ' ').trim()
+            : '';
+
+          try {
+            extraForm.getTextField('applicant-number').setText(String(authorNum));
+            extraForm.getTextField('author-name').setText(authorName);
+            extraForm.getTextField('author-university').setText(author.university || '');
+            extraForm.getTextField('author-college').setText(author.college || '');
+            extraForm.getTextField('author-department').setText(author.department || '');
+            extraForm.getTextField('author-contact').setText(author.contact_number || '');
+            extraForm.getTextField('author-position').setText(author.position || '');
+            extraForm.getTextField('author-email').setText(author.email_address || '');
+          } catch (fillError) {
+            console.warn(`Error filling extra page for author${authorNum}:`, fillError);
+          }
+
+          const [copiedPage] = await pdfDoc.copyPages(extraPdfDoc, [0]);
+          pdfDoc.addPage(copiedPage);
+        }
+      } catch (extraPageError) {
+        console.warn("Error adding extra pages:", extraPageError);
+      }
     }
 
     const pdfBytes = await pdfDoc.save();

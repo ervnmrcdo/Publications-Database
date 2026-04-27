@@ -1,8 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { PDFDocument } from 'pdf-lib';
 import fs from 'fs';
 import path from 'path';
 import { createPagesServerClient } from '@/lib/supabase/pager-server';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
+
+const MAX_MAIN_FORM_AUTHORS = 4;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -71,15 +74,150 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Temp file doesn't exist
     }
 
+    const { data: publication, error: pubError } = await supabase
+      .from('publications')
+      .select('*')
+      .eq('publication_id', publicationId)
+      .single();
+
+    if (pubError || !publication) {
+      return res.status(404).json({ message: 'Publication not found' });
+    }
+
+    const { data: pubAuthors, error: authorsError } = await supabase
+      .from('publication_authors')
+      .select('*, users(*)')
+      .eq('publication_id', publicationId);
+
+    if (authorsError) {
+      console.error('Authors error:', authorsError);
+    }
+
+    const authors = pubAuthors?.map(pa => ({
+      first_name: pa.first_name || pa.users?.first_name || "",
+      last_name: pa.last_name || pa.users?.last_name || "",
+      middle_name: pa.middle_name || pa.users?.middle_name || "",
+      university: pa.university || pa.users?.university || "",
+      college: pa.college || pa.users?.college || "",
+      department: pa.department || pa.users?.department || "",
+      position: pa.position || pa.users?.position || "",
+      contact_number: pa.contact_number || pa.users?.contact_number || "",
+      email_address: pa.email_address || pa.users?.email_address || "",
+    })) || [];
+
+    const firstAuthor = authors[0] || {};
+    const totalAuthors = authors.length;
+
     const templatePath = path.join(process.cwd(), 'public', '4.4-template.pdf');
     const buffer = fs.readFileSync(templatePath);
+    const pdfDoc = await PDFDocument.load(buffer);
+    const form = pdfDoc.getForm();
 
+    try {
+      form.getTextField('chapter-title').setText(publication.title || '');
+      try {
+        form.getTextField('book-title.undefined').setText(publication.title || '');
+      } catch (e) {
+        // Field may not exist with this exact name
+      }
+      form.getTextField('publisher-name').setText(publication.publisher || '');
+      form.getTextField('date-of-publication').setText(publication.date_published ? String(publication.date_published) : '');
+      form.getTextField('publication-place').setText('');
+      form.getTextField('editor-names').setText('');
+      form.getTextField('total-author-number').setText(String(totalAuthors));
+
+      const author1Name = firstAuthor.first_name && firstAuthor.last_name
+        ? `${firstAuthor.first_name} ${firstAuthor.middle_name || ''} ${firstAuthor.last_name}`.replace(/\s+/g, ' ').trim()
+        : '';
+      const author1NameLastFirst = firstAuthor.last_name && firstAuthor.first_name
+        ? `${firstAuthor.last_name}, ${firstAuthor.first_name}${firstAuthor.middle_name ? ' ' + firstAuthor.middle_name : ''}`
+        : '';
+      const author1UniversityAndDept = firstAuthor.university && firstAuthor.department
+        ? `${firstAuthor.university} - ${firstAuthor.department}`
+        : firstAuthor.university || '';
+
+      form.getTextField('author1-name-last-first').setText(author1NameLastFirst);
+      form.getTextField('author1-name').setText(author1Name);
+      form.getTextField('author1-university-and-dept').setText(author1UniversityAndDept);
+      form.getTextField('author1-university').setText(firstAuthor.university || '');
+      form.getTextField('author1-college').setText(firstAuthor.college || '');
+      form.getTextField('author1-department').setText(firstAuthor.department || '');
+      form.getTextField('author1-contact').setText(firstAuthor.contact_number || '');
+      form.getTextField('author1-position').setText(firstAuthor.position || '');
+      form.getTextField('author1-email').setText(firstAuthor.email_address || '');
+
+      for (let i = 1; i < Math.min(totalAuthors, MAX_MAIN_FORM_AUTHORS); i++) {
+        const author = authors[i];
+        if (!author) break;
+
+        const authorName = author.first_name && author.last_name
+          ? `${author.first_name} ${author.middle_name || ''} ${author.last_name}`.replace(/\s+/g, ' ').trim()
+          : '';
+        const authorNameLastFirst = author.last_name && author.first_name
+          ? `${author.last_name}, ${author.first_name}${author.middle_name ? ' ' + author.middle_name : ''}`
+          : '';
+        const authorUniversityAndDept = author.university && author.department
+          ? `${author.university} - ${author.department}`
+          : author.university || '';
+
+        const authorNum = i + 1;
+
+        try {
+          form.getTextField(`author${authorNum}-name-last-first`).setText(authorNameLastFirst);
+          form.getTextField(`author${authorNum}-university-and-dept`).setText(authorUniversityAndDept);
+        } catch (fieldError) {
+          console.warn(`Field for author${authorNum} not found in PDF:`, fieldError);
+        }
+      }
+    } catch (fieldError) {
+      console.warn("One or more fields were not found in the PDF:", fieldError);
+    }
+
+    if (totalAuthors > MAX_MAIN_FORM_AUTHORS) {
+      try {
+        for (let i = MAX_MAIN_FORM_AUTHORS; i < totalAuthors; i++) {
+          const author = authors[i];
+          if (!author) continue;
+
+          const extraTemplatePath = path.join(process.cwd(), 'public', '4.x-extra-page.pdf');
+          const extraBuffer = fs.readFileSync(extraTemplatePath);
+          const extraPdfDoc = await PDFDocument.load(extraBuffer);
+          const extraForm = extraPdfDoc.getForm();
+
+          const authorNum = i + 1;
+
+          const authorName = author.first_name && author.last_name
+            ? `${author.first_name} ${author.middle_name || ''} ${author.last_name}`.replace(/\s+/g, ' ').trim()
+            : '';
+
+          try {
+            extraForm.getTextField('applicant-number').setText(String(authorNum));
+            extraForm.getTextField('author-name').setText(authorName);
+            extraForm.getTextField('author-university').setText(author.university || '');
+            extraForm.getTextField('author-college').setText(author.college || '');
+            extraForm.getTextField('author-department').setText(author.department || '');
+            extraForm.getTextField('author-contact').setText(author.contact_number || '');
+            extraForm.getTextField('author-position').setText(author.position || '');
+            extraForm.getTextField('author-email').setText(author.email_address || '');
+          } catch (fillError) {
+            console.warn(`Error filling extra page for author${authorNum}:`, fillError);
+          }
+
+          const [copiedPage] = await pdfDoc.copyPages(extraPdfDoc, [0]);
+          pdfDoc.addPage(copiedPage);
+        }
+      } catch (extraPageError) {
+        console.warn("Error adding extra pages:", extraPageError);
+      }
+    }
+
+    const pdfBytes = await pdfDoc.save();
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="4.4-template.pdf"');
-    return res.send(buffer);
+    res.setHeader('Content-Disposition', 'inline; filename="filled-report.pdf"');
+    return res.send(Buffer.from(pdfBytes));
 
   } catch (error) {
-    console.error("Error:", error);
+    console.error("PDF Generation Error:", error);
     return res.status(500).json({ message: 'Internal server error', error: String(error) });
   }
 }

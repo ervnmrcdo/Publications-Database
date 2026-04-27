@@ -50,12 +50,12 @@ export default forwardRef(function Form43Editor({ publicationId, documentUrl, aw
 
   const config = useMemo(() => ({
     document: {
-      fileType: "docx",
+      fileType: "pdf",
       key: documentKey,
       title: "4.3-template",
       url: documentUrlFinal,
     },
-    documentType: "word",
+    documentType: "pdf",
     editorConfig: {
       mode: "edit",
       callbackUrl: `http://host.docker.internal:3000/api/drafts/callback?publicationId=${publicationId}&awardId=${awardId}&formType=43&user_id=${userId}`,

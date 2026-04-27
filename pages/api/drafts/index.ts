@@ -115,9 +115,9 @@ async function handleGet(
   }
 
   if (!draftPaths.form43_path) {
-    const tempFile = `${tempPath}43.docx`;
+    const tempFile = `${tempPath}43.pdf`;
     try {
-      const { data: urlData } = await docxBucket.createSignedUrl(tempFile, 3600);
+      const { data: urlData } = await pdfBucket.createSignedUrl(tempFile, 3600);
       if (urlData?.signedUrl) {
         draftUrls.form43 = urlData.signedUrl;
         draftPaths.form43_path = tempFile;
@@ -155,21 +155,21 @@ async function handleDelete(
     const pdfFiles = [
       `${basePath}/form41.pdf`,
       `${basePath}/form44.pdf`,
+      `${basePath}/form43.pdf`,
     ];
 
     const docxFiles = [
       `${basePath}/form42.docx`,
-      `${basePath}/form43.docx`,
     ];
 
     const tempPdfFiles = [
       `${userId}_${publicationId}_${awardId}_form41.pdf`,
       `${userId}_${publicationId}_${awardId}_form44.pdf`,
+      `${userId}_${publicationId}_${awardId}_form43.pdf`,
     ];
 
     const tempDocxFiles = [
       `${userId}_${publicationId}_${awardId}_form42.docx`,
-      `${userId}_${publicationId}_${awardId}_form43.docx`,
     ];
 
     await supabase.storage.from("drafts-pdf").remove([...pdfFiles, ...tempPdfFiles]);

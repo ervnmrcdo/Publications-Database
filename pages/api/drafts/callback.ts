@@ -46,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const arrayBuffer = await resp.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-      const fileExt = formType === "41" || formType === "44" ? "pdf" : "docx";
+      const fileExt = formType === "41" || formType === "44" || formType === "43" ? "pdf" : "docx";
       const bucket = fileExt === "pdf" ? "drafts-pdf" : "drafts-docx";
 
       let filePath: string;

@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       existingDocxFiles.push(existingDraft.form42_path);
     }
     if (existingDraft.form43_path) {
-      existingDocxFiles.push(existingDraft.form43_path);
+      existingPdfFiles.push(existingDraft.form43_path);
     }
 
     if (existingPdfFiles.length === 0 && existingDocxFiles.length === 0) {
@@ -53,7 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     for (const draftPath of existingPdfFiles) {
       const formType = draftPath.includes("form41") ? "41" :
-        draftPath.includes("form44") ? "44" : null;
+        draftPath.includes("form44") ? "44" :
+          draftPath.includes("form43") ? "43" : null;
       if (!formType) continue;
 
       const { data: fileData, error: downloadError } = await supabaseAdmin.storage
@@ -75,13 +76,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
 
       if (!uploadError && uploadData) {
-        submissionPaths[formType === "41" ? "form41_path" : "form44_path"] = uploadData.path;
+        submissionPaths[formType === "41" ? "form41_path" : formType === "44" ? "form44_path" : "form43_path"] = uploadData.path;
       }
     }
 
     for (const draftPath of existingDocxFiles) {
-      const formType = draftPath.includes("form42") ? "42" :
-        draftPath.includes("form43") ? "43" : null;
+      const formType = draftPath.includes("form42") ? "42" : null;
       if (!formType) continue;
 
       const { data: fileData, error: downloadError } = await supabaseAdmin.storage
