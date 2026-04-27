@@ -2,6 +2,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { signOut } from "@/app/actions/auth";
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from "react";
+import { useAuth } from '@/context/AuthContext'
 import { AlertTriangle } from "lucide-react";
 import "../../app/globals.css";
 
@@ -15,6 +16,9 @@ type TeachingPage =
 const TeachingSidebar: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, profile } = useAuth()
+  const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || user?.email || ''
+  const roleLabel = profile?.role === 'admin' ? 'Admin' : profile?.role === 'teaching' ? 'Teaching' : 'Non-Teaching'
   const [completedCount, setCompletedCount] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
 
@@ -119,6 +123,10 @@ const TeachingSidebar: React.FC = () => {
       </div>
 
       <div className="mt-auto">
+        <div className="mb-4 p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
+          <p className="text-sm font-medium text-gray-200 truncate">{displayName}</p>
+          <span className="text-xs text-blue-400">{roleLabel}</span>
+        </div>
         <button
           onClick={handleLogout}
           className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 rounded-lg transition"
