@@ -82,10 +82,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const tempPdfFiles = [
         `${user_id}_${publicationIdNum}_${awardIdNum}_form41.pdf`,
         `${user_id}_${publicationIdNum}_${awardIdNum}_form44.pdf`,
+        `${user_id}_${publicationIdNum}_${awardIdNum}_form43.pdf`,
       ];
       const tempDocxFiles = [
         `${user_id}_${publicationIdNum}_${awardIdNum}_form42.docx`,
-        `${user_id}_${publicationIdNum}_${awardIdNum}_form43.docx`,
       ];
 
       for (const tempPath of tempPdfFiles) {
@@ -95,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .download(tempPath);
           
           if (tempFile) {
-            const formType = tempPath.includes("form41") ? "41" : "44";
+            const formType = tempPath.includes("form41") ? "41" : tempPath.includes("form44") ? "44" : "43";
             const newPath = `${submission_id}_form${formType}.pdf`;
             const fileBuffer = Buffer.from(await tempFile.arrayBuffer());
             
@@ -119,7 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .download(tempPath);
           
           if (tempFile) {
-            const formType = tempPath.includes("form42") ? "42" : "43";
+            const formType = "42";
             const newPath = `${submission_id}_form${formType}.docx`;
             const fileBuffer = Buffer.from(await tempFile.arrayBuffer());
             

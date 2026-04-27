@@ -32,11 +32,11 @@ export default async function ReturnAward(
 
 		const pdfFiles = [
 			`${admin_id}/${submission_id}/form41.pdf`,
-			`${admin_id}/${submission_id}/form44.pdf`
+			`${admin_id}/${submission_id}/form44.pdf`,
+			`${admin_id}/${submission_id}/form43.pdf`
 		];
 		const docxFiles = [
 			`${admin_id}/${submission_id}/form42.docx`,
-			`${admin_id}/${submission_id}/form43.docx`
 		];
 
 		await supabaseAdmin.storage.from("drafts-pdf").remove(pdfFiles);

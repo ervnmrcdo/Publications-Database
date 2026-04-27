@@ -173,9 +173,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.warn("One or more fields were not found in the PDF:", fieldError);
     }
 
-    if (totalAuthors > MAX_MAIN_FORM_AUTHORS) {
+    if (totalAuthors > 1) {
       try {
-        for (let i = MAX_MAIN_FORM_AUTHORS; i < totalAuthors; i++) {
+        for (let i = 1; i < totalAuthors; i++) {
           const author = authors[i];
           if (!author) continue;
 

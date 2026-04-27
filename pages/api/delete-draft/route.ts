@@ -41,13 +41,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .remove([
         `${submissionId}_form41.pdf`,
         `${submissionId}_form44.pdf`,
+        `${submissionId}_form43.pdf`,
       ]);
 
     await supabaseAdmin.storage
       .from("drafts-docx")
       .remove([
         `${submissionId}_form42.docx`,
-        `${submissionId}_form43.docx`,
       ]);
 
     return res.status(200).json({

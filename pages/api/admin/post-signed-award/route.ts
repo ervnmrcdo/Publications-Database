@@ -20,11 +20,11 @@ export default async function ValidateAward(
 
 		const draftsPdfFiles = [
 			`${admin_id}/${submission_id}/form41.pdf`,
-			`${admin_id}/${submission_id}/form44.pdf`
+			`${admin_id}/${submission_id}/form44.pdf`,
+			`${admin_id}/${submission_id}/form43.pdf`
 		];
 		const draftsDocxFiles = [
 			`${admin_id}/${submission_id}/form42.docx`,
-			`${admin_id}/${submission_id}/form43.docx`
 		];
 
 		const { data: pdfList, error: pdfListError } = await supabaseAdmin.storage

@@ -67,7 +67,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     for (const draftPath of existingPdfFiles) {
       const formType = draftPath.includes("form41") ? "41" :
-        draftPath.includes("form44") ? "44" : null;
+        draftPath.includes("form44") ? "44" :
+          draftPath.includes("form43") ? "43" : null;
       if (!formType) continue;
 
       const { data: fileData, error: downloadError } = await supabaseAdmin.storage
@@ -79,9 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const arrayBuffer = await fileData.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-      const newFileName = formType === "41"
-        ? `${submissionId}_form41.pdf`
-        : `${submissionId}_form44.pdf`;
+      const newFileName = `${submissionId}_form${formType}.pdf`;
 
       const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
         .from("submissions-pdf")
@@ -91,13 +90,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
 
       if (!uploadError && uploadData) {
-        submissionPaths[formType === "41" ? "form41_path" : "form44_path"] = uploadData.path;
+        submissionPaths[formType === "41" ? "form41_path" : formType === "44" ? "form44_path" : "form43_path"] = uploadData.path;
       }
     }
 
     for (const draftPath of existingDocxFiles) {
-      const formType = draftPath.includes("form42") ? "42" :
-        draftPath.includes("form43") ? "43" : null;
+      const formType = draftPath.includes("form42") ? "42" : null;
       if (!formType) continue;
 
       const { data: fileData, error: downloadError } = await supabaseAdmin.storage
@@ -109,9 +107,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const arrayBuffer = await fileData.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-      const newFileName = formType === "42"
-        ? `${submissionId}_form42.docx`
-        : `${submissionId}_form43.docx`;
+      const newFileName = `${submissionId}_form${formType}.docx`;
 
       const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
         .from("submissions-docx")

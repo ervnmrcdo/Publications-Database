@@ -82,9 +82,10 @@ export default async function POST(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ error3: updateError.message });
     }
 
-    // Upload DOCX files if present
-    const docxPaths: { form42_path?: string; form43_path?: string } = {};
-    let form44PdfPath: string | null = null;
+    // Upload PDF and DOCX files if present
+    const pdfPaths: { form41_path?: string; form43_path?: string; form44_path?: string } = {};
+    const docxPaths: { form42_path?: string } = {};
+    let form42DocxPath: string | null = null;
 
     const form42File = files.form42?.[0];
     const form43File = files.form43?.[0];
@@ -107,16 +108,16 @@ export default async function POST(req: NextApiRequest, res: NextApiResponse) {
 
     if (form43File) {
       const form43Buffer = fs.readFileSync(form43File.filepath);
-      const form43FileName = `${submission_id}_form43.docx`;
+      const form43FileName = `${submission_id}_form43.pdf`;
       const { data: form43Upload, error: form43Error } = await supabase.storage
-        .from('submissions-docx')
+        .from('submissions-pdf')
         .upload(form43FileName, form43Buffer, {
-          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          contentType: 'application/pdf',
           upsert: true
         });
       
       if (!form43Error && form43Upload) {
-        docxPaths.form43_path = form43Upload.path;
+        pdfPaths.form43_path = form43Upload.path;
       }
     }
 
@@ -131,24 +132,21 @@ export default async function POST(req: NextApiRequest, res: NextApiResponse) {
         });
       
       if (!form44Error && form44Upload) {
-        form44PdfPath = form44Upload.path;
+        pdfPaths.form44_path = form44Upload.path;
       }
     }
 
-    // Update submission with DOCX file paths if any
-    const updateData: Record<string, string | null> = { ...docxPaths };
-    if (form44PdfPath) {
-      updateData.form44_path = form44PdfPath;
-    }
+    // Update submission with PDF file paths if any
+    const updateData: Record<string, string | null> = { ...pdfPaths, ...docxPaths };
     
     if (Object.keys(updateData).length > 0) {
-      const { error: docxUpdateError } = await supabase
+      const { error: pdfUpdateError } = await supabase
         .from('submissions')
         .update(updateData)
         .eq('submission_id', submission_id);
 
-      if (docxUpdateError) {
-        console.error('Failed to update file paths:', docxUpdateError);
+      if (pdfUpdateError) {
+        console.error('Failed to update file paths:', pdfUpdateError);
       }
     }
 

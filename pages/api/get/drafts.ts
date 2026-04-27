@@ -71,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const form41Path = r.form41_path || `${submissionId}_form41.pdf`;
         const form42Path = r.form42_path || `${submissionId}_form42.docx`;
-        const form43Path = r.form43_path || `${submissionId}_form43.docx`;
+        const form43Path = r.form43_path || `${submissionId}_form43.pdf`;
         const form44Path = r.form44_path || `${submissionId}_form44.pdf`;
 
         let form41Url: string | null = null;
@@ -90,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         form42Url = form42SignedUrl?.signedUrl || null;
 
         const { data: form43SignedUrl } = await supabaseAdmin.storage
-          .from("drafts-docx")
+          .from("drafts-pdf")
           .createSignedUrl(form43Path, 3600);
         form43Url = form43SignedUrl?.signedUrl || null;
 

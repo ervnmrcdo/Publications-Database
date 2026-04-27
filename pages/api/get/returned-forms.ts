@@ -71,8 +71,8 @@ export default async function RetrieveReturnedForms(
           form42Url = form42SignedUrl?.signedUrl || null;
 
           const { data: form43SignedUrl } = await supabase.storage
-            .from('drafts-docx')
-            .createSignedUrl(`${submissionId}_form43.docx`, 3600);
+            .from('drafts-pdf')
+            .createSignedUrl(`${submissionId}_form43.pdf`, 3600);
           form43Url = form43SignedUrl?.signedUrl || null;
 
           const { data: form44SignedUrl } = await supabase.storage
