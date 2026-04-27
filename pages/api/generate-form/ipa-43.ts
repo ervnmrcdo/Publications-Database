@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { publicationId, awardId, user_id } = req.query;
+  const { publicationId, awardId, user_id, adminId } = req.query;
 
   if (!publicationId) {
     return res.status(400).json({ message: 'publicationId is required' });
@@ -98,6 +98,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       department: pa.department || pa.users?.department || "",
     })) || [];
 
+    let adminUser = null;
+    if (adminId) {
+      const { data: adminData } = await supabase
+        .from('users')
+        .select('first_name, middle_name, last_name, position')
+        .eq('id', adminId)
+        .single();
+      adminUser = adminData;
+    }
+
     const templatePath = path.join(process.cwd(), 'public', '4.3-template.pdf');
     const buffer = fs.readFileSync(templatePath);
     const pdfDoc = await PDFDocument.load(buffer);
@@ -136,8 +146,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
-      form.getTextField('admin-name').setText('');
-      form.getTextField('admin-position').setText('');
+      form.getTextField('admin-name').setText(adminUser ? [adminUser.first_name, adminUser.middle_name, adminUser.last_name].filter(Boolean).join(' ').trim() : '');
+      form.getTextField('admin-position').setText(adminUser?.position || '');
       form.getTextField('admin-name-2').setText('');
       form.getTextField('admin-position-2').setText('');
       form.getTextField('vice-president-name').setText('');

@@ -228,7 +228,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
     const generateForm43Config = useCallback(async () => {
         setLoadingForm43(true);
         try {
-            const form43 = await generateConfig("43", "docx", "word", "4.3");
+            const form43 = await generateConfig("43", "pdf", "pdf", "4.3");
             setDocxConfigs(prev => ({ ...prev, form43: form43 }));
         } catch (err) {
             console.error('Error loading form 4.3:', err);

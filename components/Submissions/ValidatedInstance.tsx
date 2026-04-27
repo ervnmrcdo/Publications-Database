@@ -216,12 +216,12 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
             const documentUrl = `${baseUrl}/api/admin/get-validated-form/route?submission_id=${data.submission_id}&form_type=43`;
             const config: DocumentConfig = {
                 document: {
-                    fileType: "docx",
+                    fileType: "pdf",
                     key: crypto.randomUUID(),
                     title: "4.3",
                     url: documentUrl,
                 },
-                documentType: "word",
+                documentType: "pdf",
                 editorConfig: {
                     mode: "view",
                     customization: {

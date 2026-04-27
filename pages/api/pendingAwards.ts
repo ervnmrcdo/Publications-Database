@@ -68,7 +68,7 @@ export default async function PendingAwards(
 
       if (r.form43_path) {
         const { data: form43SignedUrl } = await supabase.storage
-          .from('submissions-docx')
+          .from('submissions-pdf')
           .createSignedUrl(r.form43_path, 3600);
         form43Url = form43SignedUrl?.signedUrl || null;
       }

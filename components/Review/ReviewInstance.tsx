@@ -314,12 +314,12 @@ export default function ReviewInstance({ data, onBack }: Props) {
 
       const config: DocumentConfig = {
         document: {
-          fileType: "docx",
+          fileType: "pdf",
           key: documentKey,
           title: "4.3",
           url: documentUrl,
         },
-        documentType: "word",
+        documentType: "pdf",
         editorConfig: {
           callbackUrl: callbackUrl,
           mode: "edit",

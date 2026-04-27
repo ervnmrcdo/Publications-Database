@@ -23,8 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid form_type. Must be 41, 42, 43, or 44' });
   }
 
-  const fileExt = formType === '41' || formType === '44' ? 'pdf' : 'docx';
-  const submissionBucket = fileExt === 'pdf' ? 'submissions-pdf' : 'submissions-docx';
+  const fileExt = 'pdf';
+  const submissionBucket = 'submissions-pdf';
 
   try {
     const supabase = createServiceRoleClient();
