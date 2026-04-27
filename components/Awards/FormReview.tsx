@@ -5,47 +5,51 @@ import { useAwardsFlow } from '@/context/AwardsFlowContext';
 import { useState } from 'react';
 
 interface FormReviewProps {
-  onSubmit: (attachments: AttachmentMap) => void;
-  onSaveDraft: (attachments: AttachmentMap) => void;
+  onSubmit: (attachments: AttachmentData) => void;
+  onSaveDraft: (attachments: AttachmentData) => void;
   onBack: () => void;
   isJournal: boolean;
   isSubmitting: boolean;
 }
 
-const JOURNAL_FIELDS = [
-  { key: 'journal_article', label: 'Copy of the Journal Article' },
+const JOURNAL_CHECKLIST = [
+  'Copy of the Journal Article',
 ];
 
-const BOOK_FIELDS = [
-  { key: 'book_chapter', label: 'Copy of Book / Book Chapter' },
-  { key: 'book_cover', label: 'Book Cover' },
-  { key: 'copyright_page', label: 'Copyright Page' },
-  { key: 'preface', label: 'Preface' },
-  { key: 'table_of_contents', label: 'Table of Contents' },
-  { key: 'contributors_notes', label: 'List of Contributors or Contributors Notes' },
-  { key: 'proof_of_peer_review', label: 'Proof of Peer Review Process' },
+const BOOK_CHECKLIST = [
+  'Copy of Book / Book Chapter',
+  'Book Cover',
+  'Copyright Page',
+  'Preface',
+  'Table of Contents',
+  'List of Contributors or Contributors Notes',
+  'Proof of Peer Review Process',
 ];
 
-type AttachmentMap = Record<string, string>;
+type AttachmentData = {
+  drive_url: string;
+  checklist: string[];
+};
 
 export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, isSubmitting }: FormReviewProps) {
   const { setFormStep } = useAwardsFlow();
-  const fields = isJournal ? JOURNAL_FIELDS : BOOK_FIELDS;
+  const checklistItems = isJournal ? JOURNAL_CHECKLIST : BOOK_CHECKLIST;
 
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showSaveDraftConfirm, setShowSaveDraftConfirm] = useState(false);
 
-  const [attachments, setAttachments] = useState<AttachmentMap>(
-    Object.fromEntries(fields.map(f => [f.key, '']))
-  );
+  const [driveUrl, setDriveUrl] = useState('');
+  const [checklist, setChecklist] = useState<string[]>([]);
 
   const handleBack = () => {
     setFormStep('form43');
     onBack();
   };
 
-  const updateAttachment = (key: string, value: string) => {
-    setAttachments(prev => ({ ...prev, [key]: value }));
+  const toggleCheck = (item: string) => {
+    setChecklist(prev =>
+      prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
+    );
   };
 
   const formsList = isJournal ? (
@@ -115,30 +119,46 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
       {/* Attachments Section */}
       <div className="bg-[#1b1e2b] rounded-lg p-6 mt-6">
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-white">
-            {isJournal ? 'Journal Article Attachments' : 'Book Chapter Attachments'}
-          </h3>
+          <h3 className="text-lg font-semibold text-white">Supporting Documents</h3>
           <p className="text-sm text-gray-400 mt-0.5">
-            Optional — paste links to your supporting documents
+            Optional — paste your Google Drive folder link and check off what's included
           </p>
         </div>
 
-        <div className="space-y-4">
-          {fields.map(({ key, label }) => (
-            <div key={key}>
-              <label className="block text-sm text-gray-300 mb-1">{label}</label>
-              <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2 focus-within:border-blue-500">
-                <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
+        {/* Google Drive URL */}
+        <div className="mb-5">
+          <label className="block text-sm text-gray-300 mb-1">Google Drive Folder Link</label>
+          <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2 focus-within:border-blue-500">
+            <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
+            <input
+              type="url"
+              placeholder="https://drive.google.com/drive/folders/..."
+              value={driveUrl}
+              onChange={e => setDriveUrl(e.target.value)}
+              className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Checklist */}
+        <div>
+          <label className="block text-sm text-gray-300 mb-2">Documents included in the folder</label>
+          <div className="space-y-2">
+            {checklistItems.map(item => (
+              <label
+                key={item}
+                className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition"
+              >
                 <input
-                  type="url"
-                  placeholder="https://..."
-                  value={attachments[key]}
-                  onChange={e => updateAttachment(key, e.target.value)}
-                  className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
+                  type="checkbox"
+                  checked={checklist.includes(item)}
+                  onChange={() => toggleCheck(item)}
+                  className="w-4 h-4 accent-blue-500"
                 />
-              </div>
-            </div>
-          ))}
+                <span className="text-sm text-gray-300">{item}</span>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -160,7 +180,7 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
         </button>
 
         <button
-          onClick={()=>onSubmit(attachments)}
+          onClick={() => onSubmit({ drive_url: driveUrl, checklist })}
           disabled={isSubmitting}
           className="flex items-center px-8 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
         >
@@ -197,7 +217,7 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                 onClick={() => {
                   setShowSubmitConfirm(false);
-                  onSubmit(attachments);
+                  onSubmit({ drive_url: driveUrl, checklist });
                 }}
               >
                 Confirm Submit
@@ -226,7 +246,7 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
                 className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
                 onClick={() => {
                   setShowSaveDraftConfirm(false);
-                  onSaveDraft(attachments);
+                  onSubmit({ drive_url: driveUrl, checklist });
                 }}
               >
                 Save Draft

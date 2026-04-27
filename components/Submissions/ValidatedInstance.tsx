@@ -1,4 +1,4 @@
-import { AcceptedForm } from "@/lib/types"
+import { AcceptedForm, AttachmentData } from "@/lib/types"
 import { ArrowLeft, ChevronDown, ChevronRight, Link, Edit2, Save, X, RotateCcw } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import * as jose from 'jose';
@@ -67,11 +67,11 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
     const [updatingStatus, setUpdatingStatus] = useState<boolean>(false);
 
     const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false);
-    const [journalAttachments, setJournalAttachments] = useState<Record<string, string>>(
-        data.journal_attachments || {}
+    const [journalAttachments, setJournalAttachments] = useState<AttachmentData>(
+        { drive_url: data.journal_attachments?.drive_url ?? '', checklist: data.journal_attachments?.checklist ?? [] }
     );
-    const [bookAttachments, setBookAttachments] = useState<Record<string, string>>(
-        data.book_attachments || {}
+    const [bookAttachments, setBookAttachments] = useState<AttachmentData>(
+        { drive_url: data.book_attachments?.drive_url ?? '', checklist: data.book_attachments?.checklist ?? [] }
     );
     const [savingAttachments, setSavingAttachments] = useState<boolean>(false);
 
@@ -477,82 +477,129 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
                 </div>
             )}
             {/* Attachments Section */}
-            <div className="p-4 bg-[#252836] rounded-lg">
-                <div className="flex justify-between items-center mb-4">
-                    <p className="font-bold text-med text-white">
-                        Attachments
-                    </p>
-                    {!isEditingAttachments ? (
+{(() => {
+    const isJournal = !!data.form41_url;
+    const attachments = isJournal ? journalAttachments : bookAttachments;
+    const setAttachments = isJournal ? setJournalAttachments : setBookAttachments;
+
+    const JOURNAL_CHECKLIST = ['Copy of the Journal Article'];
+    const BOOK_CHECKLIST = [
+        'Copy of Book / Book Chapter',
+        'Book Cover',
+        'Copyright Page',
+        'Preface',
+        'Table of Contents',
+        'List of Contributors or Contributors Notes',
+        'Proof of Peer Review Process',
+    ];
+    const checklistItems = isJournal ? JOURNAL_CHECKLIST : BOOK_CHECKLIST;
+
+    const toggleCheck = (item: string) => {
+        setAttachments(prev => ({
+            ...prev,
+            checklist: (prev.checklist ?? []).includes(item)
+                ? (prev.checklist ?? []).filter(i => i !== item)
+                : [...(prev.checklist ?? []), item],
+        }));
+    };
+
+    return (
+        <div className="p-4 bg-[#252836] rounded-lg">
+            <div className="flex justify-between items-center mb-4">
+                <p className="font-bold text-white">Supporting Documents</p>
+                {!isEditingAttachments ? (
+                    <button
+                        onClick={() => setIsEditingAttachments(true)}
+                        className="flex items-center px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                    >
+                        <Edit2 className="w-4 h-4 mr-1" /> Edit
+                    </button>
+                ) : (
+                    <div className="flex gap-2">
                         <button
-                            onClick={() => setIsEditingAttachments(true)}
-                            className="flex items-center px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                            onClick={() => {
+                                setJournalAttachments({ drive_url: data.journal_attachments?.drive_url ?? '', checklist: data.journal_attachments?.checklist ?? [] });
+                                setBookAttachments({ drive_url: data.book_attachments?.drive_url ?? '', checklist: data.book_attachments?.checklist ?? [] });
+                                setIsEditingAttachments(false);
+                            }}
+                            className="flex items-center px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
                         >
-                            <Edit2 className="w-4 h-4 mr-1" /> Edit
+                            <X className="w-4 h-4 mr-1" /> Cancel
                         </button>
-                    ) : (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => {
-                                    setJournalAttachments(data.journal_attachments || {});
-                                    setBookAttachments(data.book_attachments || {});
-                                    setIsEditingAttachments(false);
-                                }}
-                                className="flex items-center px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                            >
-                                <X className="w-4 h-4 mr-1" /> Cancel
-                            </button>
-                            <button
-                                onClick={handleSaveAttachments}
-                                disabled={savingAttachments}
-                                className="flex items-center px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50"
-                            >
-                                <Save className="w-4 h-4 mr-1" /> {savingAttachments ? 'Saving...' : 'Save'}
-                            </button>
-                        </div>
-                    )}
-                </div>
-                
-                <div className="space-y-3">
-                    {Object.entries(journalAttachments).map(([key, value]) => (
-                        <div key={key}>
-                            <label className="block text-sm text-gray-300 mb-1 capitalize">
-                                {key.replace(/_/g, ' ')}
-                            </label>
-                            {isEditingAttachments ? (
-                                <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
-                                    <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
-                                    <input
-                                        type="url"
-                                        value={value || ''}
-                                        onChange={(e) => setJournalAttachments(prev => ({ ...prev, [key]: e.target.value }))}
-                                        placeholder="https://..."
-                                        className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
-                                    />
-                                </div>
-                            ) : (
-                                value ? (
-                                    <a 
-                                        href={value} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="text-blue-400 hover:underline text-sm break-all"
-                                    >
-                                        {value}
-                                    </a>
-                                ) : (
-                                    <span className="text-gray-500 text-sm">No link provided</span>
-                                )
-                            )}
-                        </div>
-                    ))}
-                </div>
+                        <button
+                            onClick={handleSaveAttachments}
+                            disabled={savingAttachments}
+                            className="flex items-center px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50"
+                        >
+                            <Save className="w-4 h-4 mr-1" /> {savingAttachments ? 'Saving...' : 'Save'}
+                        </button>
+                    </div>
+                )}
             </div>
 
-            {(!hasForm41 && !hasForm42 && !hasForm43 && !hasForm44) && (
-                <div className="p-4 bg-[#252836] rounded-lg">
-                    <p className="text-gray-400">No documents attached.</p>
+            {/* Drive URL */}
+            <div className="mb-4">
+                <label className="block text-sm text-gray-300 mb-1">Google Drive Folder Link</label>
+                {isEditingAttachments ? (
+                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
+                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
+                        <input
+                            type="url"
+                            value={attachments.drive_url}
+                            onChange={e => setAttachments(prev => ({ ...prev, drive_url: e.target.value }))}
+                            placeholder="https://drive.google.com/drive/folders/..."
+                            className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
+                        />
+                    </div>
+                ) : attachments.drive_url ? (
+                    <a
+                        href={attachments.drive_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:underline text-sm break-all"
+                    >
+                        {attachments.drive_url}
+                    </a>
+                ) : (
+                    <span className="text-gray-500 text-sm">No link provided</span>
+                )}
+            </div>
+
+            {/* Checklist */}
+            <div>
+                <label className="block text-sm text-gray-300 mb-2">Documents included in the folder</label>
+                <div className="space-y-2">
+                    {checklistItems.map(item => {
+                        const checked = (attachments.checklist ?? []).includes(item);
+                        return isEditingAttachments ? (
+                            <label
+                                key={item}
+                                className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => toggleCheck(item)}
+                                    className="w-4 h-4 accent-blue-500"
+                                />
+                                <span className="text-sm text-gray-300">{item}</span>
+                            </label>
+                        ) : (
+                            <div key={item} className="flex items-center gap-2 text-sm">
+                                <span className={checked ? 'text-green-400' : 'text-gray-600'}>
+                                    {checked ? '☑' : '☐'}
+                                </span>
+                                <span className={checked ? 'text-gray-200' : 'text-gray-500'}>
+                                    {item}
+                                </span>
+                            </div>
+                        );
+                    })}
                 </div>
-            )}
+            </div>
+        </div>
+    );
+})()}
 
         </div >
     )
