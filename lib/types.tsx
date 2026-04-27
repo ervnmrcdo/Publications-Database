@@ -61,7 +61,7 @@ export interface SupabasePublication {
   doi: string;
 }
 
-type AttachmentData = {
+export type AttachmentData = {
   drive_url?: string;
   checklist?: string[];
 };
