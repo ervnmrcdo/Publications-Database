@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     for (const form of formTypes) {
       const draftPath = `${submission_id}_form${form.type}.${form.ext}`;
-      const submissionPath = `submissions/${submission_id}_form${form.type}.${form.ext}`;
+      const submissionPath = `${submission_id}_form${form.type}.${form.ext}`;
       const targetBucket = form.ext === "pdf" ? "submissions-pdf" : "submissions-docx";
 
       try {
