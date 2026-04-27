@@ -18,32 +18,28 @@ export default async function ValidateAward(
 			logs: newLogs
 		};
 
-		const draftsPdfFiles = [
-			`${admin_id}/${submission_id}/form41.pdf`,
-			`${admin_id}/${submission_id}/form44.pdf`,
-			`${admin_id}/${submission_id}/form43.pdf`
-		];
-		const draftsDocxFiles = [
-			`${admin_id}/${submission_id}/form42.docx`,
-		];
+		// Get submission details for PDF regeneration
+		const { data: submission, error: subError } = await supabaseAdmin
+			.from('submissions')
+			.select('publication_id, award_id')
+			.eq('submission_id', submission_id)
+			.single();
 
-		const { data: pdfList, error: pdfListError } = await supabaseAdmin.storage
-			.from("drafts-pdf")
-			.list(`${admin_id}/${submission_id}`, {
-				limit: 10
-			});
+		const baseUrl = 'http://localhost:3000';
 
-		if (!pdfListError && pdfList && pdfList.length > 0) {
-			for (const file of pdfList) {
-				const fileName = file.name;
-				const formType = fileName.replace('.pdf', '').replace('form', '');
+		// PDF forms that need regeneration with admin fields
+		const pdfFormTypes = ['41', '43', '44'];
 
-				const { data: fileData, error: downloadError } = await supabaseAdmin.storage
-					.from("drafts-pdf")
-					.download(`${admin_id}/${submission_id}/${fileName}`);
-
-				if (!downloadError && fileData) {
-					const fileBuffer = Buffer.from(await fileData.arrayBuffer());
+		// Try to regenerate PDFs with admin fields
+		for (const formType of pdfFormTypes) {
+			try {
+				const generateUrl = `${baseUrl}/api/generate-form/ipa-${formType}?publicationId=${submission?.publication_id}&awardId=${submission?.award_id}&user_id=${admin_id}&adminId=${admin_id}`;
+				
+				const response = await fetch(generateUrl);
+				
+				if (response.ok) {
+					const regeneratedPdf = await response.arrayBuffer();
+					const fileBuffer = Buffer.from(regeneratedPdf);
 					const uploadFileName = `${submission_id}-form${formType}.pdf`;
 
 					const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
@@ -53,12 +49,24 @@ export default async function ValidateAward(
 							upsert: true
 						});
 
-					if (!uploadError) {
+					if (!uploadError && uploadData) {
 						updateData[`form${formType}_path`] = uploadData.path;
+						console.log(`Successfully regenerated and saved form ${formType} with admin fields`);
+					} else {
+						console.warn(`Failed to upload regenerated form ${formType}:`, uploadError);
 					}
+				} else {
+					console.warn(`Failed to regenerate form ${formType}:`, response.status);
 				}
+			} catch (regenError) {
+				console.warn(`Error regenerating form ${formType}:`, regenError);
 			}
 		}
+
+		// Handle DOCX files (form 42) - no regeneration needed
+		const draftsDocxFiles = [
+			`${admin_id}/${submission_id}/form42.docx`,
+		];
 
 		const { data: docxList, error: docxListError } = await supabaseAdmin.storage
 			.from("drafts-docx")
@@ -104,6 +112,12 @@ export default async function ValidateAward(
 			return res.status(400).json({ error: updateError.message });
 		}
 
+		// Clean up drafts
+		const draftsPdfFiles = [
+			`${admin_id}/${submission_id}/form41.pdf`,
+			`${admin_id}/${submission_id}/form43.pdf`,
+			`${admin_id}/${submission_id}/form44.pdf`
+		];
 		await supabaseAdmin.storage.from("drafts-pdf").remove(draftsPdfFiles);
 		await supabaseAdmin.storage.from("drafts-docx").remove(draftsDocxFiles);
 

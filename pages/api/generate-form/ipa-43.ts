@@ -202,9 +202,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       form.getTextField('admin-name-2').setText(adminUser ? [adminUser.first_name, adminUser.middle_name, adminUser.last_name].filter(Boolean).join(' ').trim() : '');
       form.getTextField('admin-position-2').setText(adminUser?.position || '');
-      form.getTextField('vice-president-name').setText('');
     } catch (fieldError) {
       console.warn("One or more fields were not found in the PDF:", fieldError);
+    }
+
+    try {
+      const { data: vpSetting } = await supabaseAdmin
+        .from('settings')
+        .select('value')
+        .eq('key', 'vice_president_name')
+        .single();
+
+      form.getTextField('vice-president-name').setText(vpSetting?.value || '');
+    } catch (vpError) {
+      console.warn("Failed to set vice-president-name:", vpError);
     }
 
     const pdfBytes = await pdfDoc.save();

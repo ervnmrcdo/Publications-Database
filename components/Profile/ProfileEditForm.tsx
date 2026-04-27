@@ -111,46 +111,58 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
       if (newSignatureFile && user?.id) {
         const fileExt = 'png'
         const fileName = `${user.id}.${fileExt}`
-        const filePath = `${user.id}/${fileName}`
-        
-        // Upload signature (upsert to replace existing)
-        const { error: uploadError } = await supabase.storage
-          .from('signatures')
-          .upload(filePath, newSignatureFile, {
-            contentType: 'image/png',
-            upsert: true,
-          })
-        
-        if (uploadError) {
-          console.error('Upload error:', uploadError)
-          throw new Error('Failed to upload signature')
+
+        // Convert file to base64 for backend upload
+        const fileBuffer = await newSignatureFile.arrayBuffer();
+        const base64Data = Buffer.from(fileBuffer).toString('base64');
+
+        const response = await fetch('/api/upload-signature/route', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            file_name: fileName,
+            file_data: base64Data,
+          }),
+        });
+
+        if (!response.ok) {
+          const result = await response.json();
+          console.error('Upload error:', result.error)
+          throw new Error(result.error || 'Failed to upload signature')
         }
-        
-        // Get the storage path (not full URL)
-        signatureUrl = filePath
+
+        const result = await response.json();
+        signatureUrl = result.path
       }
       
       // Upload new proof of affiliation if one was selected
       if (newAffiliationFile && user?.id) {
         const fileExt = 'png'
         const fileName = `${user.id}.${fileExt}`
-        const filePath = `${user.id}/${fileName}`
-        
-        // Upload affiliation (upsert to replace existing)
-        const { error: uploadError } = await supabase.storage
-          .from('proof-of-affiliation')
-          .upload(filePath, newAffiliationFile, {
-            contentType: 'image/png',
-            upsert: true,
-          })
-        
-        if (uploadError) {
-          console.error('Upload error:', uploadError)
-          throw new Error('Failed to upload proof of affiliation')
+
+        // Convert file to base64 for backend upload
+        const fileBuffer = await newAffiliationFile.arrayBuffer();
+        const base64Data = Buffer.from(fileBuffer).toString('base64');
+
+        const response = await fetch('/api/upload-affiliation/route', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            file_name: fileName,
+            file_data: base64Data,
+          }),
+        });
+
+        if (!response.ok) {
+          const result = await response.json();
+          console.error('Upload error:', result.error)
+          throw new Error(result.error || 'Failed to upload proof of affiliation')
         }
-        
-        // Get the storage path (not full URL)
-        affiliationUrl = filePath
+
+        const result = await response.json();
+        affiliationUrl = result.path
       }
 
       const updateData: any = {

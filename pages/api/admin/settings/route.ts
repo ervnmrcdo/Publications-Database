@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { error } = await supabase
       .from('settings')
-      .update({ value, updated_at: new Date().toISOString() })
+      .update({ value })
       .eq('key', key);
 
     if (error) return res.status(400).json({ error: error.message });
