@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"publication_type_id\\\\|pub\\\\.type\" /Users/marcovcantero/Documents/School/2-2526/CS192/Publications-Database --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" --include=\"*.jsx\" ! -path \"*/.next/*\" ! -path \"*/node_modules/*\" -n)"
+    ]
+  }
+}

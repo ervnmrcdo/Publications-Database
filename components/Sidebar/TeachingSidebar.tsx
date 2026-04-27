@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from '@/context/AuthContext'
 import { AlertTriangle } from "lucide-react";
 import "../../app/globals.css";
+import SidebarUserCard from './SidebarUserCard'
 
 type TeachingPage =
   | "Home"
@@ -16,27 +17,23 @@ type TeachingPage =
 const TeachingSidebar: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, profile } = useAuth()
-  const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || user?.email || ''
-  const roleLabel = profile?.role === 'admin' ? 'Admin' : profile?.role === 'teaching' ? 'Teaching' : 'Non-Teaching'
+  const { user } = useAuth()
   const [completedCount, setCompletedCount] = useState(0);
   const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
+    if (!user?.id) return
     const supabase = createClient();
     const checkCompleted = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from('submissions')
-          .select('submission_id')
-          .eq('submitter_id', user.id)
-          .in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED']);
-        setCompletedCount(data?.length || 0);
-      }
+      const { data } = await supabase
+        .from('submissions')
+        .select('submission_id')
+        .eq('submitter_id', user.id)
+        .in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED']);
+      setCompletedCount(data?.length || 0);
     };
     checkCompleted();
-  }, []);
+  }, [user?.id]);
 
   const handleAwardsClick = () => {
     if (completedCount > 0) {
@@ -122,18 +119,7 @@ const TeachingSidebar: React.FC = () => {
         </ul>
       </div>
 
-      <div className="mt-auto">
-        <div className="mb-4 p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
-          <p className="text-sm font-medium text-gray-200 truncate">{displayName}</p>
-          <span className="text-xs text-blue-400">{roleLabel}</span>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 rounded-lg transition"
-        >
-          Sign Out
-        </button>
-      </div>
+      <SidebarUserCard onLogout={handleLogout} />
 
     </aside>
   );

@@ -3,21 +3,15 @@
 import { useState, useEffect } from "react";
 import AdminSidebar from "@/components/Sidebar/AdminSidebar";
 
-interface PublicationType {
-  id: number;
-  name: string;
-}
-
 interface Award {
   award_id: number;
   title: string;
   description: string | null;
-  allowed_publication_types: number[];
+  allowed_type: 'JOURNAL' | 'BOOK' | null;
 }
 
 export default function Page() {
   const [awards, setAwards] = useState<Award[]>([]);
-  const [publicationTypes, setPublicationTypes] = useState<PublicationType[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -32,7 +26,6 @@ export default function Page() {
       if (!response.ok) throw new Error("Failed to fetch data");
       const data = await response.json();
       setAwards(data.awards);
-      setPublicationTypes(data.publication_types);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -40,24 +33,14 @@ export default function Page() {
     }
   };
 
-  const handleCheckboxChange = (awardId: number, typeId: number) => {
-    setAwards((prev) =>
-      prev.map((award) => {
-        if (award.award_id !== awardId) return award;
-        const isChecked = award.allowed_publication_types.includes(typeId);
-        return {
-          ...award,
-          allowed_publication_types: isChecked
-            ? award.allowed_publication_types.filter((id) => id !== typeId)
-            : [...award.allowed_publication_types, typeId],
-        };
-      })
+  const handleTypeChange = (awardId: number, allowed_type: 'JOURNAL' | 'BOOK') => {
+    setAwards(prev =>
+      prev.map(a => a.award_id === awardId ? { ...a, allowed_type } : a)
     );
   };
 
   const handleSave = async (awardId: number) => {
-    const award = awards.find((a) => a.award_id === awardId);
-    console.log(award)
+    const award = awards.find(a => a.award_id === awardId);
     if (!award) return;
 
     setSaving(awardId);
@@ -67,10 +50,7 @@ export default function Page() {
       const response = await fetch("/api/admin/awards/route", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          award_id: awardId,
-          allowed_publication_type_ids: award.allowed_publication_types,
-        }),
+        body: JSON.stringify({ award_id: awardId, allowed_type: award.allowed_type }),
       });
 
       if (!response.ok) throw new Error("Failed to save");
@@ -100,43 +80,36 @@ export default function Page() {
       <AdminSidebar />
       <main className="flex-1 bg-[#0f1117] overflow-y-auto">
         <div className="p-8">
-          <h1 className="text-2xl font-bold text-white mb-6">Awards Settings</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">Awards Settings</h1>
           <p className="text-gray-400 mb-8">
-            Configure which publication types are allowed for each award.
+            Configure whether each award accepts Journal or Book publications.
           </p>
 
           {message && (
-            <div
-              className={`mb-6 p-4 rounded-lg ${message.type === "success" ? "bg-green-600/20 text-green-400" : "bg-red-600/20 text-red-400"
-                }`}
-            >
+            <div className={`mb-6 p-4 rounded-lg ${message.type === "success" ? "bg-green-600/20 text-green-400" : "bg-red-600/20 text-red-400"}`}>
               {message.text}
             </div>
           )}
 
           <div className="space-y-6">
             {awards.map((award) => (
-              <div
-                key={award.award_id}
-                className="bg-[#1b1e2b] rounded-lg p-6 border border-gray-700"
-              >
-                <h2 className="text-lg font-semibold text-white mb-4">{award.title}</h2>
+              <div key={award.award_id} className="bg-[#1b1e2b] rounded-lg p-6 border border-gray-700">
+                <h2 className="text-lg font-semibold text-white mb-1">{award.title}</h2>
                 {award.description && (
                   <p className="text-gray-400 text-sm mb-4">{award.description}</p>
                 )}
-                <div className="flex flex-wrap gap-4 mb-4">
-                  {publicationTypes.map((type) => (
-                    <label
-                      key={type.id}
-                      className="flex items-center space-x-2 cursor-pointer"
-                    >
+                <div className="flex gap-4 mb-4">
+                  {(['JOURNAL', 'BOOK'] as const).map(type => (
+                    <label key={type} className="flex items-center gap-2 cursor-pointer">
                       <input
-                        type="checkbox"
-                        checked={award.allowed_publication_types.includes(type.id)}
-                        onChange={() => handleCheckboxChange(award.award_id, type.id)}
-                        className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-800"
+                        type="radio"
+                        name={`award-${award.award_id}`}
+                        value={type}
+                        checked={award.allowed_type === type}
+                        onChange={() => handleTypeChange(award.award_id, type)}
+                        className="accent-blue-500"
                       />
-                      <span className="text-gray-300">{type.name}</span>
+                      <span className="text-gray-300">{type === 'JOURNAL' ? 'Journal' : 'Book'}</span>
                     </label>
                   ))}
                 </div>

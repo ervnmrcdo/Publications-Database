@@ -5,11 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { SupabasePublication } from '@/lib/types';
 
-type PublicationType = {
-  id: number;
-  name: string;
-};
-
 type TaggableUser = {
   id: string;
   first_name: string;
@@ -29,8 +24,10 @@ export default function Publications() {
   type Mode = "view" | "add" | "edit";
   const [mode, setMode] = useState<Mode>("view");
 
-  const [type, setType] = useState('');
-  const [publicationTypeId, setPublicationTypeId] = useState<number | null>(null)
+  const [bookOrJournal, setBookOrJournal] = useState<'JOURNAL' | 'BOOK' | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [typeFilter, setTypeFilter] = useState<'all' | 'JOURNAL' | 'BOOK' | 'unclassified'>('all')
+
   const [title, setTitle] = useState('');
   const [publisher, setPublisher] = useState('');
   const [publicationStatus, setPublicationStatus] = useState('');
@@ -40,8 +37,6 @@ export default function Publications() {
   const [volumeNumber, setVolumeNumber] = useState('');
   const [journalName, setJournalName] = useState('');
   const [doi, setDOI] = useState('');
-
-  const [publicationTypes, setPublicationTypes] = useState<PublicationType[]>([]);
 
   const [selectedPublication, setSelectedPublication] = useState<SupabasePublication | null>(null);
   const [highlightedPubId, setHighlightedPubId] = useState<number | null>(null);
@@ -93,14 +88,20 @@ export default function Publications() {
     return [...publications].sort(comparePublications);
   }, [publications, sortOption]);
 
-  const totalItems = sortedPublications.length;
+  const filteredPublications = useMemo(() => {
+    if (typeFilter === 'all') return sortedPublications
+    if (typeFilter === 'unclassified') return sortedPublications.filter(p => !p.book_or_journal)
+    return sortedPublications.filter(p => p.book_or_journal === typeFilter)
+  }, [sortedPublications, typeFilter])
+
+  const totalItems = filteredPublications.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / PUBLICATIONS_PER_PAGE));
 
   const paginatedPublications = useMemo(() => {
     const startIndex = (currentPage - 1) * PUBLICATIONS_PER_PAGE;
     const endIndex = startIndex + PUBLICATIONS_PER_PAGE;
-    return sortedPublications.slice(startIndex, endIndex);
-  }, [sortedPublications, currentPage]);
+    return filteredPublications.slice(startIndex, endIndex);
+  }, [filteredPublications, currentPage]);
 
   const paginationSummary = useMemo(() => {
     if (totalItems === 0) {
@@ -143,21 +144,8 @@ export default function Publications() {
 
   useEffect(() => {
     fetchPublications();
-    fetchPublicationTypes();
     fetchTaggableUsers();
   }, [user]);
-
-  const fetchPublicationTypes = async () => {
-    try {
-      const res = await fetch("/api/admin/publication-types/route");
-      if (!res.ok) throw new Error("Failed to fetch types");
-
-      const data = await res.json();
-      setPublicationTypes(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const fetchPublications = async () => {
     if (!user) {
@@ -171,15 +159,14 @@ export default function Publications() {
           publication_id,
           publications (
             publication_id,
-            type,
-            publication_type_id,
+            book_or_journal,
             title,
             publisher,
             publication_status,
             date_published,
             issue_number,
             page_numbers,
-            volume_number, 
+            volume_number,
             journal_name,
             doi
           )
@@ -266,7 +253,7 @@ export default function Publications() {
   };
 
   function resetForm() {
-    setType('')
+    setBookOrJournal(null)
     setTitle('')
     setPublisher('')
     setPublicationStatus('')
@@ -281,15 +268,14 @@ export default function Publications() {
   }
 
   const addPublication = async () => {
-    if (!title.trim() || !publicationTypeId || !user) return;
+    if (!title.trim() || !bookOrJournal || !user) return;
 
     setLoading(true);
     const { data: pubData, error: pubError } = await supabase
       .from('publications')
       .insert([
         {
-          type,
-          publication_type_id: publicationTypeId,
+          book_or_journal: bookOrJournal,
           title,
           publisher,
           publication_status: publicationStatus,
@@ -362,8 +348,7 @@ export default function Publications() {
       const { error } = await supabase
         .from('publications')
         .update({
-          type,
-          publication_type_id: publicationTypeId,
+          book_or_journal: bookOrJournal,
           title,
           publisher,
           publication_status: publicationStatus,
@@ -433,6 +418,31 @@ export default function Publications() {
       setLoading(false)
     }
   }
+
+  const bulkSetType = async (newType: 'JOURNAL' | 'BOOK') => {
+    const ids = Array.from(selectedIds)
+    const { error } = await supabase
+      .from('publications')
+      .update({ book_or_journal: newType })
+      .in('publication_id', ids)
+    if (!error) {
+      setPublications(prev =>
+        prev.map(p => selectedIds.has(p.publication_id) ? { ...p, book_or_journal: newType } : p)
+      )
+      setSelectedIds(new Set())
+    }
+  }
+
+  const toggleSelect = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const selectAll = () => setSelectedIds(new Set(filteredPublications.map(p => p.publication_id)))
 
   async function runCrawler() {
     try {
@@ -517,21 +527,13 @@ export default function Publications() {
           {(mode === "add" || mode === "edit") && (
             <div className="mb-6 grid gap-2 grid-cols-1 md:grid-cols-2">
               <select
-                value={publicationTypeId ?? ''}
-                onChange={(e) => {
-                  const value = Number(e.target.value)
-                  const selectedPubType = publicationTypes.find(t => t.id === value);
-                  setPublicationTypeId(value)
-                  setType(selectedPubType?.name || "")
-                }}
+                value={bookOrJournal ?? ''}
+                onChange={(e) => setBookOrJournal((e.target.value as 'JOURNAL' | 'BOOK') || null)}
                 className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600"
               >
                 <option value="">Select Type</option>
-                {publicationTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name}
-                  </option>
-                ))}
+                <option value="JOURNAL">Journal</option>
+                <option value="BOOK">Book</option>
               </select>
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600" />
               <input type="text" value={publisher} onChange={(e) => setPublisher(e.target.value)} placeholder="Publisher" className="w-full p-2 rounded bg-[#252836] text-white border border-gray-600" />
@@ -623,9 +625,28 @@ export default function Publications() {
             </div>
           )}
 
+          {/* Filter tabs */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            {(['all', 'JOURNAL', 'BOOK', 'unclassified'] as const).map(f => (
+              <button
+                key={f}
+                onClick={() => { setTypeFilter(f); setCurrentPage(1); setSelectedIds(new Set()) }}
+                className={`px-3 py-1 rounded text-sm transition ${typeFilter === f ? 'bg-blue-600 text-white' : 'bg-[#252836] text-gray-300 hover:bg-gray-700'}`}
+              >
+                {f === 'all' ? 'All' : f === 'unclassified' ? 'Unclassified' : f === 'JOURNAL' ? 'Journal' : 'Book'}
+              </button>
+            ))}
+            <button
+              onClick={selectAll}
+              className="ml-auto px-3 py-1 rounded text-sm bg-[#252836] text-gray-300 hover:bg-gray-700 transition"
+            >
+              Select All
+            </button>
+          </div>
+
           {loading ? (
             <p className="text-gray-400">Loading...</p>
-          ) : sortedPublications.length === 0 ? (
+          ) : filteredPublications.length === 0 ? (
             <p className="text-gray-400">No publications found.</p>
           ) : (
             <>
@@ -637,8 +658,7 @@ export default function Publications() {
                       setSelectedPublication(pub)
                       setMode("view");
 
-                      setType(pub.type || '')
-                      setPublicationTypeId(pub.publication_type_id || null)
+                      setBookOrJournal(pub.book_or_journal ?? null)
                       setTitle(pub.title || '')
                       setPublisher(pub.publisher || '')
                       setDOI(pub.doi || '')
@@ -650,22 +670,41 @@ export default function Publications() {
 
                       loadExistingTaggedAuthors(pub.publication_id)
                     }}
-                    className={`p-4 rounded-lg border cursor-pointer transition
+                    className={`relative p-4 rounded-lg border cursor-pointer transition
                     ${highlightedPubId === pub.publication_id
                         ? "bg-green-900 border-green-500"
-                        : "bg-[#23263a] border-gray-600 hover:border-blue-500"
+                        : selectedIds.has(pub.publication_id)
+                          ? "bg-blue-900/30 border-blue-500"
+                          : "bg-[#23263a] border-gray-600 hover:border-blue-500"
                       }
                   `}
                   >
-                    <div className="font-bold text-lg text-white">{pub.title}</div>
-                    <div className="text-gray-400 text-sm">
-                      Date Published: {pub.date_published || 'N/A'}
-                    </div>
-                    <div className="text-gray-400 text-sm">
-                      Type: {pub.type}
-                    </div>
-                    <div className="text-gray-400 text-sm">
-                      Publisher: {pub.publisher}
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(pub.publication_id)}
+                        onClick={(e) => toggleSelect(pub.publication_id, e)}
+                        onChange={() => {}}
+                        className="mt-1 h-4 w-4 cursor-pointer accent-blue-500 flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="font-bold text-lg text-white">{pub.title}</div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            pub.book_or_journal === 'JOURNAL' ? 'bg-blue-500/20 text-blue-400' :
+                            pub.book_or_journal === 'BOOK' ? 'bg-purple-500/20 text-purple-400' :
+                            'bg-gray-600/40 text-gray-400'
+                          }`}>
+                            {pub.book_or_journal ?? 'Unclassified'}
+                          </span>
+                        </div>
+                        <div className="text-gray-400 text-sm">
+                          Date Published: {pub.date_published || 'N/A'}
+                        </div>
+                        <div className="text-gray-400 text-sm">
+                          Publisher: {pub.publisher}
+                        </div>
+                      </div>
                     </div>
                   </li>
                 ))}
@@ -715,7 +754,7 @@ export default function Publications() {
                 </h3>
 
                 <div className="space-y-2 text-gray-300 text-sm">
-                  <p><span className="text-gray-400">Type:</span> {selectedPublication.type}</p>
+                  <p><span className="text-gray-400">Type:</span> {selectedPublication.book_or_journal ?? 'Unclassified'}</p>
                   <p><span className="text-gray-400">Publisher:</span> {selectedPublication.publisher}</p>
                   <p><span className="text-gray-400">Date Published:</span> {selectedPublication.date_published}</p>
                   <p><span className="text-gray-400">Issue:</span> {selectedPublication.issue_number}</p>
@@ -782,6 +821,15 @@ export default function Publications() {
           }
         </div >
       </div >
+
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-[#1b1e2b] border border-gray-600 rounded-xl px-6 py-3 shadow-xl z-40">
+          <span className="text-gray-300 text-sm">{selectedIds.size} selected</span>
+          <button onClick={() => bulkSetType('JOURNAL')} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">Set as Journal</button>
+          <button onClick={() => bulkSetType('BOOK')} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded transition">Set as Book</button>
+          <button onClick={() => setSelectedIds(new Set())} className="text-gray-400 hover:text-white text-sm transition">Deselect All</button>
+        </div>
+      )}
     </div >
   );
 }

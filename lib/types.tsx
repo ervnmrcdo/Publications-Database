@@ -10,18 +10,12 @@ export interface Author {
   email_address: string;
 }
 
-export interface PublicationType {
-  id: number;
-  name: string;
-  award_id: number;
-  publications: Publication[];
-}
-
 export interface AwardWithPublications {
   award_id: number;
   title: string;
   description: string | null;
-  publication_per_award: PublicationType[];
+  allowed_type: 'JOURNAL' | 'BOOK' | null;
+  publication_per_award: Publication[];
 }
 
 export interface Award {
@@ -31,7 +25,7 @@ export interface Award {
 }
 
 export interface Publication {
-  type: string;
+  book_or_journal?: 'JOURNAL' | 'BOOK' | null;
   publication_id: string;
   users: Author[];
   title: string;
@@ -42,14 +36,12 @@ export interface Publication {
   publisher: string;
   issue_number: string;
   publication_status: string;
-  publication_type_id?: number;
   doi?: string | null;
 }
 
 export interface SupabasePublication {
   publication_id: number;
-  type: string;
-  publication_type_id: number;
+  book_or_journal: 'JOURNAL' | 'BOOK' | null;
   title: string;
   publisher: string;
   publication_status: string;
