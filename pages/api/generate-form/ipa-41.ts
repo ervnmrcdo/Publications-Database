@@ -184,6 +184,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         for (let i = 1; i < totalAuthors; i++) {
           const author = authors[i];
+          console.log(author)
           if (!author) continue;
 
           const extraTemplatePath = path.join(process.cwd(), 'public', '4.x-extra-page.pdf');
@@ -197,6 +198,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             ? `${author.first_name} ${author.middle_name || ''} ${author.last_name}`.replace(/\s+/g, ' ').trim()
             : '';
 
+          console.log('Adding extra page for author', authorNum + ':', authorName);
+
           try {
             extraForm.getTextField('applicant-number').setText(String(authorNum));
             extraForm.getTextField('author-name').setText(authorName);
@@ -206,12 +209,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             extraForm.getTextField('author-contact').setText(author.contact_number || '');
             extraForm.getTextField('author-position').setText(author.position || '');
             extraForm.getTextField('author-email').setText(author.email_address || '');
+
+            // Save to render form changes to page content
+            const filledExtraBytes = await extraPdfDoc.save();
+
+            // Reload and copy
+            const tempPdfDoc = await PDFDocument.load(filledExtraBytes);
+            const [copiedPage] = await pdfDoc.copyPages(tempPdfDoc, [0]);
+            const pageCount = pdfDoc.getPageCount();
+            pdfDoc.insertPage(pageCount - 1, copiedPage);
           } catch (fillError) {
             console.warn(`Error filling extra page for author${authorNum}:`, fillError);
           }
-
-          const [copiedPage] = await pdfDoc.copyPages(extraPdfDoc, [0]);
-          pdfDoc.addPage(copiedPage);
         }
       } catch (extraPageError) {
         console.warn("Error adding extra pages:", extraPageError);
