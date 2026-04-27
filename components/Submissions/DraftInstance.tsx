@@ -31,6 +31,18 @@ interface DocumentConfig {
     };
 }
 
+const JOURNAL_CHECKLIST = ['Copy of the Journal Article'];
+
+const BOOK_CHECKLIST = [
+  'Copy of Book / Book Chapter',
+  'Book Cover',
+  'Copyright Page',
+  'Preface',
+  'Table of Contents',
+  'List of Contributors or Contributors Notes',
+  'Proof of Peer Review Process',
+];
+
 export default function DraftInstance({ data, onBack }: Props) {
     const { setSelected } = useSubmissionsFlow()
     const { profile, user } = useAuth()
@@ -51,13 +63,7 @@ export default function DraftInstance({ data, onBack }: Props) {
 
     const [showSubmitConfirmDialog, setShowSubmitConfirmDialog] = useState<boolean>(false);
 
-const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false);
-    const [journalAttachments, setJournalAttachments] = useState<Record<string, string>>(
-        data.journal_attachments || {}
-    );
-    const [bookAttachments, setBookAttachments] = useState<Record<string, string>>(
-        data.book_attachments || {}
-    );
+    const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false);
     const [savingAttachments, setSavingAttachments] = useState<boolean>(false);
 
     const [expandedForm41, setExpandedForm41] = useState<boolean>(false);
@@ -66,11 +72,19 @@ const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false)
     const [expandedForm44, setExpandedForm44] = useState<boolean>(false);
 
     const detectedIp = useMemo(() => typeof window !== 'undefined' ? window.location.hostname : '', [])
-
+    
     const publicationId = data.publication_id?.toString() || ""
     const awardId = data.award_id || 1
     const submitterId = data.submitter_id || user?.id || ""
     const submissionId = data.submission_id
+
+    const [driveUrl, setDriveUrl] = useState<string>(
+        (awardId === 1 ? data.journal_attachments?.drive_url : data.book_attachments?.drive_url) || ''
+    );
+    const [checklist, setChecklist] = useState<string[]>(() => {
+        const attachments = awardId === 1 ? data.journal_attachments : data.book_attachments;
+        return (attachments?.checklist || []) as string[];
+    });
 
     const getActorName = () => {
         return profile ? `${profile.first_name} ${profile.last_name}` : 'User';
@@ -83,8 +97,8 @@ const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false)
             const isJournal = awardId === 1;
             const payload = {
                 submission_id: submissionId,
-                journal_attachments: isJournal ? journalAttachments : undefined,
-                book_attachments: !isJournal ? bookAttachments : undefined,
+                journal_attachments: isJournal ? { drive_url: driveUrl, checklist } : undefined,
+                book_attachments: !isJournal ? { drive_url: driveUrl, checklist } : undefined,
             };
 
             const response = await fetch('/api/update-attachments/route', {
@@ -312,7 +326,7 @@ const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false)
             <div className="p-4 bg-[#252836] rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                     <p className="font-bold text-med text-white">
-                        {awardId === 1 ? 'Journal Article Attachments' : 'Book Attachments'}
+                        Supporting Documents
                     </p>
                     {!isEditingAttachments ? (
                         <button
@@ -325,8 +339,9 @@ const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false)
                         <div className="flex gap-2">
                             <button
                                 onClick={() => {
-                                    setJournalAttachments(data.journal_attachments || {});
-                                    setBookAttachments(data.book_attachments || {});
+                                    setDriveUrl((awardId === 1 ? data.journal_attachments?.drive_url : data.book_attachments?.drive_url) || '');
+                                    const attachments = awardId === 1 ? data.journal_attachments : data.book_attachments;
+                                    setChecklist([...(attachments?.checklist || [])]);
                                     setIsEditingAttachments(false);
                                 }}
                                 className="flex items-center px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
@@ -344,74 +359,64 @@ const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false)
                     )}
                 </div>
                 
-                <div className="space-y-3">
-                    {awardId === 1 ? (
-                        Object.entries(journalAttachments).map(([key, value]) => (
-                            <div key={key}>
-                                <label className="block text-sm text-gray-300 mb-1 capitalize">
-                                    {key.replace(/_/g, ' ')}
-                                </label>
-                                {isEditingAttachments ? (
-                                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
-                                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
-                                        <input
-                                            type="url"
-                                            value={value || ''}
-                                            onChange={(e) => setJournalAttachments(prev => ({ ...prev, [key]: e.target.value }))}
-                                            placeholder="https://..."
-                                            className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
-                                        />
-                                    </div>
-                                ) : (
-                                    value ? (
-                                        <a 
-                                            href={value} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline text-sm break-all"
-                                        >
-                                            {value}
-                                        </a>
-                                    ) : (
-                                        <span className="text-gray-500 text-sm">No link provided</span>
-                                    )
-                                )}
-                            </div>
-                        ))
-                    ) : (
-                        Object.entries(bookAttachments).map(([key, value]) => (
-                            <div key={key}>
-                                <label className="block text-sm text-gray-300 mb-1 capitalize">
-                                    {key.replace(/_/g, ' ')}
-                                </label>
-                                {isEditingAttachments ? (
-                                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
-                                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
-                                        <input
-                                            type="url"
-                                            value={value || ''}
-                                            onChange={(e) => setBookAttachments(prev => ({ ...prev, [key]: e.target.value }))}
-                                            placeholder="https://..."
-                                            className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
-                                        />
-                                    </div>
-                                ) : (
-                                    value ? (
-                                        <a 
-                                            href={value} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline text-sm break-all"
-                                        >
-                                            {value}
-                                        </a>
-                                    ) : (
-                                        <span className="text-gray-500 text-sm">No link provided</span>
-                                    )
-                                )}
-                            </div>
-                        ))
-                    )}
+                <p className="text-sm text-gray-400 mb-4">
+                    Optional — paste your Google Drive folder link and check off what's included
+                </p>
+
+                {/* Google Drive URL */}
+                <div className="mb-5">
+                    <label className="block text-sm text-gray-300 mb-1">Google Drive Folder Link</label>
+                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2 focus-within:border-blue-500">
+                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
+                        {isEditingAttachments ? (
+                            <input
+                                type="url"
+                                placeholder="https://drive.google.com/drive/folders/..."
+                                value={driveUrl}
+                                onChange={e => setDriveUrl(e.target.value)}
+                                className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
+                            />
+                        ) : (
+                            driveUrl ? (
+                                <a 
+                                    href={driveUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:underline text-sm break-all"
+                                >
+                                    {driveUrl}
+                                </a>
+                            ) : (
+                                <span className="text-gray-500 text-sm">No link provided</span>
+                            )
+                        )}
+                    </div>
+                </div>
+
+                {/* Checklist */}
+                <div>
+                    <label className="block text-sm text-gray-300 mb-2">Documents included in the folder</label>
+                    <div className="space-y-2">
+                        {(awardId === 1 ? JOURNAL_CHECKLIST : BOOK_CHECKLIST).map(item => (
+                            <label
+                                key={item}
+                                className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={checklist.includes(item)}
+                                    onChange={() => {
+                                        if (!isEditingAttachments) return;
+                                        setChecklist(prev =>
+                                            prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
+                                        );
+                                    }}
+                                    className="w-4 h-4 accent-blue-500"
+                                />
+                                <span className="text-sm text-gray-300">{item}</span>
+                            </label>
+                        ))}
+                    </div>
                 </div>
             </div>
 
