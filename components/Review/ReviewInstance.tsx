@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { Application, SubmissionLog } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
@@ -55,6 +55,8 @@ export default function ReviewInstance({ data, onBack }: Props) {
   const [errorRemarks, setErrorRemarks] = useState<string>("");
   const [showErrorDialog, setShowErrorDialog] = useState<boolean>(false);
   const [showSignConfirmDialog, setShowSignConfirmDialog] = useState<boolean>(false);
+  const [showSignatureWarning, setShowSignatureWarning] = useState<boolean>(false);
+  const [signatureWarningDismissed, setSignatureWarningDismissed] = useState<boolean>(false);
 
   const [expandedForm41, setExpandedForm41] = useState<boolean>(false);
   const [expandedForm42, setExpandedForm42] = useState<boolean>(false);
@@ -62,6 +64,31 @@ export default function ReviewInstance({ data, onBack }: Props) {
   const [expandedForm44, setExpandedForm44] = useState<boolean>(false);
 
   const detectedIp = useMemo(() => typeof window !== 'undefined' ? window.location.hostname : '', [])
+
+  useEffect(() => {
+    const checkSignature = async () => {
+      if (!user?.id || signatureWarningDismissed) return;
+
+      try {
+        const response = await fetch(`/api/admin/get-user-signature/route?user_id=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (!data.hasSignature) {
+            setShowSignatureWarning(true);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking signature:', err);
+      }
+    };
+
+    checkSignature();
+  }, [user?.id, signatureWarningDismissed]);
+
+  const dismissSignatureWarning = () => {
+    setShowSignatureWarning(false);
+    setSignatureWarningDismissed(true);
+  };
 
   const getActorName = () => {
     return profile ? `${profile.first_name} ${profile.last_name}` : 'Admin';
@@ -607,6 +634,39 @@ export default function ReviewInstance({ data, onBack }: Props) {
                   }}
                 >
                   Confirm Sign
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        showSignatureWarning && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-[#1b1e2b] rounded-lg p-6 max-w-md w-full mx-4 border border-yellow-500">
+              <h3 className="text-lg font-semibold mb-4 text-yellow-400">No Signature Uploaded</h3>
+              <p className="text-sm text-gray-300 mb-4">
+                You have not uploaded a signature. Please upload your signature in your profile before reviewing submissions.
+              </p>
+              <p className="text-sm text-gray-400 mb-6">
+                You can proceed without a signature but it will not appear on the form.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  className="px-4 py-2 border rounded-md hover:bg-gray-700"
+                  onClick={dismissSignatureWarning}
+                >
+                  Proceed Anyway
+                </button>
+                <button
+                  className="px-4 py-2 bg-yellow-500 text-black rounded-md hover:bg-yellow-600"
+                  onClick={() => {
+                    dismissSignatureWarning();
+                    window.location.href = '/profile';
+                  }}
+                >
+                  Go to Profile
                 </button>
               </div>
             </div>

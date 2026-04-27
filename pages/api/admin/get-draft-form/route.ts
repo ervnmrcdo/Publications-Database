@@ -34,37 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const supabase = createServiceRoleClient();
 
-    const { data: existingDraft, error: draftError } = await supabase.storage
-      .from(bucket)
-      .list('', {
-        limit: 1,
-        search: filePath
-      });
-
-    if (!draftError && existingDraft && existingDraft.length > 0) {
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from(bucket)
-        .download(filePath);
-
-      if (downloadError || !fileData) {
-        return res.status(500).json({ error: 'Failed to download existing draft' });
-      }
-
-      const fileBuffer = await fileData.arrayBuffer();
-      const buffer = Buffer.from(fileBuffer);
-
-      const contentType = fileExt === 'pdf'
-        ? 'application/pdf'
-        : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Disposition', `inline; filename="form${formType}.${fileExt}"`);
-      return res.send(buffer);
-    }
-
     const { data: submission, error: submissionError } = await supabase
       .from('submissions')
-      .select('form41_path, form42_path, form43_path, form44_path')
+      .select('publication_id, award_id, form41_path, form42_path, form43_path, form44_path')
       .eq('submission_id', Number(submission_id))
       .single();
 
@@ -98,21 +70,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fileBuffer = await fileData.arrayBuffer();
     const buffer = Buffer.from(fileBuffer);
 
-    const contentType = 'application/pdf';
-
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, buffer, {
-        contentType,
-        upsert: true
-      });
-
-    if (uploadError) {
-      return res.status(500).json({ error: 'Failed to upload draft to storage' });
+    if (formType === '42') {
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `inline; filename="form${formType}.docx"`);
+      return res.send(buffer);
     }
 
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `inline; filename="form${formType}.${fileExt}"`);
+    const generateFormUrl = `http://localhost:3000/api/generate-form/ipa-${formType}?publicationId=${submission.publication_id}&awardId=${submission.award_id}&user_id=${admin_id}&adminId=${admin_id}`;
+    
+    try {
+      const response = await fetch(generateFormUrl);
+      if (response.ok) {
+        const regeneratedPdf = await response.arrayBuffer();
+        const regeneratedBuffer = Buffer.from(regeneratedPdf);
+        
+        await supabase.storage
+          .from(bucket)
+          .upload(filePath, regeneratedBuffer, {
+            contentType: 'application/pdf',
+            upsert: true
+          });
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="form${formType}.pdf"`);
+        return res.send(regeneratedBuffer);
+      }
+    } catch (generateError) {
+      console.warn('Failed to regenerate PDF with admin fields, returning stored version:', generateError);
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="form${formType}.pdf"`);
     return res.send(buffer);
 
   } catch (err) {

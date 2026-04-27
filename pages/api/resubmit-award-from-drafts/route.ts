@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const formTypes = [
       { type: "41", ext: "pdf", bucket: "drafts-pdf" },
       { type: "42", ext: "docx", bucket: "drafts-docx" },
-      { type: "43", ext: "docx", bucket: "drafts-docx" },
+      { type: "43", ext: "pdf", bucket: "drafts-pdf" },
       { type: "44", ext: "pdf", bucket: "drafts-pdf" },
     ];
 

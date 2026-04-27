@@ -99,13 +99,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })) || [];
 
     let adminUser = null;
+    let adminSignature = null;
     if (adminId) {
       const { data: adminData } = await supabase
         .from('users')
-        .select('first_name, middle_name, last_name, position')
+        .select('first_name, middle_name, last_name, position, signature_path')
         .eq('id', adminId)
         .single();
       adminUser = adminData;
+      
+      if (adminData?.signature_path) {
+        const { data: sigData, error: sigError } = await supabaseAdmin.storage
+          .from('signatures')
+          .download(adminData.signature_path);
+        if (!sigError && sigData) {
+          adminSignature = Buffer.from(await sigData.arrayBuffer());
+        }
+      }
     }
 
     const templatePath = path.join(process.cwd(), 'public', '4.3-template.pdf');
@@ -148,8 +158,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       form.getTextField('admin-name').setText(adminUser ? [adminUser.first_name, adminUser.middle_name, adminUser.last_name].filter(Boolean).join(' ').trim() : '');
       form.getTextField('admin-position').setText(adminUser?.position || '');
-      form.getTextField('admin-name-2').setText('');
-      form.getTextField('admin-position-2').setText('');
+      
+      if (adminUser) {
+        try {
+          const todayDate = new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            timeZone: 'Asia/Manila'
+          });
+          try { form.getTextField('admin-sign-date').setText(todayDate); } catch {}
+        } catch (dateError) {
+          console.warn("Admin sign date field not found:", dateError);
+        }
+        
+        if (adminSignature) {
+          try {
+            const signatureImage = await pdfDoc.embedPng(adminSignature);
+            
+            try {
+              const sigField = form.getButton('admin-signature_af_image');
+              if (sigField) {
+                sigField.setImage(signatureImage);
+              }
+            } catch (buttonError) {
+              console.warn("Signature button field not found, trying drawImage:", buttonError);
+              const signatureDims = signatureImage.scale(0.15);
+              const pages = pdfDoc.getPages();
+              const lastPage = pages[pages.length - 1];
+              const { height } = lastPage.getSize();
+              lastPage.drawImage(signatureImage, {
+                x: 50,
+                y: height - 100,
+                height: signatureDims.height,
+                width: signatureDims.width,
+              });
+            }
+          } catch (sigError) {
+            console.warn("Failed to embed signature:", sigError);
+          }
+        }
+      }
+      
+      form.getTextField('admin-name-2').setText(adminUser ? [adminUser.first_name, adminUser.middle_name, adminUser.last_name].filter(Boolean).join(' ').trim() : '');
+      form.getTextField('admin-position-2').setText(adminUser?.position || '');
       form.getTextField('vice-president-name').setText('');
     } catch (fieldError) {
       console.warn("One or more fields were not found in the PDF:", fieldError);
