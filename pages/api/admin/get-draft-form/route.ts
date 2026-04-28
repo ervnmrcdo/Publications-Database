@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
+import { PDFDocument } from 'pdf-lib';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -28,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const fileExt = 'pdf';
-  const bucket = 'drafts-pdf';
+  const draftsBucket = 'drafts-pdf';
   const filePath = `${admin_id}/${submission_id}_form${formType}.${fileExt}`;
 
   try {
@@ -36,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { data: submission, error: submissionError } = await supabase
       .from('submissions')
-      .select('publication_id, award_id, form41_path, form42_path, form43_path, form44_path')
+      .select('submission_id, publication_id, award_id, submitter_id, form41_path, form42_path, form43_path, form44_path')
       .eq('submission_id', Number(submission_id))
       .single();
 
@@ -57,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: `Form ${formType} not found in submission` });
     }
 
-    const submissionBucket = 'submissions-pdf';
+    const submissionBucket = formType === '42' ? 'submissions-docx' : 'submissions-pdf';
 
     const { data: fileData, error: downloadError } = await supabase.storage
       .from(submissionBucket)
@@ -76,32 +77,86 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.send(buffer);
     }
 
-    const generateFormUrl = `http://localhost:3000/api/generate-form/ipa-${formType}?publicationId=${submission.publication_id}&awardId=${submission.award_id}&user_id=${admin_id}&adminId=${admin_id}`;
-    
-    try {
-      const response = await fetch(generateFormUrl);
-      if (response.ok) {
-        const regeneratedPdf = await response.arrayBuffer();
-        const regeneratedBuffer = Buffer.from(regeneratedPdf);
-        
-        await supabase.storage
-          .from(bucket)
-          .upload(filePath, regeneratedBuffer, {
-            contentType: 'application/pdf',
-            upsert: true
-          });
+    const { data: adminUser, error: adminError } = await supabase
+      .from('users')
+      .select('first_name, middle_name, last_name, position, signature_path')
+      .eq('id', admin_id)
+      .single();
 
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename="form${formType}.pdf"`);
-        return res.send(regeneratedBuffer);
-      }
-    } catch (generateError) {
-      console.warn('Failed to regenerate PDF with admin fields, returning stored version:', generateError);
+    if (adminError || !adminUser) {
+      return res.status(404).json({ error: 'Admin user not found' });
     }
+
+    const adminName = `${adminUser.first_name || ''} ${adminUser.middle_name || ''} ${adminUser.last_name || ''}`.trim();
+    const adminPosition = adminUser.position || '';
+    const adminSignaturePath = adminUser.signature_path;
+
+    let pdfDoc: PDFDocument;
+    try {
+      pdfDoc = await PDFDocument.load(buffer);
+    } catch (loadError) {
+      console.error('Failed to load PDF:', loadError);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="form${formType}.pdf"`);
+      return res.send(buffer);
+    }
+
+    const form = pdfDoc.getForm();
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+
+    const existingSignatureField = form.getButton('admin-signature_af_image');
+    if (existingSignatureField) {
+      try {
+        const { data: signatureData, error: sigError } = await supabase.storage
+          .from('signatures')
+          .download(adminSignaturePath);
+
+        if (!sigError && signatureData) {
+          const signatureBuffer = await signatureData.arrayBuffer();
+          const signatureImage = await pdfDoc.embedPng(signatureBuffer);
+          existingSignatureField.setImage(signatureImage);
+        }
+      } catch (sigEmbedError) {
+        console.warn('Failed to embed signature:', sigEmbedError);
+      }
+    }
+
+    try {
+      const nameFieldName = formType === '43' ? 'admin-name-2' : 'admin-name';
+      const nameField = form.getTextField(nameFieldName);
+      if (nameField) {
+        nameField.setText(adminName);
+      }
+
+      const positionFieldName = formType === '43' ? 'admin-position-2' : 'admin-position';
+      const positionField = form.getTextField(positionFieldName);
+      if (positionField) {
+        positionField.setText(adminPosition);
+      }
+
+      const dateField = form.getTextField('admin-date');
+      if (dateField) {
+        dateField.setText(new Date().toLocaleDateString());
+      }
+    } catch (fieldError) {
+      console.warn('Some admin fields not found in PDF:', fieldError);
+    }
+
+    const modifiedPdfBytes = await pdfDoc.save();
+
+    const modifiedBuffer = Buffer.from(modifiedPdfBytes);
+
+    await supabase.storage
+      .from(draftsBucket)
+      .upload(filePath, modifiedBuffer, {
+        contentType: 'application/pdf',
+        upsert: true
+      });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="form${formType}.pdf"`);
-    return res.send(buffer);
+    return res.send(modifiedBuffer);
 
   } catch (err) {
     console.error('Error in get-draft-form:', err);

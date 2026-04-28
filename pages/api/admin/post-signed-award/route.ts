@@ -21,7 +21,7 @@ export default async function ValidateAward(
 		// Get submission details for PDF regeneration
 		const { data: submission, error: subError } = await supabaseAdmin
 			.from('submissions')
-			.select('publication_id, award_id')
+			.select('publication_id, award_id, submitter_id')
 			.eq('submission_id', submission_id)
 			.single();
 
@@ -33,7 +33,7 @@ export default async function ValidateAward(
 		// Try to regenerate PDFs with admin fields
 		for (const formType of pdfFormTypes) {
 			try {
-				const generateUrl = `${baseUrl}/api/generate-form/ipa-${formType}?publicationId=${submission?.publication_id}&awardId=${submission?.award_id}&user_id=${admin_id}&adminId=${admin_id}`;
+				const generateUrl = `${baseUrl}/api/generate-form/ipa-${formType}?publicationId=${submission?.publication_id}&awardId=${submission?.award_id}&user_id=${submission?.submitter_id}&adminId=${admin_id}`;
 				
 				const response = await fetch(generateUrl);
 				
