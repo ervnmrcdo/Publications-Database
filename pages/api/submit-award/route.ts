@@ -67,6 +67,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       submissionId = existingSubmission.submission_id;
     }
 
+    // Ensure publication_award_applications record exists
+    const { data: existingLink } = await supabaseAdmin
+      .from("publication_award_applications")
+      .select("*")
+      .eq("publication_id", publicationIdNum)
+      .eq("award_id", awardIdNum)
+      .single();
+
+    if (!existingLink) {
+      await supabaseAdmin
+        .from("publication_award_applications")
+        .insert([{
+          publication_id: publicationIdNum,
+          award_id: awardIdNum,
+          submission_id: submissionId,
+        }]);
+    }
+
     const formTypes = awardIdNum === 1
       ? [41, 42, 43]
       : [44, 43];
