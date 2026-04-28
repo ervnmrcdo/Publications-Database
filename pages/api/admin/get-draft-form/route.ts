@@ -135,9 +135,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         positionField.setText(adminPosition);
       }
 
-      const dateField = form.getTextField('admin-date');
-      if (dateField) {
-        dateField.setText(new Date().toLocaleDateString());
+      // For Form 4.3: also fill admin-name and admin-position with same data
+      if (formType === '43') {
+        try {
+          const nameFieldPlain = form.getTextField('admin-name');
+          if (nameFieldPlain) nameFieldPlain.setText(adminName);
+        } catch (e) { /* skip - field not found */ }
+
+        try {
+          const positionFieldPlain = form.getTextField('admin-position');
+          if (positionFieldPlain) positionFieldPlain.setText(adminPosition);
+        } catch (e) { /* skip - field not found */ }
       }
     } catch (fieldError) {
       console.warn('Some admin fields not found in PDF:', fieldError);
