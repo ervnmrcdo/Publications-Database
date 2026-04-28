@@ -11,7 +11,7 @@ import Form42Editor from "./Form42Editor";
 import FormEditing from "./FormEditing";
 
 const AwardsPageContent: FC = () => {
-  const { step, setStep, setDraftId, setDraftUrls, draftsMap, setDraftsMap } = useAwardsFlow();
+  const { step, setStep, setDraftId, setDraftUrls, draftsMap, setDraftsMap, setChecklist } = useAwardsFlow();
   const [selectedAward, setSelectedAward] = useState<Award | null>(null);
   const [selectedPublication, setSelectedPublication] =
     useState<Publication | null>(null);
@@ -112,9 +112,11 @@ const AwardsPageContent: FC = () => {
             form43: draft.form43 || null,
             form44: draft.form44 || null,
           });
+          setChecklist(draft.checklist || []);
         } else {
           setDraftId(null);
           setDraftUrls({});
+          setChecklist([]);
         }
       } catch (err) {
         console.error("Failed to fetch draft:", err);

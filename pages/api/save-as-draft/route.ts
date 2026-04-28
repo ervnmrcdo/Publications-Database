@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { publicationId, awardId, user_id, attachments } = req.body;
+    const { publicationId, awardId, user_id, attachments, checklist } = req.body;
 
     if (!publicationId || !awardId || !user_id) {
       return res
@@ -195,6 +195,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await supabaseAdmin
         .from("submissions")
         .update(attachmentsData)
+        .eq("submission_id", submission_id);
+    }
+
+    if (checklist && checklist.length > 0) {
+      const { data: existingData } = await supabaseAdmin
+        .from("submissions")
+        .select("pdf_json_data")
+        .eq("submission_id", submission_id)
+        .single();
+      
+      const existingJson = existingData?.pdf_json_data || {};
+      const updatedJson = {
+        ...existingJson,
+        checklist,
+      };
+      
+      await supabaseAdmin
+        .from("submissions")
+        .update({ pdf_json_data: updatedJson })
         .eq("submission_id", submission_id);
     }
 
