@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const fileExt = 'pdf';
   const bucket = 'drafts-pdf';
-  const filePath = `${submission_id}_form${formType}.${fileExt}`;
+  const filePath = `${admin_id}/${submission_id}_form${formType}.${fileExt}`;
 
   try {
     const supabase = createServiceRoleClient();
