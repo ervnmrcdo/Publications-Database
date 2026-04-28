@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: `Form ${formType} not found in submission` });
     }
 
-    const submissionBucket = 'submissions-pdf';
+    const submissionBucket = formType === '42' ? 'submissions-docx' : 'submissions-pdf';
 
     const { data: fileData, error: downloadError } = await supabase.storage
       .from(submissionBucket)
