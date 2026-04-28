@@ -53,7 +53,7 @@ export default forwardRef(function Form43Editor({ publicationId, documentUrl, aw
       fileType: "pdf",
       key: documentKey,
       title: "4.3-template",
-      url: documentUrlFinal,
+      url: documentUrl || documentUrlFinal,
     },
     documentType: "pdf",
     editorConfig: {

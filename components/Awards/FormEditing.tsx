@@ -99,9 +99,11 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
         user_id: userId,
       };
 
+      let savedSubmissionId: number | null = null;
+
       for (const [formType, url] of Object.entries(draftUrls)) {
         if (url) {
-          await fetch('/api/save-as-draft/route', {
+          const res = await fetch('/api/save-as-draft/route', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -110,10 +112,14 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
               fileUrl: url,
             }),
           });
+          if (res.ok && !savedSubmissionId) {
+            const data = await res.json();
+            savedSubmissionId = data.submission_id;
+          }
         }
       }
 
-      await fetch('/api/save-as-draft/route', {
+      const attachRes = await fetch('/api/save-as-draft/route', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -121,6 +127,12 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
           attachments,
         }),
       });
+      if (attachRes.ok && !savedSubmissionId) {
+        const data = await attachRes.json();
+        savedSubmissionId = data.submission_id;
+      }
+
+      if (savedSubmissionId) setDraftId(String(savedSubmissionId));
 
       alert('Draft saved successfully! You can continue editing later.');
       handleBack();

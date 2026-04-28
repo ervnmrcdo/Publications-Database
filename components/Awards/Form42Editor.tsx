@@ -53,7 +53,7 @@ export default forwardRef(function Form42Editor({ publicationId, documentUrl, aw
       fileType: "docx",
       key: documentKey,
       title: "4.2-template",
-      url: documentUrlFinal,
+      url: documentUrl || documentUrlFinal,
     },
     documentType: "word",
     editorConfig: {

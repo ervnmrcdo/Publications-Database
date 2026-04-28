@@ -127,6 +127,41 @@ async function handleGet(
     }
   }
 
+  // Fallback: check submission-based paths (files migrated after first "Save as Draft")
+  const { data: submissionRecord } = await supabase
+    .from("submissions")
+    .select("submission_id")
+    .eq("publication_id", Number(publicationId))
+    .eq("award_id", Number(awardId))
+    .in("status", ["DRAFT", "RETURNED"])
+    .single();
+
+  if (submissionRecord) {
+    const sid = submissionRecord.submission_id;
+
+    const submissionPdfForms: { formKey: string; fileName: string }[] = [
+      { formKey: "form41", fileName: `${sid}_form41.pdf` },
+      { formKey: "form43", fileName: `${sid}_form43.pdf` },
+      { formKey: "form44", fileName: `${sid}_form44.pdf` },
+    ];
+    const submissionDocxForms: { formKey: string; fileName: string }[] = [
+      { formKey: "form42", fileName: `${sid}_form42.docx` },
+    ];
+
+    for (const { formKey, fileName } of submissionPdfForms) {
+      if (!draftUrls[formKey]) {
+        const { data: urlData } = await pdfBucket.createSignedUrl(fileName, 3600);
+        if (urlData?.signedUrl) draftUrls[formKey] = urlData.signedUrl;
+      }
+    }
+    for (const { formKey, fileName } of submissionDocxForms) {
+      if (!draftUrls[formKey]) {
+        const { data: urlData } = await docxBucket.createSignedUrl(fileName, 3600);
+        if (urlData?.signedUrl) draftUrls[formKey] = urlData.signedUrl;
+      }
+    }
+  }
+
   return res.status(200).json({
     publication_id: Number(publicationId),
     award_id: Number(awardId),

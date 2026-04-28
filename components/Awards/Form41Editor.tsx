@@ -35,7 +35,7 @@ export default forwardRef(function Form41Editor({ publicationId, documentUrl, aw
             fileType: "pdf",
             key: documentKey,
             title: "4.1-template",
-            url: documentUrlFinal,
+            url: documentUrl || documentUrlFinal,
         },
         documentType: "pdf",
         editorConfig: {

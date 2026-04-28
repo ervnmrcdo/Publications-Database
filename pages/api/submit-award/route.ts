@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const existingDocxFiles: string[] = [];
 
     for (const formType of formTypes) {
-      const fileExt = formType === 41 || formType === 44 ? "pdf" : "docx";
+      const fileExt = formType === 42 ? "docx" : "pdf";
       const bucket = fileExt === "pdf" ? "drafts-pdf" : "drafts-docx";
       const filePath = `${submissionId}_form${formType}.${fileExt}`;
 
