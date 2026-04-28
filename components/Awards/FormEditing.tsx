@@ -5,10 +5,18 @@ import Form42Editor from "./Form42Editor";
 import Form43Editor from "./Form43Editor";
 import Form44Editor from "./Form44Editor";
 import FormReview from "./FormReview";
+import SubmissionChecklist from "./SubmissionChecklist";
 import { Award, Publication, SubmissionLog } from "@/lib/types";
 import { useAwardsFlow } from "@/context/AwardsFlowContext";
 import { Save } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+
+const REQUIRED_CHECKLIST = [
+  'All authors have signed',
+  'All necessary textboxes are filled',
+  'All necessary checkboxes are ticked',
+  'I certify the information is correct',
+];
 
 interface FormEditingProps {
   handleBack: () => void;
@@ -19,12 +27,26 @@ interface FormEditingProps {
 
 export default function FormEditing({ handleBack, selectedAward, selectedPublication, userId }: FormEditingProps) {
   const USER_INFO = useAuth().profile
-  const { formStep, setFormStep, setIsJournal, draftUrls, setDraftUrls, setDraftId } = useAwardsFlow();
+  const { formStep, setFormStep, setIsJournal, draftUrls, setDraftUrls, setDraftId, checklist, setChecklist, setStep } = useAwardsFlow();
 
   const isJournalType = selectedAward.id === 1;
   const isBookType = selectedAward.id === 2;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const toggleChecklist = (item: string) => {
+    if (checklist.includes(item)) {
+      setChecklist(checklist.filter(i => i !== item));
+    } else {
+      setChecklist([...checklist, item]);
+    }
+  };
+
+  const isChecklistComplete = REQUIRED_CHECKLIST.every(item => checklist.includes(item));
+
+  const handleNext = (nextStep: string) => {
+    setFormStep(nextStep as any);
+  };
 
   useEffect(() => {
     setIsJournal(isJournalType);
@@ -79,9 +101,10 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
 
       setDraftUrls({});
       setDraftId(null);
+      setChecklist([]);
 
       alert('Submission successful! Your application has been submitted for review.');
-      handleBack();
+      setStep("awards");
     } catch (err) {
       console.error('Failed to submit:', err);
       alert(err instanceof Error ? err.message : 'Failed to submit application. Please try again.');
@@ -90,13 +113,14 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     }
   };
 
-  const handleSaveAsDraft = async (attachments: { drive_url: string; checklist: string[] }) => {
+  const handleSaveAsDraft = async (attachments: { drive_url: string; checklist: string[]; requirements?: string[] }) => {
     setIsSubmitting(true);
     try {
       const draftData = {
         publicationId: selectedPublication.publication_id,
         awardId: selectedAward.id,
         user_id: userId,
+        checklist: attachments.requirements || checklist,
       };
 
       for (const [formType, url] of Object.entries(draftUrls)) {
@@ -188,15 +212,23 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <Form41Editor
-                publicationId={selectedPublication.publication_id}
-                documentUrl={draftUrls.form41 || undefined}
-                awardId={selectedAward.id}
-                userId={userId}
-              />
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Form41Editor
+                    publicationId={selectedPublication.publication_id}
+                    documentUrl={draftUrls.form41 || undefined}
+                    awardId={selectedAward.id}
+                    userId={userId}
+                  />
+                </div>
+                <SubmissionChecklist
+                  checkedItems={checklist}
+                  onToggle={toggleChecklist}
+                />
+              </div>
               <div className="mt-4 flex justify-end">
                 <button
-                  onClick={() => setFormStep('form42')}
+                  onClick={() => handleNext('form42')}
                   className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   Next →
@@ -213,15 +245,23 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <Form42Editor
-                publicationId={selectedPublication.publication_id}
-                documentUrl={draftUrls.form42 || undefined}
-                awardId={selectedAward.id}
-                userId={userId}
-              />
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Form42Editor
+                    publicationId={selectedPublication.publication_id}
+                    documentUrl={draftUrls.form42 || undefined}
+                    awardId={selectedAward.id}
+                    userId={userId}
+                  />
+                </div>
+                <SubmissionChecklist
+                  checkedItems={checklist}
+                  onToggle={toggleChecklist}
+                />
+              </div>
               <div className="mt-4 flex justify-end">
                 <button
-                  onClick={() => setFormStep('form43')}
+                  onClick={() => handleNext('form43')}
                   className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   Next →
@@ -238,15 +278,23 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <Form44Editor
-                publicationId={selectedPublication.publication_id}
-                documentUrl={draftUrls.form44 || undefined}
-                awardId={selectedAward.id}
-                userId={userId}
-              />
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Form44Editor
+                    publicationId={selectedPublication.publication_id}
+                    documentUrl={draftUrls.form44 || undefined}
+                    awardId={selectedAward.id}
+                    userId={userId}
+                  />
+                </div>
+                <SubmissionChecklist
+                  checkedItems={checklist}
+                  onToggle={toggleChecklist}
+                />
+              </div>
               <div className="mt-4 flex justify-end">
                 <button
-                  onClick={() => setFormStep('form43')}
+                  onClick={() => handleNext('form43')}
                   className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   Next →
@@ -263,15 +311,23 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <Form43Editor
-                publicationId={selectedPublication.publication_id}
-                documentUrl={draftUrls.form43 || undefined}
-                awardId={selectedAward.id}
-                userId={userId}
-              />
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Form43Editor
+                    publicationId={selectedPublication.publication_id}
+                    documentUrl={draftUrls.form43 || undefined}
+                    awardId={selectedAward.id}
+                    userId={userId}
+                  />
+                </div>
+                <SubmissionChecklist
+                  checkedItems={checklist}
+                  onToggle={toggleChecklist}
+                />
+              </div>
               <div className="mt-4 flex justify-end">
                 <button
-                  onClick={() => setFormStep('review')}
+                  onClick={() => handleNext('review')}
                   className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   Next →

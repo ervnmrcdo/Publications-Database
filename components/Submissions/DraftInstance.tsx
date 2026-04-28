@@ -5,6 +5,7 @@ import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubmissionsFlow } from "@/context/SubmissionsFlowContext";
+import SubmissionChecklist from "../Awards/SubmissionChecklist";
 
 type Props = {
     data: DraftForm;
@@ -41,6 +42,13 @@ const BOOK_CHECKLIST = [
   'Table of Contents',
   'List of Contributors or Contributors Notes',
   'Proof of Peer Review Process',
+];
+
+const REQUIRED_CHECKLIST = [
+  'All authors have signed',
+  'All necessary textboxes are filled',
+  'All necessary checkboxes are ticked',
+  'I certify the information is correct',
 ];
 
 export default function DraftInstance({ data, onBack }: Props) {
@@ -85,6 +93,19 @@ export default function DraftInstance({ data, onBack }: Props) {
         const attachments = awardId === 1 ? data.journal_attachments : data.book_attachments;
         return (attachments?.checklist || []) as string[];
     });
+    const [requirements, setRequirements] = useState<string[]>(() => {
+        return (data.pdf_json_data?.checklist || []) as string[];
+    });
+
+    const toggleRequirements = (item: string) => {
+        if (requirements.includes(item)) {
+            setRequirements(requirements.filter(i => i !== item));
+        } else {
+            setRequirements([...requirements, item]);
+        }
+    };
+
+    const isRequirementsComplete = REQUIRED_CHECKLIST.every(item => requirements.includes(item));
 
     const getActorName = () => {
         return profile ? `${profile.first_name} ${profile.last_name}` : 'User';
@@ -420,16 +441,24 @@ export default function DraftInstance({ data, onBack }: Props) {
                 </div>
             </div>
 
-            <div className="flex gap-3">
-                <button
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                    onClick={() => setShowSubmitConfirmDialog(true)}
-                >
-                    Submit
-                </button>
-            </div>
+            <div className="flex gap-4">
+                <div className="flex-1">
+                    <div className="flex gap-3">
+                        <button
+                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                            onClick={() => setShowSubmitConfirmDialog(true)}
+                            disabled={!isRequirementsComplete}
+                        >
+                            Submit
+                        </button>
+                    </div>
+                </div>
 
-            {/* Form 4.1 - PDF */}
+                <SubmissionChecklist
+                    checkedItems={requirements}
+                    onToggle={toggleRequirements}
+                />
+            </div>
             {hasForm41 && (
                 <div className="border rounded-lg overflow-hidden">
                     <button

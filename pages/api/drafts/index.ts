@@ -30,13 +30,23 @@ async function handleGet(
   userId: string
 ) {
   const { publicationId, awardId } = req.query;
-
-
+ 
   if (!publicationId || !awardId) {
     return res
       .status(400)
       .json({ error: "publicationId and awardId are required" });
   }
+
+  // Fetch existing draft to get checklist from pdf_json_data
+  const { data: existingDraft } = await supabase
+    .from("submissions")
+    .select("pdf_json_data")
+    .eq("publication_id", Number(publicationId))
+    .eq("award_id", Number(awardId))
+    .in("status", ["DRAFT", "RETURNED"])
+    .single();
+
+  const savedChecklist = existingDraft?.pdf_json_data?.checklist || [];
 
   const basePath = `${userId}/${awardId}/${publicationId}`;
   const tempPath = `${userId}_${publicationId}_${awardId}_form`;
@@ -132,6 +142,7 @@ async function handleGet(
     award_id: Number(awardId),
     ...draftPaths,
     ...draftUrls,
+    checklist: savedChecklist,
   });
 }
 

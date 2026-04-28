@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const publicationIdNum = Number(publicationId);
     const awardIdNum = Number(awardId);
 
-    const { data: existingDraft, error: draftError } = await supabaseAdmin
+    const { data: existingSubmission, error: draftError } = await supabaseAdmin
       .from("submissions")
       .select("*")
       .eq("publication_id", publicationIdNum)
@@ -26,11 +26,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .eq("status", "DRAFT")
       .single();
 
-    if (draftError || !existingDraft) {
-      return res.status(400).json({ error: "No draft found to submit" });
-    }
+    let submissionId: number;
 
-    const submissionId = existingDraft.submission_id;
+    if (draftError || !existingSubmission) {
+      const { data: existingAny, error: checkError } = await supabaseAdmin
+        .from("submissions")
+        .select("submission_id, status")
+        .eq("publication_id", publicationIdNum)
+        .eq("award_id", awardIdNum)
+        .single();
+
+      if (!checkError && existingAny) {
+        if (existingAny.status === "PENDING") {
+          return res.status(400).json({ error: "This is already submitted and pending review" });
+        }
+        submissionId = existingAny.submission_id;
+      } else {
+        const { data: newSubmission, error: createError } = await supabaseAdmin
+          .from("submissions")
+          .insert([
+            {
+              submitter_id: userId,
+              award_id: awardIdNum,
+              publication_id: publicationIdNum,
+              status: "PENDING",
+              pdf_json_data: {},
+              logs: logs || [],
+            },
+          ])
+          .select("submission_id")
+          .single();
+
+        if (createError || !newSubmission) {
+          return res.status(400).json({ error: "Failed to create submission: " + createError.message });
+        }
+
+        submissionId = newSubmission.submission_id;
+      }
+    } else {
+      submissionId = existingSubmission.submission_id;
+    }
 
     const formTypes = awardIdNum === 1
       ? [41, 42, 43]
@@ -38,11 +73,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const existingPdfFiles: string[] = [];
     const existingDocxFiles: string[] = [];
+    const tempFileMap: Record<string, string> = {};
 
     for (const formType of formTypes) {
-      const fileExt = formType === 41 || formType === 44 ? "pdf" : "docx";
+      const fileExt = formType === 41 || formType === 44 || formType === 43 ? "pdf" : "docx";
       const bucket = fileExt === "pdf" ? "drafts-pdf" : "drafts-docx";
       const filePath = `${submissionId}_form${formType}.${fileExt}`;
+      const tempFilePath = `${userId}_${publicationIdNum}_${awardIdNum}_form${formType}.${fileExt}`;
 
       const { data: fileData, error } = await supabaseAdmin.storage
         .from(bucket)
@@ -54,14 +91,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else {
           existingDocxFiles.push(filePath);
         }
+      } else {
+        const { data: tempFileData, error: tempError } = await supabaseAdmin.storage
+          .from(bucket)
+          .download(tempFilePath);
+
+        if (!tempError && tempFileData) {
+          tempFileMap[formType] = tempFilePath;
+          if (fileExt === "pdf") {
+            existingPdfFiles.push(tempFilePath);
+          } else {
+            existingDocxFiles.push(tempFilePath);
+          }
+        }
       }
     }
 
     if (existingPdfFiles.length === 0 && existingDocxFiles.length === 0) {
-      return res.status(400).json({ error: "No draft files found to submit" });
+      return res.status(400).json({ error: "No draft files found to submit. Please save your work in the form editor first." });
     }
 
-    const submission_id = existingDraft.submission_id;
+    const submission_id = submissionId;
 
     const submissionPaths: Record<string, string> = {};
 
@@ -121,7 +171,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    const existingLogs = existingDraft?.logs || [];
+    const existingLogs = existingSubmission?.logs || [];
     const updatedLogs = [...existingLogs, ...logs];
 
     const updateData: Record<string, unknown> = {

@@ -20,6 +20,8 @@ interface AwardsFlowContextValue {
   setDraftUrls: Dispatch<SetStateAction<Record<string, string | null>>>
   draftsMap: Record<string, boolean>
   setDraftsMap: Dispatch<SetStateAction<Record<string, boolean>>>
+  checklist: string[]
+  setChecklist: Dispatch<SetStateAction<string[]>>
 }
 
 const AwardsFlowContext = createContext<AwardsFlowContextValue | undefined>(undefined)
@@ -31,6 +33,7 @@ export function AwardsFlowProvider({ children }: { children: React.ReactNode }) 
   const [draftId, setDraftId] = useState<string | null>(null)
   const [draftUrls, setDraftUrls] = useState<Record<string, string | null>>({})
   const [draftsMap, setDraftsMap] = useState<Record<string, boolean>>({})
+  const [checklist, setChecklist] = useState<string[]>([])
   const { user } = useAuth()
   
   useEffect(() => {
@@ -40,10 +43,11 @@ export function AwardsFlowProvider({ children }: { children: React.ReactNode }) 
     setDraftId(null)
     setDraftUrls({})
     setDraftsMap({})
+    setChecklist([])
   }, [user?.id])
 
   return (
-    <AwardsFlowContext.Provider value={{ step, setStep, formStep, setFormStep, isJournal, setIsJournal, draftId, setDraftId, draftUrls, setDraftUrls, draftsMap, setDraftsMap }}>
+    <AwardsFlowContext.Provider value={{ step, setStep, formStep, setFormStep, isJournal, setIsJournal, draftId, setDraftId, draftUrls, setDraftUrls, draftsMap, setDraftsMap, checklist, setChecklist }}>
       {children}
     </AwardsFlowContext.Provider>
   )
