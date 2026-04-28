@@ -37,6 +37,8 @@ export interface Publication {
   issue_number: string;
   publication_status: string;
   doi?: string | null;
+  type: string;
+  publication_type_id?: number; 
 }
 
 export interface SupabasePublication {
