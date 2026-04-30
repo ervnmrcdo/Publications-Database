@@ -126,6 +126,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (submissionPaths.form43_path) updateData.form43_path = submissionPaths.form43_path;
     if (submissionPaths.form44_path) updateData.form44_path = submissionPaths.form44_path;
 
+    const attachments = req.body.attachments;
+    if (attachments) {
+      const cleanAttachments = { drive_url: attachments.drive_url || '' };
+      if (isJournalType) {
+        updateData.journal_attachments = cleanAttachments;
+      } else {
+        updateData.book_attachments = cleanAttachments;
+      }
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from("submissions")
       .update(updateData)

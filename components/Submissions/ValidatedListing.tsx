@@ -29,9 +29,8 @@ export default function AcceptedListing({ onSelect }: Props) {
             method: 'POST',
             body: JSON.stringify(payload)
         }).then((res) => res.json()).then((result) => {
-            console.log(result)
             const list = Array.isArray(result) ? result : [];
-            setAcceptedData(result.map((item: any) => ({
+            setAcceptedData(list.map((item: any) => ({
                 submission_id: item.submission_id,
                 // NEW: Use pdfUrl from Supabase Storage instead of attached_files
                 pdfBufferData: item.pdfUrl || item.attached_files,

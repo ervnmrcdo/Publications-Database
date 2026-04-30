@@ -29,7 +29,7 @@ const BOOK_CHECKLIST = [
 
 type AttachmentData = {
   drive_url: string;
-  checklist: string[];
+  checklist?: string[];
   requirements?: string[];
 };
 
@@ -120,7 +120,7 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
   );
 
 return (
-    <div className="mb-8 flex gap-4">
+    <div className="mb-8 flex flex-col gap-4">
       <div className="flex-1">
         <button
           onClick={handleBack}
@@ -141,7 +141,7 @@ return (
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-white">Supporting Documents</h3>
             <p className="text-sm text-gray-400 mt-0.5">
-              Optional — paste your Google Drive folder link and check off what's included
+              Required — paste your Google Drive folder link and check off what's included
             </p>
           </div>
 
@@ -207,7 +207,15 @@ return (
                 alert('Please complete all requirements before submitting.');
                 return;
               }
-              onSubmit({ drive_url: driveUrl, checklist: driveChecklist });
+              if (!driveUrl.trim()) {
+                alert('Please provide your Google Drive folder link before submitting.');
+                return;
+              }
+              if (driveChecklist.length === 0) {
+                alert('Please check off at least one document included in your folder before submitting.');
+                return;
+              }
+              onSubmit({ drive_url: driveUrl });
             }}
             disabled={isSubmitting}
             className="flex items-center px-8 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"

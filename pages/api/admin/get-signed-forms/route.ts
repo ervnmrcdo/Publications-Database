@@ -16,7 +16,8 @@ export default async function GetSignedForms(
 			.select(`
 				*,
 				authors:users!submitter_id(first_name, last_name),
-				awards:awards!award_id(title)
+				awards:awards!award_id(title),
+				publications:publications!publication_id(title)
 			`)
 .eq('reviewed_by_admin_id', adminId)
 		.in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED'])
@@ -46,6 +47,7 @@ export default async function GetSignedForms(
 						last_name: r.authors?.last_name,
 						date_submitted: r.date_submitted,
 						title: r.awards?.title,
+						publication_title: r.publications?.title,
 						logs: r.logs,
 						status: r.status,
 						form41Url: r.form41_path ? true : null,

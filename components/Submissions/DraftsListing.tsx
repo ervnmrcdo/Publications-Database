@@ -22,7 +22,8 @@ export default function DraftsListing({ onSelect }: Props) {
             method: 'POST',
             body: JSON.stringify(payload),
         }).then((res) => res.json()).then((result) => {
-            setDraftsData(result.map((item: any) => ({
+            const list = Array.isArray(result) ? result : [];
+            setDraftsData(list.map((item: any) => ({
                 submission_id: item.submission_id,
                 publication_id: item.publication_id,
                 first_name: item.authors?.first_name,

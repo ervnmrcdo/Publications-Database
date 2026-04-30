@@ -32,7 +32,8 @@ export default function PendingListing({ onSelect }: Props) {
 
                 if (response.ok) {
                     const data = await response.json();
-                    const formatted = data.map((item: any) => ({
+                    const list = Array.isArray(data) ? data : [];
+                    const formatted = list.map((item: any) => ({
                         submission_id: item.id,
                         name: item.name,
                         first_name: item.name.split(' ')[0],

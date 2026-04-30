@@ -5,6 +5,7 @@ import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubmissionsFlow } from "@/context/SubmissionsFlowContext";
+import SubmissionChecklist from "../Awards/SubmissionChecklist";
 
 type Props = {
     data: RejectedForm;
@@ -73,6 +74,46 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
     const submitterId = data.submitter_id || user?.id || ""
     const submissionId = data.submission_id
 
+    const isJournal = awardId === 1;
+
+    const [driveUrl, setDriveUrl] = useState<string>(
+        (isJournal ? data.journal_attachments?.drive_url : data.book_attachments?.drive_url) || ''
+    );
+    const [checklist, setChecklist] = useState<string[]>(() => {
+        const attachments = isJournal ? data.journal_attachments : data.book_attachments;
+        return (attachments?.checklist || []) as string[];
+    });
+    const [requirements, setRequirements] = useState<string[]>([]);
+
+    const JOURNAL_CHECKLIST_ITEMS = ['Copy of the Journal Article'];
+    const BOOK_CHECKLIST_ITEMS = [
+        'Copy of Book / Book Chapter',
+        'Book Cover',
+        'Copyright Page',
+        'Preface',
+        'Table of Contents',
+        'List of Contributors or Contributors Notes',
+        'Proof of Peer Review Process',
+    ];
+    const REQUIRED_CHECKLIST = [
+        'All authors have signed',
+        'All necessary textboxes are filled',
+        'All necessary checkboxes are ticked',
+        'I certify the information is correct',
+    ];
+
+    const toggleRequirements = (item: string) => {
+        if (requirements.includes(item)) {
+            setRequirements(requirements.filter(i => i !== item));
+        } else {
+            setRequirements([...requirements, item]);
+        }
+    };
+
+    const isRequirementsComplete = REQUIRED_CHECKLIST.every(item => requirements.includes(item));
+    const isAttachmentsComplete = driveUrl.trim() !== '' && checklist.length > 0;
+    const isSubmitReady = isRequirementsComplete && isAttachmentsComplete;
+
     const getActorName = () => {
         return profile ? `${profile.first_name} ${profile.last_name}` : 'User';
     };
@@ -110,6 +151,18 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
     };
 
     const handleResubmitForm = async () => {
+        if (!driveUrl.trim()) {
+            alert('Please provide your Google Drive folder link before resubmitting.');
+            return;
+        }
+        if (checklist.length === 0) {
+            alert('Please check off at least one document included in your folder before resubmitting.');
+            return;
+        }
+        if (!isRequirementsComplete) {
+            alert('Please complete all requirements before resubmitting.');
+            return;
+        }
         try {
             const resubmissionLog = {
                 action: 'RESUBMITTED',
@@ -126,6 +179,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                 publicationId,
                 awardId,
                 submitterId,
+                attachments: { drive_url: driveUrl, checklist, requirements },
             }
 
             const response = await fetch('/api/resubmit-award-from-drafts/route', {
@@ -305,8 +359,9 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
 
             <div className="flex gap-3">
                 <button
-                    className="px-4 py-2 bg-green-500 text-white rounded-md"
+                    className="px-4 py-2 bg-green-500 text-white rounded-md disabled:opacity-50"
                     onClick={() => setShowSignConfirmDialog(true)}
+                    disabled={!isSubmitReady}
                 >
                     Resubmit
                 </button>
@@ -448,7 +503,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
             <div className="p-4 bg-[#252836] rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                     <p className="font-bold text-med text-white">
-                        {data.form41_url ? 'Journal Article Attachments' : 'Book Chapter Attachments'}
+                        Supporting Documents
                     </p>
                     {!isEditingAttachments ? (
                         <button
@@ -461,8 +516,9 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => {
-                                    setJournalAttachments(data.journal_attachments || {});
-                                    setBookAttachments(data.book_attachments || {});
+                                    setDriveUrl((isJournal ? data.journal_attachments?.drive_url : data.book_attachments?.drive_url) || '');
+                                    const attachments = isJournal ? data.journal_attachments : data.book_attachments;
+                                    setChecklist([...(attachments?.checklist || [])]);
                                     setIsEditingAttachments(false);
                                 }}
                                 className="flex items-center px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
@@ -480,76 +536,70 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                     )}
                 </div>
                 
-                <div className="space-y-3">
-                    {awardId === 1 ? (
-                        Object.entries(journalAttachments).map(([key, value]) => (
-                            <div key={key}>
-                                <label className="block text-sm text-gray-300 mb-1 capitalize">
-                                    {key.replace(/_/g, ' ')}
-                                </label>
-                                {isEditingAttachments ? (
-                                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
-                                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
-                                        <input
-                                            type="url"
-                                            value={value || ''}
-                                            onChange={(e) => setJournalAttachments(prev => ({ ...prev, [key]: e.target.value }))}
-                                            placeholder="https://..."
-                                            className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
-                                        />
-                                    </div>
-                                ) : (
-                                    value ? (
-                                        <a 
-                                            href={value} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline text-sm break-all"
-                                        >
-                                            {value}
-                                        </a>
-                                    ) : (
-                                        <span className="text-gray-500 text-sm">No link provided</span>
-                                    )
-                                )}
-                            </div>
-                        ))
-                    ) : (
-                        Object.entries(bookAttachments).map(([key, value]) => (
-                            <div key={key}>
-                                <label className="block text-sm text-gray-300 mb-1 capitalize">
-                                    {key.replace(/_/g, ' ')}
-                                </label>
-                                {isEditingAttachments ? (
-                                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
-                                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
-                                        <input
-                                            type="url"
-                                            value={value || ''}
-                                            onChange={(e) => setBookAttachments(prev => ({ ...prev, [key]: e.target.value }))}
-                                            placeholder="https://..."
-                                            className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
-                                        />
-                                    </div>
-                                ) : (
-                                    value ? (
-                                        <a 
-                                            href={value} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-blue-400 hover:underline text-sm break-all"
-                                        >
-                                            {value}
-                                        </a>
-                                    ) : (
-                                        <span className="text-gray-500 text-sm">No link provided</span>
-                                    )
-                                )}
-                            </div>
-                        ))
-                    )}
+                <p className="text-sm text-gray-400 mb-4">
+                    Required — paste your Google Drive folder link and check off what's included
+                </p>
+
+                {/* Google Drive URL */}
+                <div className="mb-5">
+                    <label className="block text-sm text-gray-300 mb-1">Google Drive Folder Link</label>
+                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2 focus-within:border-blue-500">
+                        <Link className="w-4 h-4 text-gray-500 mr-2 shrink-0" />
+                        {isEditingAttachments ? (
+                            <input
+                                type="url"
+                                placeholder="https://drive.google.com/drive/folders/..."
+                                value={driveUrl}
+                                onChange={e => setDriveUrl(e.target.value)}
+                                className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 focus:outline-none"
+                            />
+                        ) : (
+                            driveUrl ? (
+                                <a 
+                                    href={driveUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:underline text-sm break-all"
+                                >
+                                    {driveUrl}
+                                </a>
+                            ) : (
+                                <span className="text-gray-500 text-sm">No link provided</span>
+                            )
+                        )}
+                    </div>
+                </div>
+
+                {/* Checklist */}
+                <div>
+                    <label className="block text-sm text-gray-300 mb-2">Documents included in the folder</label>
+                    <div className="space-y-2">
+                        {(isJournal ? JOURNAL_CHECKLIST_ITEMS : BOOK_CHECKLIST_ITEMS).map(item => (
+                            <label
+                                key={item}
+                                className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition"
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={checklist.includes(item)}
+                                    onChange={() => {
+                                        setChecklist(prev =>
+                                            prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
+                                        );
+                                    }}
+                                    className="w-4 h-4 accent-blue-500"
+                                />
+                                <span className="text-sm text-gray-300">{item}</span>
+                            </label>
+                        ))}
+                    </div>
                 </div>
             </div>
+
+            <SubmissionChecklist
+                checkedItems={requirements}
+                onToggle={toggleRequirements}
+            />
 
 
             {/* Resubmit Confirmation Dialog */}

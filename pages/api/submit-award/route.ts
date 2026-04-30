@@ -205,9 +205,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const isJournalType = awardIdNum === 1;
+    const cleanAttachments = { drive_url: attachments?.drive_url || '' };
     Object.assign(updateData, isJournalType
-      ? { journal_attachments: attachments ?? {} }
-      : { book_attachments: attachments ?? {} }
+      ? { journal_attachments: cleanAttachments }
+      : { book_attachments: cleanAttachments }
     );
 
     const { error: updateError } = await supabaseAdmin

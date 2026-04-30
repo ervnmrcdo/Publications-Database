@@ -220,8 +220,8 @@ export default function PendingInstance({ data, onBack }: Props) {
     const hasForm43 = !!data.form43Url;
     const hasForm44 = !!data.form44Url;
 
-    const hasJournalAttachments = data.journal_attachments && Object.keys(data.journal_attachments).length > 0;
-    const hasBookAttachments = data.book_attachments && Object.keys(data.book_attachments).length > 0;
+    const hasJournalAttachments = data.journal_attachments?.drive_url;
+    const hasBookAttachments = data.book_attachments?.drive_url;
 
     const getEditorConfig = useCallback((config: DocumentConfig, token: string) => ({
         ...config,
@@ -381,26 +381,24 @@ export default function PendingInstance({ data, onBack }: Props) {
                         Journal Article Attachments
                     </p>
                     <div className="space-y-3">
-                        {Object.entries(data.journal_attachments || {}).map(([key, value]) => (
-                            <div key={key}>
-                                <label className="block text-sm text-gray-300 mb-1 capitalize">
-                                    {key.replace(/_/g, ' ')}
-                                </label>
-                                {value ? (
-                                    <a
-                                        href={value}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-400 hover:underline text-sm break-all flex items-center"
-                                    >
-                                        <Link className="w-4 h-4 mr-1" />
-                                        {value}
-                                    </a>
-                                ) : (
-                                    <span className="text-gray-500 text-sm">No link provided</span>
-                                )}
-                            </div>
-                        ))}
+                        <div>
+                            <label className="block text-sm text-gray-300 mb-1">
+                                Drive Folder Link
+                            </label>
+                            {data.journal_attachments?.drive_url ? (
+                                <a
+                                    href={data.journal_attachments?.drive_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:underline text-sm break-all flex items-center"
+                                >
+                                    <Link className="w-4 h-4 mr-1" />
+                                    {data.journal_attachments?.drive_url}
+                                </a>
+                            ) : (
+                                <span className="text-gray-500 text-sm">No link provided</span>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -411,26 +409,24 @@ export default function PendingInstance({ data, onBack }: Props) {
                         Book Chapter Attachments
                     </p>
                     <div className="space-y-3">
-                        {Object.entries(data.book_attachments || {}).map(([key, value]) => (
-                            <div key={key}>
-                                <label className="block text-sm text-gray-300 mb-1 capitalize">
-                                    {key.replace(/_/g, ' ')}
-                                </label>
-                                {value ? (
-                                    <a
-                                        href={value}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-400 hover:underline text-sm break-all flex items-center"
-                                    >
-                                        <Link className="w-4 h-4 mr-1" />
-                                        {value}
-                                    </a>
-                                ) : (
-                                    <span className="text-gray-500 text-sm">No link provided</span>
-                                )}
-                            </div>
-                        ))}
+                        <div>
+                            <label className="block text-sm text-gray-300 mb-1">
+                                Drive Folder Link
+                            </label>
+                            {data.book_attachments?.drive_url ? (
+                                <a
+                                    href={data.book_attachments?.drive_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:underline text-sm break-all flex items-center"
+                                >
+                                    <Link className="w-4 h-4 mr-1" />
+                                    {data.book_attachments?.drive_url}
+                                </a>
+                            ) : (
+                                <span className="text-gray-500 text-sm">No link provided</span>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

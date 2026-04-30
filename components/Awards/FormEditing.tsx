@@ -69,7 +69,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     return formStep;
   };
 
-  const handleFinalSubmit = async (attachments: { drive_url: string; checklist: string[] }) => {
+  const handleFinalSubmit = async (attachments: { drive_url: string; checklist?: string[] }) => {
     setIsSubmitting(true);
     try {
 
@@ -113,7 +113,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     }
   };
 
-  const handleSaveAsDraft = async (attachments: { drive_url: string; checklist: string[]; requirements?: string[] }) => {
+  const handleSaveAsDraft = async (attachments: { drive_url: string; checklist?: string[]; requirements?: string[] }) => {
     setIsSubmitting(true);
     try {
       const draftData = {
@@ -142,7 +142,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...draftData,
-          attachments,
+          attachments: { drive_url: attachments.drive_url },
         }),
       });
 
@@ -212,8 +212,8 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <div className="flex flex-col gap-4">
+                <div className="w-full">
                   <Form41Editor
                     publicationId={selectedPublication.publication_id}
                     documentUrl={draftUrls.form41 || undefined}
@@ -245,8 +245,8 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <div className="flex flex-col gap-4">
+                <div className="w-full">
                   <Form42Editor
                     publicationId={selectedPublication.publication_id}
                     documentUrl={draftUrls.form42 || undefined}
@@ -278,8 +278,8 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <div className="flex flex-col gap-4">
+                <div className="w-full">
                   <Form44Editor
                     publicationId={selectedPublication.publication_id}
                     documentUrl={draftUrls.form44 || undefined}
@@ -311,8 +311,8 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
               exit={{ x: -200, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <div className="flex flex-col gap-4">
+                <div className="w-full">
                   <Form43Editor
                     publicationId={selectedPublication.publication_id}
                     documentUrl={draftUrls.form43 || undefined}

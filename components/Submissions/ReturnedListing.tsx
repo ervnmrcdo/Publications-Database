@@ -22,8 +22,8 @@ export default function ReturnedListing({ onSelect }: Props) {
             method: 'POST',
             body: JSON.stringify(payload)
         }).then((res) => res.json()).then((result) => {
-            console.log(result)
-            setReturnedData(result.map((item: any) => ({
+            const list = Array.isArray(result) ? result : [];
+            setReturnedData(list.map((item: any) => ({
                 submission_id: item.submission_id,
                 publication_id: item.publication_id,
                 first_name: item.authors?.first_name,

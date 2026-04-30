@@ -25,7 +25,7 @@ export default async function ValidateAward(
 			.eq('submission_id', submission_id)
 			.single();
 
-		const baseUrl = 'http://localhost:3000';
+		const baseUrl = 'http://host.docker.internal:3000';
 
 		// PDF forms that need regeneration with admin fields
 		const pdfFormTypes = ['41', '43', '44'];
@@ -53,13 +53,14 @@ export default async function ValidateAward(
 						updateData[`form${formType}_path`] = uploadData.path;
 						console.log(`Successfully regenerated and saved form ${formType} with admin fields`);
 					} else {
-						console.warn(`Failed to upload regenerated form ${formType}:`, uploadError);
+						console.error(`[post-signed-award] Failed to upload regenerated form ${formType} for submission ${submission_id}:`, uploadError);
 					}
 				} else {
-					console.warn(`Failed to regenerate form ${formType}:`, response.status);
+					const errorText = await response.text();
+					console.error(`[post-signed-award] Failed to regenerate form ${formType} for submission ${submission_id}: HTTP ${response.status} - ${errorText}`);
 				}
 			} catch (regenError) {
-				console.warn(`Error regenerating form ${formType}:`, regenError);
+				console.error(`[post-signed-award] Error regenerating form ${formType} for submission ${submission_id}:`, regenError);
 			}
 		}
 

@@ -39,11 +39,12 @@ export default function AttachmentsSection({ isJournal, journal_attachments, boo
           <div>
             <p className="text-xs text-gray-400 mb-1">Google Drive Folder</p>
             
+            <a
               href={data.drive_url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm break-all"
-            <a >
+            >
               <span>🔗</span>
               {data.drive_url}
             </a>

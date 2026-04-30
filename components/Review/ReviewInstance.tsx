@@ -421,9 +421,8 @@ export default function ReviewInstance({ data, onBack }: Props) {
       </button>
 
       <div className="p-4 bg-[#252836] rounded-lg">
-        <p className="font-bold text-lg text-white">{data.name}</p>
-        <p className="text-sm text-gray-400">{data.role}</p>
-        <p className="text-sm">{data.award}</p>
+        <p className="font-bold text-lg text-white">{data.publicationTitle || 'Untitled Publication'}</p>
+        <p className="text-sm text-gray-300">{data.name} &middot; {data.award}</p>
         <p className="text-xs text-gray-400">{new Date(data.dateSubmitted).toLocaleString()}</p>
       </div>
 

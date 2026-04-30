@@ -84,6 +84,7 @@ export interface AcceptedForm {
   submission_id: string;
   date_submitted: string;
   award_title: string;
+  publication_title?: string;
   logs: SubmissionLog[];
   isReturned: boolean;
   status?: string;

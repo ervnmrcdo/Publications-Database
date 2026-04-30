@@ -41,6 +41,7 @@ export default function SignedFormsListing({ adminId, onSelect }: Props) {
                 last_name: item.last_name,
                 date_submitted: item.date_submitted,
                 award_title: item.title,
+                publication_title: item.publication_title,
                 logs: item.logs,
                 status: item.status,
                 form41Url: item.form41Url,
@@ -66,8 +67,8 @@ export default function SignedFormsListing({ adminId, onSelect }: Props) {
                             onClick={() => { onSelect(item) }}
                         >
                             <div className="flex-1">
-                                <p className="font-semibold text-lg text-white">{item.first_name + ' ' + item.last_name}</p>
-                                <p className="text-sm text-gray-300">{item.award_title}</p>
+                                <p className="font-bold text-lg text-white">{item.publication_title || 'Untitled Publication'}</p>
+                                <p className="text-sm text-gray-300">{item.first_name + ' ' + item.last_name} &middot; {item.award_title}</p>
                                 <p className="text-xs text-gray-400">{new Date(item.date_submitted).toLocaleString()}</p>
                             </div>
                             <div className="flex items-center gap-3">

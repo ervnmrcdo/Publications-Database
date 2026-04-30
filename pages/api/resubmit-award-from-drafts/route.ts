@@ -89,6 +89,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (formPaths.form43_path) updateData.form43_path = formPaths.form43_path;
     if (formPaths.form44_path) updateData.form44_path = formPaths.form44_path;
 
+    const attachments = req.body.attachments;
+    if (attachments) {
+      const cleanAttachments = { drive_url: attachments.drive_url || '' };
+      const isJournalType = awardId === 1;
+      if (isJournalType) {
+        updateData.journal_attachments = cleanAttachments;
+      } else {
+        updateData.book_attachments = cleanAttachments;
+      }
+    }
+
     const { data, error } = await supabase
       .from('submissions')
       .update(updateData)

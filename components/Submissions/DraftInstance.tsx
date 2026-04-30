@@ -1,5 +1,5 @@
 import { DraftForm } from "@/lib/types"
-import { ArrowLeft, ChevronDown, ChevronRight, Link, Edit2, Save, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Link, Edit2, Save, X, Loader2 } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
@@ -70,6 +70,7 @@ export default function DraftInstance({ data, onBack }: Props) {
     const [loadingForm44, setLoadingForm44] = useState<boolean>(false);
 
     const [showSubmitConfirmDialog, setShowSubmitConfirmDialog] = useState<boolean>(false);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false);
     const [savingAttachments, setSavingAttachments] = useState<boolean>(false);
@@ -118,8 +119,8 @@ export default function DraftInstance({ data, onBack }: Props) {
             const isJournal = awardId === 1;
             const payload = {
                 submission_id: submissionId,
-                journal_attachments: isJournal ? { drive_url: driveUrl, checklist } : undefined,
-                book_attachments: !isJournal ? { drive_url: driveUrl, checklist } : undefined,
+                journal_attachments: isJournal ? { drive_url: driveUrl } : undefined,
+                book_attachments: !isJournal ? { drive_url: driveUrl } : undefined,
             };
 
             const response = await fetch('/api/update-attachments/route', {
@@ -145,6 +146,15 @@ export default function DraftInstance({ data, onBack }: Props) {
     };
 
     const handleSubmitDraft = async () => {
+        if (!driveUrl.trim()) {
+            alert('Please provide your Google Drive folder link before submitting.');
+            return;
+        }
+        if (checklist.length === 0) {
+            alert('Please check off at least one document included in your folder before submitting.');
+            return;
+        }
+        setIsSubmitting(true);
         try {
             const submissionLog = {
                 action: 'SUBMITTED',
@@ -157,6 +167,7 @@ export default function DraftInstance({ data, onBack }: Props) {
                 submission_id: submissionId,
                 user_id: user?.id,
                 logs: [submissionLog],
+                attachments: { drive_url: driveUrl },
             }
 
             const response = await fetch('/api/submit-from-draft/route', {
@@ -175,6 +186,8 @@ export default function DraftInstance({ data, onBack }: Props) {
         } catch (err) {
             console.error('Error submitting draft:', err)
             alert('Failed to submit draft')
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -315,6 +328,9 @@ export default function DraftInstance({ data, onBack }: Props) {
         token: token,
     }), []);
 
+    const isAttachmentsComplete = driveUrl.trim() !== '' && checklist.length > 0;
+    const isSubmitReady = isRequirementsComplete && isAttachmentsComplete;
+
     return (
         <div className="bg-[#1b1e2b] rounded-xl shadow p-6 space-y-4">
             <button
@@ -381,7 +397,7 @@ export default function DraftInstance({ data, onBack }: Props) {
                 </div>
                 
                 <p className="text-sm text-gray-400 mb-4">
-                    Optional — paste your Google Drive folder link and check off what's included
+                    Required — paste your Google Drive folder link and check off what's included
                 </p>
 
                 {/* Google Drive URL */}
@@ -427,7 +443,6 @@ export default function DraftInstance({ data, onBack }: Props) {
                                     type="checkbox"
                                     checked={checklist.includes(item)}
                                     onChange={() => {
-                                        if (!isEditingAttachments) return;
                                         setChecklist(prev =>
                                             prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
                                         );
@@ -447,7 +462,7 @@ export default function DraftInstance({ data, onBack }: Props) {
                         <button
                             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
                             onClick={() => setShowSubmitConfirmDialog(true)}
-                            disabled={!isRequirementsComplete}
+                            disabled={!isSubmitReady}
                         >
                             Submit
                         </button>
@@ -607,13 +622,21 @@ export default function DraftInstance({ data, onBack }: Props) {
                                 Cancel
                             </button>
                             <button
-                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
                                 onClick={() => {
                                     setShowSubmitConfirmDialog(false);
                                     handleSubmitDraft();
                                 }}
+                                disabled={isSubmitting}
                             >
-                                Confirm Submit
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Submitting...
+                                    </>
+                                ) : (
+                                    'Confirm Submit'
+                                )}
                             </button>
                         </div>
                     </div>
