@@ -38,6 +38,7 @@ export default function AcceptedListing({ onSelect }: Props) {
                 last_name: item.last_name,
                 date_submitted: item.date_submitted,
                 award_title: item.award_title,
+                publication_title: item.publication_title,
                 logs: item.logs,
                 form41_url: item.form41_path,
                 form42_url: item.form42_path,
@@ -62,8 +63,8 @@ export default function AcceptedListing({ onSelect }: Props) {
                         onClick={() => { onSelect(item) }}
                     >
                         <div>
-                            <p className="font-semibold text-lg text-white">{item.first_name + ' ' + item.last_name}</p>
-                            <p className="text-sm text-gray-300">{item.award_title}</p>
+                            <p className="font-bold text-lg text-white">{item.publication_title || 'Untitled Publication'}</p>
+                            <p className="text-sm text-gray-300">{item.first_name + ' ' + item.last_name} &middot; {item.award_title}</p>
                             <p className="text-xs text-gray-400">{new Date(item.date_submitted).toLocaleString()}</p>
                         </div>
                         <ChevronRight className="text-gray-400" />

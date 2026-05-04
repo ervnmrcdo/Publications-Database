@@ -28,13 +28,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid form_type. Must be 41, 42, 43, or 44' });
   }
 
-  const fileExt = 'pdf';
-  const draftsBucket = 'drafts-pdf';
-  const filePath = `${admin_id}/${submission_id}_form${formType}.${fileExt}`;
+  const fileExt = formType === '42' ? 'docx' : 'pdf';
+  const draftsBucket = formType === '42' ? 'drafts-docx' : 'drafts-pdf';
+  const draftPath = `${admin_id}/${submission_id}/form${formType}.${fileExt}`;
 
   try {
     const supabase = createServiceRoleClient();
 
+    // Check if draft already exists
+    const { data: draftExists } = await supabase.storage
+      .from(draftsBucket)
+      .list(`${admin_id}/${submission_id}`, {
+        search: `form${formType}.${fileExt}`,
+        limit: 1
+      });
+
+    // If draft exists, serve it directly
+    if (draftExists && draftExists.length > 0) {
+      const { data: draftData, error: draftError } = await supabase.storage
+        .from(draftsBucket)
+        .download(draftPath);
+
+      if (!draftError && draftData) {
+        const buffer = await draftData.arrayBuffer();
+        
+        const contentType = fileExt === 'pdf'
+          ? 'application/pdf'
+          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `inline; filename="form${formType}.${fileExt}"`);
+        return res.send(Buffer.from(buffer));
+      }
+    }
+
+    // No draft exists - get from submissions bucket, auto-fill admin fields, save to drafts
     const { data: submission, error: submissionError } = await supabase
       .from('submissions')
       .select('submission_id, publication_id, award_id, submitter_id, form41_path, form42_path, form43_path, form44_path')
@@ -71,12 +99,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fileBuffer = await fileData.arrayBuffer();
     const buffer = Buffer.from(fileBuffer);
 
+    // For DOCX (form 42), just save to drafts and return - no admin fields to fill
     if (formType === '42') {
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      const contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+      await supabase.storage
+        .from(draftsBucket)
+        .upload(draftPath, buffer, {
+          contentType,
+          upsert: true
+        });
+
+      res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Disposition', `inline; filename="form${formType}.docx"`);
       return res.send(buffer);
     }
 
+    // For PDF forms (41, 43, 44), auto-fill admin fields before saving
     const { data: adminUser, error: adminError } = await supabase
       .from('users')
       .select('first_name, middle_name, last_name, position, signature_path')
@@ -102,11 +141,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const form = pdfDoc.getForm();
-    const pages = pdfDoc.getPages();
-    const firstPage = pages[0];
 
+    // Embed admin signature
     const existingSignatureField = form.getButton('admin-signature_af_image');
-    if (existingSignatureField) {
+    if (existingSignatureField && adminSignaturePath) {
       try {
         const { data: signatureData, error: sigError } = await supabase.storage
           .from('signatures')
@@ -122,6 +160,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    // Fill admin name and position fields
     try {
       const nameFieldName = formType === '43' ? 'admin-name-2' : 'admin-name';
       const nameField = form.getTextField(nameFieldName);
@@ -152,12 +191,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const modifiedPdfBytes = await pdfDoc.save();
-
     const modifiedBuffer = Buffer.from(modifiedPdfBytes);
 
+    // Save to drafts bucket
     await supabase.storage
       .from(draftsBucket)
-      .upload(filePath, modifiedBuffer, {
+      .upload(draftPath, modifiedBuffer, {
         contentType: 'application/pdf',
         upsert: true
       });
@@ -167,7 +206,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.send(modifiedBuffer);
 
   } catch (err) {
-    console.error('Error in get-draft-form:', err);
+    console.error('Error in get-review-form:', err);
     return res.status(500).json({ error: `Internal Server Error: ${err}` });
   }
 }

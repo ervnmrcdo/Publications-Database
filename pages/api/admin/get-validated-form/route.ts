@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (submissionError || !submission) {
-      return res.status(404).json({ error: 'Submission not found' });
+      return res.status(404).json({ error: 'Submission not found', code: 'SUBMISSION_NOT_FOUND' });
     }
 
     const submissionFieldMap: Record<string, string> = {
@@ -50,7 +50,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const submissionPath = submission[submissionFieldMap[formType] as keyof typeof submission];
 
     if (!submissionPath) {
-      return res.status(404).json({ error: `Form ${formType} not found in submission` });
+      const availableForms: string[] = [];
+      if (submission.form41_path) availableForms.push('form41');
+      if (submission.form42_path) availableForms.push('form42');
+      if (submission.form43_path) availableForms.push('form43');
+      if (submission.form44_path) availableForms.push('form44');
+      
+      return res.status(404).json({ 
+        error: `Form ${formType} was not processed during admin validation. The file may not have been uploaded.`,
+        code: 'FORM_PATH_NULL',
+        formType: formType,
+        availableForms
+      });
     }
 
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -58,7 +69,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .download(submissionPath);
 
     if (downloadError || !fileData) {
-      return res.status(404).json({ error: 'Failed to download file from submission bucket' });
+      return res.status(404).json({ 
+        error: `Form ${formType} file exists in database but failed to download from storage: ${downloadError?.message || 'Unknown error'}`,
+        code: 'FILE_DOWNLOAD_FAILED',
+        storagePath: submissionPath
+      });
     }
 
     const fileBuffer = await fileData.arrayBuffer();

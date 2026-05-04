@@ -11,7 +11,6 @@ type Page =
   | "Teaching"
   | "NonTeaching"
   | "Awards"
-  | "Crawler"
   | "Database"
   | "Publication Types";
 
@@ -26,7 +25,6 @@ const AdminSidebar: React.FC = () => {
     if (path === "teaching") return "Teaching";
     if (path === "nonteaching") return "NonTeaching";
     if (path === "awards") return "Awards";
-    if (path === "crawler") return "Crawler";
     if (path === "publication-types") return "Publication Types";
     if (path === "database") return "Database";
     return "Home";
@@ -47,7 +45,7 @@ const AdminSidebar: React.FC = () => {
 }
 
   return (
-    <aside className="h-screen w-18 bg-[#1b1e2b] flex flex-col p-8">
+    <aside className="h-screen w-18 bg-[#1b1e2b] flex flex-col p-8 overflow-y-auto">
       <div className="flex items-center space-x-2 mb-8">
         <span
           className="font-semibold text-lg text-gray-400 cursor-pointer"
@@ -117,13 +115,6 @@ const AdminSidebar: React.FC = () => {
             className={buttonStyle("Publication Types")}
           >
             <span>Publication Types</span>
-          </li>
-
-          <li
-            onClick={() => router.push("/admin/crawler")}
-            className={buttonStyle("Crawler")}
-          >
-            <span>Crawler</span>
           </li>
         </ul>
       </div>

@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const arrayBuffer = await resp.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-      const fileExt = form_type === "41" || form_type === "44" ? "pdf" : "docx";
+      const fileExt = form_type === "41" || form_type === "44" || form_type === "43" ? "pdf" : "docx";
       const bucket = fileExt === "pdf" ? "drafts-pdf" : "drafts-docx";
 
       const filePath = `${admin_id}/${submission_id}/form${form_type}.${fileExt}`;

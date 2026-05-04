@@ -99,7 +99,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
       const verifiedLog: SubmissionLog = {
         action: 'VALIDATED',
         remarks: '',
-        date: Date().toLocaleString(),
+        date: new Date().toISOString(),
         actor_name: getActorName(),
       }
 
@@ -112,17 +112,55 @@ export default function ReviewInstance({ data, onBack }: Props) {
         newLogs
       }
 
-      const response = await fetch('/api/admin/post-signed-award/route', {
+      const response = await fetch('/api/admin/sign-and-submit/route', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      
+      const result = await response.json() as {
+        error?: string;
+        results?: Record<string, { success: boolean; error?: string; path?: string }>;
+      };
+      
       if (response.ok) {
-        alert('Form Signed and Returned')
-        setSelected(null)
+        // Build success/failure message based on results
+        const results = result.results;
+        const successForms: string[] = [];
+        const failedForms: string[] = [];
+        
+        if (results) {
+          Object.entries(results).forEach(([form, res]) => {
+            if (res.success) {
+              successForms.push(form);
+            } else {
+              failedForms.push(`${form}: ${res.error}`);
+            }
+          });
+        }
+        
+        let message = 'Form Signed and Returned';
+        if (successForms.length > 0) {
+          message += `\n\nSuccessfully processed: ${successForms.join(', ')}`;
+        }
+        if (failedForms.length > 0) {
+          message += `\n\nFailed to process: ${failedForms.join(', ')}`;
+        }
+        
+        alert(message);
+        setSelected(null);
       } else {
-        const error = await response.json();
-        alert('Failed to return signed form: ' + (error.error || 'Unknown error'))
+        // Show detailed error with results if available
+        let errorDetails = result.error || 'Unknown error';
+        if (result.results) {
+          const errors = Object.entries(result.results)
+            .filter(([, r]) => !r.success)
+            .map(([form, r]) => `${form}: ${r.error}`);
+          if (errors.length > 0) {
+            errorDetails += `\n\nFailed forms:\n${errors.join('\n')}`;
+          }
+        }
+        alert('Failed to return signed form: ' + errorDetails);
       }
     } catch (err) {
       alert(err)
@@ -231,7 +269,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     try {
       const documentKey = crypto.randomUUID();
       setForm41Key(documentKey);
-      const documentUrl = `http://host.docker.internal:3000/api/admin/get-draft-form/route?submission_id=${data.application_id}&form_type=41&admin_id=${user.id}`;
+      const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=41&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=41&admin_id=${user.id}`;
 
       const config: DocumentConfig = {
@@ -266,7 +304,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     try {
       const documentKey = crypto.randomUUID();
       setForm44Key(documentKey);
-      const documentUrl = `http://host.docker.internal:3000/api/admin/get-draft-form/route?submission_id=${data.application_id}&form_type=44&admin_id=${user.id}`;
+      const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=44&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=44&admin_id=${user.id}`;
 
       const config: DocumentConfig = {
@@ -301,7 +339,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     try {
       const documentKey = crypto.randomUUID();
       setForm42Key(documentKey);
-      const documentUrl = `http://host.docker.internal:3000/api/admin/get-draft-form/route?submission_id=${data.application_id}&form_type=42&admin_id=${user.id}`;
+      const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=42&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=42&admin_id=${user.id}`;
 
       const config: DocumentConfig = {
@@ -336,7 +374,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     try {
       const documentKey = crypto.randomUUID();
       setForm43Key(documentKey);
-      const documentUrl = `http://host.docker.internal:3000/api/admin/get-draft-form/route?submission_id=${data.application_id}&form_type=43&admin_id=${user.id}`;
+      const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=43&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=43&admin_id=${user.id}`;
 
       const config: DocumentConfig = {

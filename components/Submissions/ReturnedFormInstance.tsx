@@ -367,6 +367,11 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                 </button>
             </div>
 
+            <SubmissionChecklist
+                checkedItems={requirements}
+                onToggle={toggleRequirements}
+            />
+
             {/* Form 4.1 - PDF */}
             {hasForm41 && (
                 <div className="border rounded-lg overflow-hidden">
@@ -595,12 +600,6 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                     </div>
                 </div>
             </div>
-
-            <SubmissionChecklist
-                checkedItems={requirements}
-                onToggle={toggleRequirements}
-            />
-
 
             {/* Resubmit Confirmation Dialog */}
             {showSignConfirmDialog && (

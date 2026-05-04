@@ -24,7 +24,8 @@ export default async function RetrieveAcceptedForms(
       .select(`
         *,
         authors:users!submitter_id(*),
-        awards:awards!award_id(*)
+        awards:awards!award_id(*),
+        publications:publications!publication_id(title)
       `)
       .in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED'])
       .in('publication_id', taggedPublicationIds.length > 0 ? taggedPublicationIds : [0]);
@@ -40,6 +41,7 @@ export default async function RetrieveAcceptedForms(
         last_name: r.authors?.last_name,
         date_submitted: r.date_submitted,
         award_title: r.awards?.title,
+        publication_title: r.publications?.title,
         logs: r.logs,
         status: r.status,
         attached_files: r.attached_files,

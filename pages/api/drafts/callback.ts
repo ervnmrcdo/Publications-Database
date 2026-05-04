@@ -99,8 +99,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ? `${user.first_name || ''} ${user.middle_name || ''} ${user.last_name || ''}`.trim()
           : 'Unknown';
 
+        const formNumber = formType.toString().slice(-1);
+
         const newLog = {
-          remarks: submissionId ? `Form 4.${formType} updated (${currentStatus})` : `Form 4.${formType} auto-saved`,
+          remarks: submissionId ? `Form 4.${formNumber} updated (${currentStatus})` : `Form 4.${formNumber} auto-saved`,
           date: new Date().toLocaleString(),
           action: 'DRAFT_EDITED' as const,
           actor_name: actorName

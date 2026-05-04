@@ -1,0 +1,77 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "plan",
+  "mcp": {
+    "deepwiki": {
+      "type": "remote",
+      "url": "https://mcp.deepwiki.com/mcp"
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp"
+    },
+  },
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "ls *": "allow",
+      "tree *": "allow",
+      "find *": "allow",
+      "grep *": "allow",
+      "curl -s *": "allow",
+      "jq -c *": "allow",
+      "date +%s *": "allow",
+      "bash .agents/skills/debug-local-o2/scripts/*": "allow",
+      "bash .agents/skills/debug-local-postgres/scripts/*": "allow",
+      "docker compose exec postgres psql *": "ask",
+      "git diff *": "allow",
+      "git show *": "allow",
+      "git status *": "allow",
+      "git log *": "allow",
+      "git rev-parse *": "allow",
+      "git branch *": "allow",
+      "gh issue list *": "allow",
+      "gh issue view *": "allow",
+      "gh pr list *": "allow",
+      "gh pr view *": "allow",
+      "rm scratchpad/*": "allow",
+      "npm lint": "allow",
+      "npm lint *": "allow",
+      "npm lint:eslint *": "allow",
+      "npm lint:svelte *": "allow",
+      "npm fmt": "allow",
+      "npm fmt *": "allow",
+      "npm fmt:fix": "allow",
+      "npm fmt:fix *": "allow",
+      "npm build": "allow",
+      "npm test:unit": "allow",
+      "npm test:unit *": "allow",
+      "npm test:playwright": "deny",
+      "npm test:playwright *": "deny",
+      "nu scripts/test-playwright.nu *": "deny",
+      "source scripts/test-playwright.sh *": "allow",
+      "bun *": "deny",
+      "bunx *": "deny",
+      "pnpm *": "deny",
+      "npx *": "deny",
+      "pnpx *": "deny",
+      "yarn *": "deny",
+      "pnpm dlx *": "deny",
+      "pnpm exec *": "deny",
+      "pnpm run *": "deny"
+    },
+    "edit": {
+      "*": "ask",
+      "drizzle/*": "deny",
+      "src/*": "allow",
+      "scratchpad/*": "allow",
+      ".agents/skills/*": "allow"
+    },
+    "skill": {
+      "*": "ask",
+      "debug-local-o2": "allow",
+      "debug-local-postgres": "allow",
+      "submit-pull-request": "allow"
+    }
+  }
+}
