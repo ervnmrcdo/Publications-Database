@@ -287,9 +287,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const pdfBytes = await pdfDoc.save();
+    const pdfBuffer = Buffer.from(pdfBytes);
+
+    const initialDraftPath = `${user_id}_${publicationId}_${awardId}_form44.pdf`;
+    try {
+      await supabaseAdmin.storage
+        .from('drafts-pdf')
+        .upload(initialDraftPath, pdfBuffer, {
+          contentType: 'application/pdf',
+          upsert: true
+        });
+    } catch (uploadError) {
+      console.warn('Failed to save initial draft to bucket:', uploadError);
+    }
+
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="filled-report.pdf"');
-    return res.send(Buffer.from(pdfBytes));
+    res.setHeader('Content-Disposition', 'inline; filename="form44.pdf"');
+    return res.send(pdfBuffer);
 
   } catch (error) {
     console.error("PDF Generation Error:", error);

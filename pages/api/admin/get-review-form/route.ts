@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (!draftError && draftData) {
         const buffer = await draftData.arrayBuffer();
-        
+
         const contentType = fileExt === 'pdf'
           ? 'application/pdf'
           : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -168,14 +168,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         nameField.setText(adminName);
       }
 
-      const positionFieldName = formType === '43' ? 'admin-position-2' : 'admin-position';
-      const positionField = form.getTextField(positionFieldName);
-      if (positionField) {
-        positionField.setText(adminPosition);
-      }
 
       // For Form 4.3: also fill admin-name and admin-position with same data
       if (formType === '43') {
+
+        const positionField = form.getTextField('admin-position-2');
+        if (positionField) {
+          positionField.setText(adminPosition);
+        }
+
+
         try {
           const nameFieldPlain = form.getTextField('admin-name');
           if (nameFieldPlain) nameFieldPlain.setText(adminName);

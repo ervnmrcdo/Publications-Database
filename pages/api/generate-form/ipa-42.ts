@@ -74,8 +74,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const templatePath = path.join(process.cwd(), 'public', '4.2-template.docx');
     const buffer = fs.readFileSync(templatePath);
 
+    const initialDraftPath = `${user_id}_${publicationId}_${awardId}_form42.docx`;
+    try {
+      await supabaseAdmin.storage
+        .from('drafts-docx')
+        .upload(initialDraftPath, buffer, {
+          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          upsert: true
+        });
+    } catch (uploadError) {
+      console.warn('Failed to save initial draft to bucket:', uploadError);
+    }
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    res.setHeader('Content-Disposition', 'inline; filename="4.2-template.docx"');
+    res.setHeader('Content-Disposition', 'inline; filename="form42.docx"');
     return res.send(buffer);
 
   } catch (error) {
