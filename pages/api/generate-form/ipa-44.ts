@@ -103,6 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       position: pa.position || pa.users?.position || "",
       contact_number: pa.contact_number || pa.users?.contact_number || "",
       email_address: pa.email_address || pa.users?.email_address || "",
+      signature_path: pa.users?.signature_path || "",
     })) || [];
 
     const firstAuthor = authors[0] || {};
@@ -194,6 +195,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.warn("One or more fields were not found in the PDF:", fieldError);
     }
 
+    // Embed author signatures in main form
+    for (let i = 0; i < Math.min(totalAuthors, MAX_MAIN_FORM_AUTHORS); i++) {
+      const author = authors[i];
+      if (author.signature_path) {
+        try {
+          const { data: sigData } = await supabaseAdmin.storage
+            .from('signatures')
+            .download(author.signature_path);
+
+          if (sigData) {
+            const sigBuffer = await sigData.arrayBuffer();
+            const sigImage = await pdfDoc.embedPng(Buffer.from(sigBuffer));
+            const sigField = form.getButton(`author${i + 1}-signature_af_image`);
+            if (sigField) {
+              sigField.setImage(sigImage);
+            }
+          }
+        } catch (sigError) {
+          console.warn(`Failed to embed signature for author${i + 1}:`, sigError);
+        }
+      }
+    }
+
     // Fill admin fields if adminId provided
     if (adminUser) {
       try {
@@ -268,6 +292,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             extraForm.getTextField('author-contact').setText(author.contact_number || '');
             extraForm.getTextField('author-position').setText(author.position || '');
             extraForm.getTextField('author-email').setText(author.email_address || '');
+
+            // Embed author signature in extra page
+            if (author.signature_path) {
+              try {
+                const { data: sigData } = await supabaseAdmin.storage
+                  .from('signatures')
+                  .download(author.signature_path);
+
+                if (sigData) {
+                  const sigBuffer = await sigData.arrayBuffer();
+                  const sigImage = await extraPdfDoc.embedPng(Buffer.from(sigBuffer));
+                  const sigField = extraForm.getButton('author-signature_af_image');
+                  if (sigField) {
+                    sigField.setImage(sigImage);
+                  }
+                }
+              } catch (sigError) {
+                console.warn(`Failed to embed signature for extra page author${authorNum}:`, sigError);
+              }
+            }
 
             // Save to render form changes to page content
             const filledExtraBytes = await extraPdfDoc.save();

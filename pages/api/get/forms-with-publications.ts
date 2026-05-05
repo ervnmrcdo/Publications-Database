@@ -37,24 +37,37 @@ export default async function func(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const { data: publicationsData, error: pubsError } = await supabase
-      .from("publications")
+      .from("publication_authors")
       .select(`
         publication_id,
-        book_or_journal,
-        title,
-        publisher,
-        publication_status,
-        date_published,
-        issue_number,
-        page_numbers,
-        volume_number,
-        journal_name,
-        doi,
-        publication_authors!inner(*, users!inner(*)),
-        users!inner(*),
-        publication_award_applications(*)
+        publications!inner(
+          publication_id,
+          book_or_journal,
+          title,
+          publisher,
+          publication_status,
+          date_published,
+          issue_number,
+          page_numbers,
+          volume_number,
+          journal_name,
+          doi,
+          publication_award_applications(*)
+        ),
+        users!inner(
+          id,
+          first_name,
+          middle_name,
+          last_name,
+          university,
+          college,
+          department,
+          position,
+          contact_number,
+          email_address
+        )
       `)
-      .eq("users.id", userId);
+      .eq("user_id", userId);
 
     if (pubsError) {
       console.log("Publications error:", pubsError);
@@ -62,37 +75,42 @@ export default async function func(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const unsubmittedPublications = (publicationsData ?? []).filter(
-      (p: any) => !p.publication_award_applications?.length
+      (row: any) => !row.publications?.publication_award_applications?.length
     );
 
     const result = awardsData.map((award: any) => {
       const eligible = unsubmittedPublications
-        .filter((p: PublicationRow) => p.book_or_journal === award.allowed_type)
-        .map((p: PublicationRow) => {
-          const authors = p.publication_authors?.map((pa: any) => ({
-            first_name: pa.first_name || pa.users?.first_name || "",
-            last_name: pa.last_name || pa.users?.last_name || "",
-            middle_name: pa.middle_name || pa.users?.middle_name || "",
-            university: pa.university || pa.users?.university || "",
-            college: pa.college || pa.users?.college || "",
-            department: pa.department || pa.users?.department || "",
-            position: pa.position || pa.users?.position || "",
-            contact_number: pa.contact_number || pa.users?.contact_number || "",
-            email_address: pa.email_address || pa.users?.email_address || "",
-          })) || [];
+        .filter((row: any) => row.publications?.book_or_journal === award.allowed_type)
+        .map((row: any) => {
+          const pub = row.publications;
+          const currentUser = row.users;
+
+          const authors = [
+            {
+              first_name: currentUser?.first_name || "",
+              last_name: currentUser?.last_name || "",
+              middle_name: currentUser?.middle_name || "",
+              university: currentUser?.university || "",
+              college: currentUser?.college || "",
+              department: currentUser?.department || "",
+              position: currentUser?.position || "",
+              contact_number: currentUser?.contact_number || "",
+              email_address: currentUser?.email_address || "",
+            },
+          ];
 
           return {
-            doi: p.doi,
-            book_or_journal: p.book_or_journal,
-            title: p.title,
-            publisher: p.publisher,
-            issue_number: p.issue_number,
-            journal_name: p.journal_name,
-            page_numbers: p.page_numbers,
-            volume_number: p.volume_number,
-            date_published: p.date_published,
-            publication_id: p.publication_id,
-            publication_status: p.publication_status,
+            doi: pub.doi,
+            book_or_journal: pub.book_or_journal,
+            title: pub.title,
+            publisher: pub.publisher,
+            issue_number: pub.issue_number,
+            journal_name: pub.journal_name,
+            page_numbers: pub.page_numbers,
+            volume_number: pub.volume_number,
+            date_published: pub.date_published,
+            publication_id: pub.publication_id,
+            publication_status: pub.publication_status,
             authors,
           };
         });

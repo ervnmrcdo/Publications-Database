@@ -17,13 +17,6 @@ COMMENT ON SCHEMA "public" IS 'standard public schema';
 
 
 
-CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
-
-
-
-
-
-
 CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
 
 
@@ -80,7 +73,9 @@ SET default_table_access_method = "heap";
 CREATE TABLE IF NOT EXISTS "public"."awards" (
     "award_id" integer NOT NULL,
     "title" character varying(200) NOT NULL,
-    "description" "text"
+    "description" "text",
+    "allowed_type" "text",
+    CONSTRAINT "awards_allowed_type_check" CHECK (("allowed_type" = ANY (ARRAY['JOURNAL'::"text", 'BOOK'::"text"])))
 );
 
 
@@ -132,8 +127,7 @@ ALTER SEQUENCE "public"."departments_department_id_seq" OWNED BY "public"."depar
 CREATE TABLE IF NOT EXISTS "public"."publication_authors" (
     "publication_id" integer NOT NULL,
     "user_id" "uuid" NOT NULL,
-    "author_rank" integer,
-    "authors" "uuid"[]
+    "tagged_authors" "uuid"[]
 );
 
 
@@ -210,7 +204,10 @@ CREATE TABLE IF NOT EXISTS "public"."publications" (
     "volume_number" character varying(50),
     "journal_name" "text",
     "doi" "text",
-    "publication_type_id" bigint
+    "publication_type_id" bigint,
+    "aggregation_type" character varying(50),
+    "book_or_journal" "text",
+    CONSTRAINT "publications_book_or_journal_check" CHECK (("book_or_journal" = ANY (ARRAY['JOURNAL'::"text", 'BOOK'::"text"])))
 );
 
 
@@ -233,6 +230,26 @@ ALTER SEQUENCE "public"."publications_publication_id_seq" OWNED BY "public"."pub
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."settings" (
+    "key" "text" NOT NULL,
+    "value" "text" NOT NULL
+);
+
+
+ALTER TABLE "public"."settings" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."submission_author_approvals" (
+    "submission_id" integer NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "status" character varying(50) DEFAULT 'PENDING_APPROVAL'::character varying,
+    "date_approved" timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE "public"."submission_author_approvals" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."submissions" (
     "submission_id" integer NOT NULL,
     "submitter_id" "uuid" NOT NULL,
@@ -247,7 +264,9 @@ CREATE TABLE IF NOT EXISTS "public"."submissions" (
     "form41_path" character varying(500),
     "form42_path" character varying(500),
     "form43_path" character varying(500),
-    "form44_path" character varying(500)
+    "form44_path" character varying(500),
+    "journal_attachments" "jsonb" DEFAULT '{"checklist": [], "drive_url": ""}'::"jsonb",
+    "book_attachments" "jsonb" DEFAULT '{"checklist": [], "drive_url": ""}'::"jsonb"
 );
 
 
@@ -369,8 +388,23 @@ ALTER TABLE ONLY "public"."publication_per_award"
 
 
 
+ALTER TABLE ONLY "public"."publication_per_award"
+    ADD CONSTRAINT "publication_per_award_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."publications"
     ADD CONSTRAINT "publications_pkey" PRIMARY KEY ("publication_id");
+
+
+
+ALTER TABLE ONLY "public"."settings"
+    ADD CONSTRAINT "settings_pkey" PRIMARY KEY ("key");
+
+
+
+ALTER TABLE ONLY "public"."submission_author_approvals"
+    ADD CONSTRAINT "submission_author_approvals_pkey" PRIMARY KEY ("submission_id", "user_id");
 
 
 
@@ -429,6 +463,16 @@ ALTER TABLE ONLY "public"."publications"
 
 
 
+ALTER TABLE ONLY "public"."submission_author_approvals"
+    ADD CONSTRAINT "submission_author_approvals_submission_id_fkey" FOREIGN KEY ("submission_id") REFERENCES "public"."submissions"("submission_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."submission_author_approvals"
+    ADD CONSTRAINT "submission_author_approvals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id");
+
+
+
 ALTER TABLE ONLY "public"."submissions"
     ADD CONSTRAINT "submissions_award_id_fkey" FOREIGN KEY ("award_id") REFERENCES "public"."awards"("award_id");
 
@@ -466,6 +510,10 @@ CREATE POLICY "Users can insert their own profile." ON "public"."users" FOR INSE
 
 
 
+CREATE POLICY "Users can update own profile" ON "public"."users" FOR UPDATE USING (("auth"."uid"() = "id")) WITH CHECK (("auth"."uid"() = "id"));
+
+
+
 CREATE POLICY "Users can update own profile." ON "public"."users" FOR UPDATE USING ((( SELECT "auth"."uid"() AS "uid") = "id"));
 
 
@@ -479,9 +527,6 @@ GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
-
-
-
 
 
 
@@ -722,6 +767,18 @@ GRANT ALL ON TABLE "public"."publications" TO "service_role";
 GRANT ALL ON SEQUENCE "public"."publications_publication_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."publications_publication_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."publications_publication_id_seq" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."settings" TO "anon";
+GRANT ALL ON TABLE "public"."settings" TO "authenticated";
+GRANT ALL ON TABLE "public"."settings" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."submission_author_approvals" TO "anon";
+GRANT ALL ON TABLE "public"."submission_author_approvals" TO "authenticated";
+GRANT ALL ON TABLE "public"."submission_author_approvals" TO "service_role";
 
 
 
