@@ -37,6 +37,7 @@ const PublicationSelection: FC<PublicationSelectionProps> = ({
       if (res.ok) {
         alert("Reset Complete");
         setDraftsMap((prev) => ({ ...prev, [publicationId]: false }));
+        window.location.reload();
       }
     } catch (err) {
       console.error("Failed to reset draft:", err);

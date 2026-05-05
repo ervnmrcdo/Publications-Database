@@ -137,15 +137,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const completeCitation = citationParts.join(', ');
       form.getTextField('citation').setText(completeCitation);
 
-      const firstAuthor = authors[0] || {};
-      form.getTextField('department').setText(firstAuthor.department || '');
-
       for (let i = 0; i < Math.min(authors.length, 6); i++) {
         const author = authors[i];
         if (!author) continue;
 
         const authorName = author.first_name && author.last_name
-          ? `${author.first_name} ${author.last_name}`.trim()
+          ? `${author.first_name} ${author.middle_name || ''} ${author.last_name}`.replace(/\s+/g, ' ').trim()
           : '';
         const authorNum = i + 1;
 
