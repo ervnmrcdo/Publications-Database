@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { Application, SubmissionLog } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 import { useReviewFlow } from "@/context/ReviewFlowContext";
@@ -57,11 +57,12 @@ export default function ReviewInstance({ data, onBack }: Props) {
   const [showSignConfirmDialog, setShowSignConfirmDialog] = useState<boolean>(false);
   const [showSignatureWarning, setShowSignatureWarning] = useState<boolean>(false);
   const [signatureWarningDismissed, setSignatureWarningDismissed] = useState<boolean>(false);
+  const [isSigning, setIsSigning] = useState<boolean>(false);
 
-  const [expandedForm41, setExpandedForm41] = useState<boolean>(false);
-  const [expandedForm42, setExpandedForm42] = useState<boolean>(false);
-  const [expandedForm43, setExpandedForm43] = useState<boolean>(false);
-  const [expandedForm44, setExpandedForm44] = useState<boolean>(false);
+  const [expandedForm41, setExpandedForm41] = useState<boolean>(true);
+  const [expandedForm42, setExpandedForm42] = useState<boolean>(true);
+  const [expandedForm43, setExpandedForm43] = useState<boolean>(true);
+  const [expandedForm44, setExpandedForm44] = useState<boolean>(true);
 
   const detectedIp = useMemo(() => typeof window !== 'undefined' ? window.location.hostname : '', [])
 
@@ -85,6 +86,22 @@ export default function ReviewInstance({ data, onBack }: Props) {
     checkSignature();
   }, [user?.id, signatureWarningDismissed]);
 
+  // Auto-load all forms on mount
+  useEffect(() => {
+    if (data.form41Url && !pdfConfigs.form41 && user?.id) {
+      generateForm41Config();
+    }
+    if (data.form42Url && !docxConfigs.form42 && user?.id) {
+      generateForm42Config();
+    }
+    if (data.form43Url && !docxConfigs.form43 && user?.id) {
+      generateForm43Config();
+    }
+    if (data.form44Url && !pdfConfigs.form44 && user?.id) {
+      generateForm44Config();
+    }
+  }, [data.form41Url, data.form42Url, data.form43Url, data.form44Url, user?.id]);
+
   const dismissSignatureWarning = () => {
     setShowSignatureWarning(false);
     setSignatureWarningDismissed(true);
@@ -95,6 +112,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
   };
 
   const acceptPDF = async () => {
+    setIsSigning(true);
     try {
       const verifiedLog: SubmissionLog = {
         action: 'VALIDATED',
@@ -164,6 +182,8 @@ export default function ReviewInstance({ data, onBack }: Props) {
       }
     } catch (err) {
       alert(err)
+    } finally {
+      setIsSigning(false);
     }
   }
 
@@ -667,13 +687,21 @@ export default function ReviewInstance({ data, onBack }: Props) {
                   Cancel
                 </button>
                 <button
-                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   onClick={() => {
                     setShowSignConfirmDialog(false);
                     acceptPDF();
                   }}
+                  disabled={isSigning}
                 >
-                  Confirm Sign
+                  {isSigning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Signing...
+                    </>
+                  ) : (
+                    "Confirm Sign"
+                  )}
                 </button>
               </div>
             </div>
