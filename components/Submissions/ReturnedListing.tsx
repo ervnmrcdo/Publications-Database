@@ -41,6 +41,7 @@ export default function ReturnedListing({ onSelect }: Props) {
                 form44_url: item.form44_url,
                 journal_attachments: item.journal_attachments ?? {},
                 book_attachments: item.book_attachments ?? {}, 
+                isReturned: true,
             })))
         })
     }, [])

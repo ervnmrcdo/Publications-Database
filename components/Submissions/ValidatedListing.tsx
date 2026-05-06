@@ -46,6 +46,7 @@ export default function AcceptedListing({ onSelect }: Props) {
                 form44_url: item.form44_path,
                 journal_attachments: item.journal_attachments ?? {},
                 book_attachments: item.book_attachments ?? {}, 
+                isReturned: false,
             })))
         })
     }, [user?.id])
