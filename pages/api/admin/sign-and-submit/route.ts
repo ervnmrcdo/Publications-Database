@@ -15,18 +15,34 @@ export default async function SignAndSubmit(
 	try {
 		const supabaseAdmin = createServiceRoleClient();
 
+		// Fetch submission to get award_id
+		const { data: submission, error: subError } = await supabaseAdmin
+			.from('submissions')
+			.select('award_id')
+			.eq('submission_id', submission_id)
+			.single();
+
+		if (subError || !submission) {
+			return res.status(404).json({ error: 'Submission not found' });
+		}
+
 		const updateData: Record<string, any> = {
 			status: 'VALIDATED',
 			reviewed_by_admin_id: admin_id,
 			logs: newLogs
 		};
 
-		const formTypes = [
-			{ type: '41', ext: 'pdf', bucket: 'submissions-pdf', draftsBucket: 'drafts-pdf' },
-			{ type: '42', ext: 'docx', bucket: 'submissions-docx', draftsBucket: 'drafts-docx' },
-			{ type: '43', ext: 'pdf', bucket: 'submissions-pdf', draftsBucket: 'drafts-pdf' },
-			{ type: '44', ext: 'pdf', bucket: 'submissions-pdf', draftsBucket: 'drafts-pdf' },
-		];
+		// Define forms based on award type
+		const formTypes = submission.award_id === 1
+			? [ // Journal (award_id = 1) - Forms 41, 42, 43
+				{ type: '41', ext: 'pdf', bucket: 'submissions-pdf', draftsBucket: 'drafts-pdf' },
+				{ type: '42', ext: 'docx', bucket: 'submissions-docx', draftsBucket: 'drafts-docx' },
+				{ type: '43', ext: 'pdf', bucket: 'submissions-pdf', draftsBucket: 'drafts-pdf' },
+			]
+			: [ // Book (award_id = 2) - Forms 43, 44
+				{ type: '43', ext: 'pdf', bucket: 'submissions-pdf', draftsBucket: 'drafts-pdf' },
+				{ type: '44', ext: 'pdf', bucket: 'submissions-pdf', draftsBucket: 'drafts-pdf' },
+			];
 
 		const results: Record<string, { success: boolean; error?: string }> = {};
 

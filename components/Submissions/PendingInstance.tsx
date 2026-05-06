@@ -1,8 +1,8 @@
 import { PendingForm } from "@/lib/types"
 import { ArrowLeft, ChevronDown, ChevronRight, Link } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
-import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
+import { generateUUID } from "@/lib/uuid";
 
 type Props = {
     data: PendingForm;
@@ -49,10 +49,13 @@ export default function PendingInstance({ data, onBack }: Props) {
     const detectedIp = useMemo(() => typeof window !== 'undefined' ? window.location.hostname : '', [])
 
     const generateToken = useCallback(async (config: DocumentConfig) => {
-        const secret = new TextEncoder().encode('my_super_secret_key');
-        return await new jose.SignJWT(config as unknown as jose.JWTPayload)
-            .setProtectedHeader({ alg: 'HS256' })
-            .sign(secret);
+        const response = await fetch("/api/onlyoffice/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ config }),
+        });
+        const data = await response.json();
+        return data.token;
     }, []);
 
     const generateForm41Config = useCallback(async () => {
@@ -64,7 +67,7 @@ export default function PendingInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.1",
                     url: documentUrl,
                 },
@@ -95,7 +98,7 @@ export default function PendingInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.4",
                     url: documentUrl,
                 },
@@ -126,7 +129,7 @@ export default function PendingInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "docx",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.2",
                     url: documentUrl,
                 },
@@ -157,7 +160,7 @@ export default function PendingInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.3",
                     url: documentUrl,
                 },

@@ -168,6 +168,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         nameField.setText(adminName);
       }
 
+      // Fill admin sign date
+      try {
+        const dateFieldName = formType === '43' ? 'admin-sign-date-2' : 'admin-sign-date';
+        const dateField = form.getTextField(dateFieldName);
+        if (dateField) {
+          const todayDate = new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            timeZone: 'Asia/Manila'
+          });
+          dateField.setText(todayDate);
+        }
+      } catch (dateFieldError) {
+        console.warn('Admin sign date field not found:', dateFieldError);
+      }
 
       // For Form 4.3: also fill admin-name and admin-position with same data
       if (formType === '43') {
@@ -177,7 +193,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           positionField.setText(adminPosition);
         }
 
-
         try {
           const nameFieldPlain = form.getTextField('admin-name');
           if (nameFieldPlain) nameFieldPlain.setText(adminName);
@@ -186,6 +201,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
           const positionFieldPlain = form.getTextField('admin-position');
           if (positionFieldPlain) positionFieldPlain.setText(adminPosition);
+        } catch (e) { /* skip - field not found */ }
+
+        try {
+          const dateFieldPlain = form.getTextField('admin-sign-date');
+          if (dateFieldPlain) {
+            const todayDate = new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              timeZone: 'Asia/Manila'
+            });
+            dateFieldPlain.setText(todayDate);
+          }
         } catch (e) { /* skip - field not found */ }
       }
     } catch (fieldError) {

@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const response = await fetch(
 
-      "http://localhost:8080/coauthoring/CommandService.ashx",
+      "http://host.docker.internal:8080/coauthoring/CommandService.ashx",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

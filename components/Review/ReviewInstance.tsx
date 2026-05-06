@@ -1,11 +1,11 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { Application, SubmissionLog } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 import { useReviewFlow } from "@/context/ReviewFlowContext";
-import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import AttachmentsSection from '@/components/Review/AttachmentsSection';
+import { generateUUID } from "@/lib/uuid";
 
 type Props = {
   data: Application;
@@ -57,11 +57,12 @@ export default function ReviewInstance({ data, onBack }: Props) {
   const [showSignConfirmDialog, setShowSignConfirmDialog] = useState<boolean>(false);
   const [showSignatureWarning, setShowSignatureWarning] = useState<boolean>(false);
   const [signatureWarningDismissed, setSignatureWarningDismissed] = useState<boolean>(false);
+  const [isSigning, setIsSigning] = useState<boolean>(false);
 
-  const [expandedForm41, setExpandedForm41] = useState<boolean>(false);
-  const [expandedForm42, setExpandedForm42] = useState<boolean>(false);
-  const [expandedForm43, setExpandedForm43] = useState<boolean>(false);
-  const [expandedForm44, setExpandedForm44] = useState<boolean>(false);
+  const [expandedForm41, setExpandedForm41] = useState<boolean>(true);
+  const [expandedForm42, setExpandedForm42] = useState<boolean>(true);
+  const [expandedForm43, setExpandedForm43] = useState<boolean>(true);
+  const [expandedForm44, setExpandedForm44] = useState<boolean>(true);
 
   const detectedIp = useMemo(() => typeof window !== 'undefined' ? window.location.hostname : '', [])
 
@@ -85,6 +86,22 @@ export default function ReviewInstance({ data, onBack }: Props) {
     checkSignature();
   }, [user?.id, signatureWarningDismissed]);
 
+  // Auto-load all forms on mount
+  useEffect(() => {
+    if (data.form41Url && !pdfConfigs.form41 && user?.id) {
+      generateForm41Config();
+    }
+    if (data.form42Url && !docxConfigs.form42 && user?.id) {
+      generateForm42Config();
+    }
+    if (data.form43Url && !docxConfigs.form43 && user?.id) {
+      generateForm43Config();
+    }
+    if (data.form44Url && !pdfConfigs.form44 && user?.id) {
+      generateForm44Config();
+    }
+  }, [data.form41Url, data.form42Url, data.form43Url, data.form44Url, user?.id]);
+
   const dismissSignatureWarning = () => {
     setShowSignatureWarning(false);
     setSignatureWarningDismissed(true);
@@ -95,6 +112,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
   };
 
   const acceptPDF = async () => {
+    setIsSigning(true);
     try {
       const verifiedLog: SubmissionLog = {
         action: 'VALIDATED',
@@ -164,6 +182,8 @@ export default function ReviewInstance({ data, onBack }: Props) {
       }
     } catch (err) {
       alert(err)
+    } finally {
+      setIsSigning(false);
     }
   }
 
@@ -205,10 +225,13 @@ export default function ReviewInstance({ data, onBack }: Props) {
   }
 
   const generateToken = useCallback(async (config: DocumentConfig) => {
-    const secret = new TextEncoder().encode('my_super_secret_key');
-    return await new jose.SignJWT(config as unknown as jose.JWTPayload)
-      .setProtectedHeader({ alg: 'HS256' })
-      .sign(secret);
+    const response = await fetch("/api/onlyoffice/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ config }),
+    });
+    const data = await response.json();
+    return data.token;
   }, []);
 
   const onForm41Ready = useCallback(async () => {
@@ -267,7 +290,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     if (!user?.id) return;
     setLoadingForm41(true);
     try {
-      const documentKey = crypto.randomUUID();
+      const documentKey = generateUUID();
       setForm41Key(documentKey);
       const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=41&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=41&admin_id=${user.id}`;
@@ -302,7 +325,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     if (!user?.id) return;
     setLoadingForm44(true);
     try {
-      const documentKey = crypto.randomUUID();
+      const documentKey = generateUUID();
       setForm44Key(documentKey);
       const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=44&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=44&admin_id=${user.id}`;
@@ -337,7 +360,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     if (!user?.id) return;
     setLoadingForm42(true);
     try {
-      const documentKey = crypto.randomUUID();
+      const documentKey = generateUUID();
       setForm42Key(documentKey);
       const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=42&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=42&admin_id=${user.id}`;
@@ -372,7 +395,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     if (!user?.id) return;
     setLoadingForm43(true);
     try {
-      const documentKey = crypto.randomUUID();
+      const documentKey = generateUUID();
       setForm43Key(documentKey);
       const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=43&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=43&admin_id=${user.id}`;
@@ -664,13 +687,21 @@ export default function ReviewInstance({ data, onBack }: Props) {
                   Cancel
                 </button>
                 <button
-                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   onClick={() => {
                     setShowSignConfirmDialog(false);
                     acceptPDF();
                   }}
+                  disabled={isSigning}
                 >
-                  Confirm Sign
+                  {isSigning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Signing...
+                    </>
+                  ) : (
+                    "Confirm Sign"
+                  )}
                 </button>
               </div>
             </div>

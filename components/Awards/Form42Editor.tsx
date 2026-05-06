@@ -1,7 +1,7 @@
 'use client'
-import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useState, useEffect, useMemo, forwardRef, useCallback } from "react";
+import { generateUUID } from "@/lib/uuid";
 
 interface FormEditorProps {
   publicationId: string;
@@ -13,7 +13,7 @@ interface FormEditorProps {
 
 export default forwardRef(function Form42Editor({ publicationId, documentUrl, awardId, userId }: FormEditorProps, ref) {
   const [token, setToken] = useState("");
-  const documentKey = useMemo(() => crypto.randomUUID(), [])
+  const documentKey = useMemo(() => generateUUID(), [])
   const detectedIp = useMemo(() => typeof window !== 'undefined' ? window.location.hostname : '', [])
 
   const documentUrlFinal = `http://host.docker.internal:3000/api/generate-form/ipa-42?publicationId=${publicationId}&awardId=${awardId}&user_id=${userId}`;
@@ -71,11 +71,13 @@ export default forwardRef(function Form42Editor({ publicationId, documentUrl, aw
 
   useEffect(() => {
     const generateToken = async () => {
-      const secret = new TextEncoder().encode('my_super_secret_key');
-      const signedToken = await new jose.SignJWT(config)
-        .setProtectedHeader({ alg: 'HS256' })
-        .sign(secret);
-      setToken(signedToken);
+      const response = await fetch("/api/onlyoffice/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ config }),
+      });
+      const data = await response.json();
+      setToken(data.token);
     };
 
     generateToken();
