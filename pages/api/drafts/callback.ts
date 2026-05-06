@@ -104,16 +104,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const newLog = {
           remarks: submissionId ? `Form 4.${formNumber} updated (${currentStatus})` : `Form 4.${formNumber} auto-saved`,
           date: new Date().toLocaleString(),
-          action: 'DRAFT_EDITED' as const,
+          action: 'DRAFT_EDITED',
           actor_name: actorName
         };
 
-        const updatedLogs = [...currentLogs, newLog];
+        const isDuplicate = currentLogs.some((log: any) =>
+          log.action === newLog.action &&
+          log.actor_name === newLog.actor_name &&
+          log.remarks === newLog.remarks &&
+          log.date === newLog.date
+        );
 
-        await supabaseAdmin
-          .from("submissions")
-          .update({ logs: updatedLogs })
-          .eq("submission_id", submissionId);
+        if (!isDuplicate) {
+          const updatedLogs = [...currentLogs, newLog];
+          await supabaseAdmin
+            .from("submissions")
+            .update({ logs: updatedLogs })
+            .eq("submission_id", submissionId);
+        }
       }
 
       if (!submissionId) {

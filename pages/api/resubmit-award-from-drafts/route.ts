@@ -70,18 +70,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const supabase = createPagesServerClient(req, res);
 
-    const { data: existingSubmission } = await supabaseAdmin
+    const { data: latestSubmission } = await supabaseAdmin
       .from("submissions")
       .select("logs")
       .eq("submission_id", submission_id)
       .single();
 
-    const existingLogs = existingSubmission?.logs || [];
-    const updatedLogs = [...existingLogs, ...newLogs];
+    const currentLogs = latestSubmission?.logs || [];
+    const dedupedLogs = (newLogs || []).filter((newLog: any) =>
+      !currentLogs.some((existing: any) =>
+        existing.action === newLog.action &&
+        existing.actor_name === newLog.actor_name &&
+        existing.remarks === newLog.remarks &&
+        existing.date === newLog.date
+      )
+    );
 
     const updateData: Record<string, unknown> = {
       status: 'PENDING',
-      logs: updatedLogs,
+      logs: [...currentLogs, ...dedupedLogs],
     };
 
     if (formPaths.form41_path) updateData.form41_path = formPaths.form41_path;

@@ -189,12 +189,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    const existingLogs = existingSubmission?.logs || [];
-    const updatedLogs = [...existingLogs, ...logs];
+    const { data: latestSubmission } = await supabaseAdmin
+      .from("submissions")
+      .select("logs")
+      .eq("submission_id", submissionId)
+      .single();
+
+    const currentLogs = latestSubmission?.logs || [];
+    const newLogs = (logs || []).filter((newLog: any) =>
+      !currentLogs.some((existing: any) =>
+        existing.action === newLog.action &&
+        existing.actor_name === newLog.actor_name &&
+        existing.remarks === newLog.remarks &&
+        existing.date === newLog.date
+      )
+    );
 
     const updateData: Record<string, unknown> = {
       status: 'PENDING',
-      logs: updatedLogs,
+      logs: [...currentLogs, ...newLogs],
     };
 
     if (Object.keys(submissionPaths).length > 0) {
