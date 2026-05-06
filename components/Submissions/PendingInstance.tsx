@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronDown, ChevronRight, Link } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
+import { generateUUID } from "@/lib/uuid";
 
 type Props = {
     data: PendingForm;
@@ -64,7 +65,7 @@ export default function PendingInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.1",
                     url: documentUrl,
                 },
@@ -95,7 +96,7 @@ export default function PendingInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.4",
                     url: documentUrl,
                 },
@@ -126,7 +127,7 @@ export default function PendingInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "docx",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.2",
                     url: documentUrl,
                 },
@@ -157,7 +158,7 @@ export default function PendingInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.3",
                     url: documentUrl,
                 },

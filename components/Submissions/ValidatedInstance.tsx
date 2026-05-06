@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronDown, ChevronRight, Link, Edit2, Save, X, RotateCcw }
 import { useState, useMemo, useCallback } from "react";
 import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
+import { generateUUID } from "@/lib/uuid";
 
 const STATUS_OPTIONS = [
   { value: 'VALIDATED', label: 'Validated', color: 'bg-green-900/30 text-green-400' },
@@ -124,7 +125,7 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.1",
                     url: documentUrl,
                 },
@@ -155,7 +156,7 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.4",
                     url: documentUrl,
                 },
@@ -186,7 +187,7 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "docx",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.2",
                     url: documentUrl,
                 },
@@ -217,7 +218,7 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
             const config: DocumentConfig = {
                 document: {
                     fileType: "pdf",
-                    key: crypto.randomUUID(),
+                    key: generateUUID(),
                     title: "4.3",
                     url: documentUrl,
                 },

@@ -2,6 +2,7 @@
 import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useState, useEffect, useMemo, forwardRef, useCallback } from "react";
+import { generateUUID } from "@/lib/uuid";
 
 interface FormEditorProps {
     publicationId: string;
@@ -13,7 +14,7 @@ interface FormEditorProps {
 
 export default forwardRef(function Form41Editor({ publicationId, documentUrl, awardId, userId }: FormEditorProps, ref) {
     const [token, setToken] = useState("");
-    const documentKey = useMemo(() => crypto.randomUUID(), [])
+    const documentKey = useMemo(() => generateUUID(), [])
     const detectedIp = useMemo(() => typeof window !== 'undefined' ? window.location.hostname : '', [])
 
     const documentUrlFinal = `http://host.docker.internal:3000/api/generate-form/ipa-41?publicationId=${publicationId}&awardId=${awardId}&user_id=${userId}`;

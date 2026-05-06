@@ -6,6 +6,7 @@ import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubmissionsFlow } from "@/context/SubmissionsFlowContext";
 import SubmissionChecklist from "../Awards/SubmissionChecklist";
+import { generateUUID } from "@/lib/uuid";
 
 type Props = {
     data: RejectedForm;
@@ -222,7 +223,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
         const config: DocumentConfig = {
             document: {
                 fileType: fileType,
-                key: crypto.randomUUID(),
+                key: generateUUID(),
                 title: title,
                 url: generateUrl,
             },

@@ -6,6 +6,7 @@ import { useReviewFlow } from "@/context/ReviewFlowContext";
 import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import AttachmentsSection from '@/components/Review/AttachmentsSection';
+import { generateUUID } from "@/lib/uuid";
 
 type Props = {
   data: Application;
@@ -267,7 +268,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     if (!user?.id) return;
     setLoadingForm41(true);
     try {
-      const documentKey = crypto.randomUUID();
+      const documentKey = generateUUID();
       setForm41Key(documentKey);
       const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=41&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=41&admin_id=${user.id}`;
@@ -302,7 +303,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     if (!user?.id) return;
     setLoadingForm44(true);
     try {
-      const documentKey = crypto.randomUUID();
+      const documentKey = generateUUID();
       setForm44Key(documentKey);
       const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=44&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=44&admin_id=${user.id}`;
@@ -337,7 +338,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     if (!user?.id) return;
     setLoadingForm42(true);
     try {
-      const documentKey = crypto.randomUUID();
+      const documentKey = generateUUID();
       setForm42Key(documentKey);
       const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=42&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=42&admin_id=${user.id}`;
@@ -372,7 +373,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
     if (!user?.id) return;
     setLoadingForm43(true);
     try {
-      const documentKey = crypto.randomUUID();
+      const documentKey = generateUUID();
       setForm43Key(documentKey);
       const documentUrl = `http://host.docker.internal:3000/api/admin/get-review-form/route?submission_id=${data.application_id}&form_type=43&admin_id=${user.id}`;
       const callbackUrl = `http://host.docker.internal:3000/api/admin/drafts/callback?submission_id=${data.application_id}&form_type=43&admin_id=${user.id}`;
