@@ -1,5 +1,4 @@
 'use client'
-import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useState, useEffect, useMemo, forwardRef, useCallback } from "react";
 import { generateUUID } from "@/lib/uuid";
@@ -53,11 +52,13 @@ export default forwardRef(function Form41Editor({ publicationId, documentUrl, aw
 
     useEffect(() => {
         const generateToken = async () => {
-            const secret = new TextEncoder().encode('my_super_secret_key');
-            const signedToken = await new jose.SignJWT(config)
-                .setProtectedHeader({ alg: 'HS256' })
-                .sign(secret);
-            setToken(signedToken);
+            const response = await fetch("/api/onlyoffice/token", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ config }),
+            });
+            const data = await response.json();
+            setToken(data.token);
         };
 
         generateToken();

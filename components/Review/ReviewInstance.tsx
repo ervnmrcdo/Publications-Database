@@ -3,7 +3,6 @@ import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { Application, SubmissionLog } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 import { useReviewFlow } from "@/context/ReviewFlowContext";
-import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import AttachmentsSection from '@/components/Review/AttachmentsSection';
 import { generateUUID } from "@/lib/uuid";
@@ -206,10 +205,13 @@ export default function ReviewInstance({ data, onBack }: Props) {
   }
 
   const generateToken = useCallback(async (config: DocumentConfig) => {
-    const secret = new TextEncoder().encode('my_super_secret_key');
-    return await new jose.SignJWT(config as unknown as jose.JWTPayload)
-      .setProtectedHeader({ alg: 'HS256' })
-      .sign(secret);
+    const response = await fetch("/api/onlyoffice/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ config }),
+    });
+    const data = await response.json();
+    return data.token;
   }, []);
 
   const onForm41Ready = useCallback(async () => {

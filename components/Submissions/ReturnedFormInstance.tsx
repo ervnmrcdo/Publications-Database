@@ -1,7 +1,6 @@
 import { RejectedForm } from "@/lib/types"
 import { ArrowLeft, ChevronDown, ChevronRight, Link, Edit2, Save, X } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
-import * as jose from 'jose';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubmissionsFlow } from "@/context/SubmissionsFlowContext";
@@ -202,10 +201,13 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
     }
 
     const generateToken = useCallback(async (config: DocumentConfig) => {
-        const secret = new TextEncoder().encode('my_super_secret_key');
-        return await new jose.SignJWT(config as unknown as jose.JWTPayload)
-            .setProtectedHeader({ alg: 'HS256' })
-            .sign(secret);
+        const response = await fetch("/api/onlyoffice/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ config }),
+        });
+        const data = await response.json();
+        return data.token;
     }, []);
 
     const baseUrl = `http://host.docker.internal:3000`
