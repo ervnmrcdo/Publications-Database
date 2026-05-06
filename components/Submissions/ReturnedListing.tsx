@@ -18,6 +18,7 @@ export default function ReturnedListing({ onSelect }: Props) {
     }
 
     useEffect(() => {
+        if (!user?.id) return;
         fetch("/api/get/returned-forms", {
             method: 'POST',
             body: JSON.stringify(payload)
@@ -44,7 +45,7 @@ export default function ReturnedListing({ onSelect }: Props) {
                 isReturned: true,
             })))
         })
-    }, [])
+    }, [user?.id])
 
     console.log(returnedData)
 

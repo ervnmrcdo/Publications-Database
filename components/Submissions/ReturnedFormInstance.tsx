@@ -330,7 +330,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
         setExpandedForm43(!expandedForm43);
     };
 
-    const hasForm41 = !!data.form42_url || !!data.form43_url || !!data.form44_url;
+    const hasForm41 = !!data.form41_url;
     const hasForm42 = !!data.form42_url;
     const hasForm43 = !!data.form43_url;
     const hasForm44 = !!data.form44_url;

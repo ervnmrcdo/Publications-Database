@@ -18,6 +18,7 @@ export default function DraftsListing({ onSelect }: Props) {
     }
 
     const refreshDrafts = () => {
+        if (!user?.id) return;
         fetch("/api/get/drafts", {
             method: 'POST',
             body: JSON.stringify(payload),
@@ -47,7 +48,7 @@ export default function DraftsListing({ onSelect }: Props) {
 
     useEffect(() => {
         refreshDrafts()
-    }, [])
+    }, [user?.id])
 
     const handleDelete = async (deleteInfo: { submissionId: number; publicationId: number; awardId: number }) => {
         setDeletingId(deleteInfo.submissionId);

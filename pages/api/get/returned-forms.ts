@@ -60,23 +60,23 @@ export default async function RetrieveReturnedForms(
           let form44Url: string | null = null;
 
           const { data: form41SignedUrl } = await supabase.storage
-            .from('drafts-pdf')
+            .from('submissions-pdf')
             .createSignedUrl(`${submissionId}_form41.pdf`, 3600);
           form41Url = form41SignedUrl?.signedUrl || null;
 
 
           const { data: form42SignedUrl } = await supabase.storage
-            .from('drafts-docx')
+            .from('submissions-docx')
             .createSignedUrl(`${submissionId}_form42.docx`, 3600);
           form42Url = form42SignedUrl?.signedUrl || null;
 
           const { data: form43SignedUrl } = await supabase.storage
-            .from('drafts-pdf')
+            .from('submissions-pdf')
             .createSignedUrl(`${submissionId}_form43.pdf`, 3600);
           form43Url = form43SignedUrl?.signedUrl || null;
 
           const { data: form44SignedUrl } = await supabase.storage
-            .from('drafts-pdf')
+            .from('submissions-pdf')
             .createSignedUrl(`${submissionId}_form44.pdf`, 3600);
           form44Url = form44SignedUrl?.signedUrl || null;
 
