@@ -51,7 +51,7 @@ export default function TeachingDashboard() {
             .from('submissions')
             .select('submission_id, status')
             .eq('submitter_id', user.id)
-            .in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED']),
+            .in('status', ['VALIDATED', 'SUBMITTED_TO_HIGHER_OFFICE', 'PROCESSED_BY_HIGHER_OFFICE']),
         ]);
 
         setPublicationCount(pubCount || 0);

@@ -109,19 +109,14 @@ export default function AllAwards() {
                                                     Returned
                                                 </span>
                                             )}
-                                            {award.status === 'PENDING_SUBMISSION' && (
-                                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-900/30 text-blue-400">
-                                                    Pending Submission
-                                                </span>
-                                            )}
-                                            {award.status === 'SUBMITTED' && (
+                                            {award.status === 'SUBMITTED_TO_HIGHER_OFFICE' && (
                                                 <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-900/30 text-purple-400">
-                                                    Submitted
+                                                    Submitted to Higher Offices
                                                 </span>
                                             )}
-                                            {award.status === 'PROCESSED' && (
+                                            {award.status === 'PROCESSED_BY_HIGHER_OFFICE' && (
                                                 <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-900/30 text-gray-400">
-                                                    Processed
+                                                    Processed by Higher Offices
                                                 </span>
                                             )}
                                         </td>

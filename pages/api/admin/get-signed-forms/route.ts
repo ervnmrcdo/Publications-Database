@@ -20,7 +20,7 @@ export default async function GetSignedForms(
 				publications:publications!publication_id(title)
 			`)
 .eq('reviewed_by_admin_id', adminId)
-		.in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED'])
+		.in('status', ['VALIDATED', 'SUBMITTED_TO_HIGHER_OFFICE', 'PROCESSED_BY_HIGHER_OFFICE'])
 		.order('date_submitted', { ascending: false });
 
 		if (error) {

@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { createPagesServerClient } from "@/lib/supabase/pager-server";
 
-const ALLOWED_STATUSES = ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED'];
+const ALLOWED_STATUSES = ['VALIDATED', 'SUBMITTED_TO_HIGHER_OFFICE', 'PROCESSED_BY_HIGHER_OFFICE'];
 
 export default async function POST(req: NextApiRequest, res: NextApiResponse) {
   try {

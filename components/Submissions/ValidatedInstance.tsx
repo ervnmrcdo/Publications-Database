@@ -6,9 +6,8 @@ import { generateUUID } from "@/lib/uuid";
 
 const STATUS_OPTIONS = [
   { value: 'VALIDATED', label: 'Validated', color: 'bg-green-900/30 text-green-400' },
-  { value: 'PENDING_SUBMISSION', label: 'Pending Submission', color: 'bg-blue-900/30 text-blue-400' },
-  { value: 'SUBMITTED', label: 'Submitted', color: 'bg-purple-900/30 text-purple-400' },
-  { value: 'PROCESSED', label: 'Processed', color: 'bg-gray-900/30 text-gray-400' },
+  { value: 'SUBMITTED_TO_HIGHER_OFFICE', label: 'Submitted to Higher Offices', color: 'bg-purple-900/30 text-purple-400' },
+  { value: 'PROCESSED_BY_HIGHER_OFFICE', label: 'Processed by Higher Offices', color: 'bg-gray-900/30 text-gray-400' },
 ];
 
 const getStatusColor = (status: string) => {
