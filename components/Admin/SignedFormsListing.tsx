@@ -54,7 +54,7 @@ export default function SignedFormsListing({ adminId, onSelect }: Props) {
 
     return (
         <div className="bg-[#1b1e2b] rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold mb-4 text-white">My Signed Forms</h2>
+            <h2 className="text-xl font-bold mb-4 text-white">Signed Forms</h2>
 
             {signedData.length === 0 ? (
                 <p className="text-gray-400">No signed forms yet.</p>

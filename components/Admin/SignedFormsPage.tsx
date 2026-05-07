@@ -16,7 +16,7 @@ export default function SignedFormsPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-white mb-6">My Signed Forms</h1>
+      <h1 className="text-2xl font-bold text-white mb-6">Signed Forms</h1>
       <AnimatePresence mode="wait">
         {!selectedForm ? (
           <motion.div
