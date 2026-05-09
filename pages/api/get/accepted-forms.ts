@@ -27,7 +27,7 @@ export default async function RetrieveAcceptedForms(
         awards:awards!award_id(*),
         publications:publications!publication_id(title)
       `)
-      .in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED'])
+      .in('status', ['VALIDATED', 'SUBMITTED_TO_HIGHER_OFFICE', 'PROCESSED_BY_HIGHER_OFFICE'])
       .in('publication_id', taggedPublicationIds.length > 0 ? taggedPublicationIds : [0]);
 
     if (error) {

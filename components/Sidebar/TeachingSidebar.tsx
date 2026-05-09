@@ -29,7 +29,7 @@ const TeachingSidebar: React.FC = () => {
         .from('submissions')
         .select('submission_id')
         .eq('submitter_id', user.id)
-        .in('status', ['VALIDATED', 'PENDING_SUBMISSION', 'SUBMITTED', 'PROCESSED']);
+        .in('status', ['VALIDATED', 'SUBMITTED_TO_HIGHER_OFFICE', 'PROCESSED_BY_HIGHER_OFFICE']);
       setCompletedCount(data?.length || 0);
     };
     checkCompleted();

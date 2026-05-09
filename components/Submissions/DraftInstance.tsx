@@ -362,6 +362,21 @@ export default function DraftInstance({ data, onBack }: Props) {
                 </div>
             )}
 
+            <div className="flex gap-3">
+                <button
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                    onClick={() => setShowSubmitConfirmDialog(true)}
+                    disabled={!isSubmitReady}
+                >
+                    Submit
+                </button>
+            </div>
+
+            <SubmissionChecklist
+                checkedItems={requirements}
+                onToggle={toggleRequirements}
+            />
+
             {/* Attachments Section */}
             <div className="p-4 bg-[#252836] rounded-lg">
                 <div className="flex justify-between items-center mb-4">
@@ -457,25 +472,6 @@ export default function DraftInstance({ data, onBack }: Props) {
                         ))}
                     </div>
                 </div>
-            </div>
-
-            <div className="flex gap-4">
-                <div className="flex-1">
-                    <div className="flex gap-3">
-                        <button
-                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-                            onClick={() => setShowSubmitConfirmDialog(true)}
-                            disabled={!isSubmitReady}
-                        >
-                            Submit
-                        </button>
-                    </div>
-                </div>
-
-                <SubmissionChecklist
-                    checkedItems={requirements}
-                    onToggle={toggleRequirements}
-                />
             </div>
             {hasForm41 && (
                 <div className="border rounded-lg overflow-hidden">

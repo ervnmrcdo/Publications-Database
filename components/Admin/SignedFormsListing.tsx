@@ -9,9 +9,8 @@ type Props = {
 
 const STATUS_OPTIONS = [
     { value: 'VALIDATED', label: 'Validated', color: 'bg-green-900/30 text-green-400' },
-    { value: 'PENDING_SUBMISSION', label: 'Pending Submission', color: 'bg-blue-900/30 text-blue-400' },
-    { value: 'SUBMITTED', label: 'Submitted', color: 'bg-purple-900/30 text-purple-400' },
-    { value: 'PROCESSED', label: 'Processed', color: 'bg-gray-900/30 text-gray-400' },
+    { value: 'SUBMITTED_TO_HIGHER_OFFICE', label: 'Submitted to Higher Offices', color: 'bg-purple-900/30 text-purple-400' },
+    { value: 'PROCESSED_BY_HIGHER_OFFICE', label: 'Processed by Higher Offices', color: 'bg-gray-900/30 text-gray-400' },
 ];
 
 const getStatusColor = (status: string) => {
@@ -54,7 +53,7 @@ export default function SignedFormsListing({ adminId, onSelect }: Props) {
 
     return (
         <div className="bg-[#1b1e2b] rounded-xl shadow p-6">
-            <h2 className="text-xl font-bold mb-4 text-white">My Signed Forms</h2>
+            <h2 className="text-xl font-bold mb-4 text-white">Signed Forms</h2>
 
             {signedData.length === 0 ? (
                 <p className="text-gray-400">No signed forms yet.</p>
