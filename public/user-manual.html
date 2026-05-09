@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DCS Records - User Manual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* =========================================================
+       RESET & BASE
+    ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Geist', 'Inter', system-ui, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.65;
+      background: #0f1117;
+      color: #d1d5db;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 52px 80px;
+    }
+
+    /* =========================================================
+       COVER PAGE
+    ========================================================= */
+    .cover {
+      text-align: center;
+      padding: 56px 0 48px;
+      border-bottom: 1px solid #374151;
+      margin-bottom: 48px;
+    }
+    .cover-wordmark {
+      font-size: 11pt;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      color: #6b7280;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .cover h1 {
+      font-size: 36pt;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+    .cover .cover-sub {
+      font-size: 13pt;
+      color: #9ca3af;
+      margin-bottom: 36px;
+    }
+    .cover-badge {
+      display: inline-block;
+      background: #1b1e2b;
+      border: 1px solid #374151;
+      color: #9ca3af;
+      font-size: 9pt;
+      padding: 6px 18px;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+    }
+
+    /* =========================================================
+       TABLE OF CONTENTS
+    ========================================================= */
+    .toc {
+      background: #1b1e2b;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin-bottom: 48px;
+    }
+    .toc-title {
+      font-size: 10pt;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+    .toc ol {
+      padding-left: 18px;
+      color: #d1d5db;
+    }
+    .toc li { margin: 5px 0; }
+    .toc a { color: #60a5fa; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .toc .toc-indent { padding-left: 18px; list-style-type: none; }
+    .toc .toc-indent li::before { content: "- "; color: #6b7280; }
+    .toc .section-label {
+      font-weight: 600;
+      color: #e5e7eb;
+      margin-top: 10px;
+      list-style: none;
+    }
+
+    /* =========================================================
+       HEADINGS
+    ========================================================= */
+    h2 {
+      font-size: 18pt;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 48px 0 14px;
+      letter-spacing: -0.01em;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #374151;
+    }
+    h3 {
+      font-size: 12pt;
+      font-weight: 600;
+      color: #e5e7eb;
+      margin: 28px 0 10px;
+    }
+    h4 {
+      font-size: 10.5pt;
+      font-weight: 600;
+      color: #d1d5db;
+      margin: 18px 0 8px;
+    }
+
+    /* =========================================================
+       PART DIVIDERS
+    ========================================================= */
+    .part-divider {
+      background: #1b1e2b;
+      border: 1px solid #374151;
+      border-left: 4px solid #2563eb;
+      border-radius: 8px;
+      padding: 18px 24px;
+      margin: 52px 0 36px;
+      font-size: 14pt;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+    .part-divider span {
+      color: #60a5fa;
+      font-weight: 500;
+      font-size: 10pt;
+      display: block;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    /* =========================================================
+       PARAGRAPHS & LISTS
+    ========================================================= */
+    p { margin: 0 0 10px; }
+    ul, ol { padding-left: 20px; margin: 8px 0 12px; }
+    li { margin: 4px 0; }
+
+    /* =========================================================
+       NUMBERED STEPS
+    ========================================================= */
+    ol.steps {
+      list-style: none;
+      padding: 0;
+      counter-reset: step;
+      margin: 12px 0 18px;
+    }
+    ol.steps > li {
+      counter-increment: step;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 8px 0;
+      border-bottom: 1px solid #1f2435;
+    }
+    ol.steps > li:last-child { border-bottom: none; }
+    ol.steps > li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 9pt;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    ol.steps ul { margin: 6px 0 0; }
+
+    /* =========================================================
+       CALLOUT BOXES
+    ========================================================= */
+    .callout {
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-size: 9.5pt;
+      line-height: 1.55;
+    }
+    .callout-label {
+      font-weight: 600;
+      font-size: 8.5pt;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .note    { background: #052e16; border-left: 3px solid #16a34a; }
+    .note    .callout-label { color: #4ade80; }
+    .warning { background: #1c1205; border-left: 3px solid #d97706; }
+    .warning .callout-label { color: #fbbf24; }
+    .tip     { background: #0c1a3a; border-left: 3px solid #2563eb; }
+    .tip     .callout-label { color: #60a5fa; }
+
+    /* =========================================================
+       TABLES
+    ========================================================= */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 20px;
+      font-size: 9.5pt;
+      background: #1b1e2b;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #374151;
+    }
+    th {
+      background: #252836;
+      color: #e5e7eb;
+      font-weight: 600;
+      font-size: 8.5pt;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #374151;
+    }
+    td {
+      padding: 9px 14px;
+      color: #d1d5db;
+      border-bottom: 1px solid #1f2435;
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    /* =========================================================
+       STATUS BADGES
+    ========================================================= */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      vertical-align: middle;
+      font-family: 'Geist Mono', monospace;
+    }
+    .badge-draft     { background: #1f2937; color: #9ca3af; border: 1px solid #374151; }
+    .badge-pending   { background: #1c1205; color: #fbbf24; border: 1px solid #78350f; }
+    .badge-validated { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+    .badge-returned  { background: #2d0a0a; color: #f87171; border: 1px solid #7f1d1d; }
+    .badge-pendsub   { background: #0c1a3a; color: #60a5fa; border: 1px solid #1e3a8a; }
+    .badge-submitted { background: #1a0c3a; color: #a78bfa; border: 1px solid #4c1d95; }
+    .badge-processed { background: #0a1a1a; color: #34d399; border: 1px solid #064e3b; }
+
+    /* =========================================================
+       DIVIDERS & MISC
+    ========================================================= */
+    hr { border: none; border-top: 1px solid #374151; margin: 36px 0; }
+    code {
+      font-family: 'Geist Mono', monospace;
+      background: #1b1e2b;
+      border: 1px solid #374151;
+      color: #60a5fa;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 9pt;
+    }
+    strong { color: #e5e7eb; font-weight: 600; }
+
+    .footer {
+      text-align: center;
+      color: #4b5563;
+      font-size: 8.5pt;
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid #374151;
+    }
+
+    /* =========================================================
+       PRINT
+    ========================================================= */
+    @media print {
+      body { background: #0f1117; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 24px 32px; }
+      .part-divider { break-before: page; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     COVER
+============================================================ -->
+<div class="cover">
+  <p class="cover-wordmark">Department of Computer Science</p>
+  <h1>DCS Records</h1>
+  <p class="cover-sub">Publications and Awards Database — User Manual</p>
+  <span class="cover-badge">Version 1.0 &nbsp;&bull;&nbsp; 2026</span>
+</div>
+
+<!-- ============================================================
+     TABLE OF CONTENTS
+============================================================ -->
+<div class="toc">
+  <p class="toc-title">Table of Contents</p>
+  <ol>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#roles">User Roles Overview</a></li>
+    <li class="section-label">Part I &mdash; Faculty and Student</li>
+    <ul class="toc-indent">
+      <li><a href="#f-register">Account Registration</a></li>
+      <li><a href="#f-login">Logging In</a></li>
+      <li><a href="#f-dashboard">Dashboard</a></li>
+      <li><a href="#f-profile">Profile Management</a></li>
+      <li><a href="#f-publications">Publications</a></li>
+      <li><a href="#f-awards">Applying for Awards</a></li>
+      <li><a href="#f-statuses">Submission Statuses</a></li>
+      <li><a href="#f-submissions">Managing Submissions</a></li>
+    </ul>
+    <li class="section-label">Part II &mdash; Admin</li>
+    <ul class="toc-indent">
+      <li><a href="#a-dashboard">Admin Dashboard</a></li>
+      <li><a href="#a-profile">Admin Profile and Signature</a></li>
+      <li><a href="#a-personnel">Personnel Management</a></li>
+      <li><a href="#a-review">Reviewing Submissions</a></li>
+      <li><a href="#a-signed">Signed Forms</a></li>
+      <li><a href="#a-awards">Award Configuration</a></li>
+      <li><a href="#a-settings">Settings</a></li>
+    </ul>
+    <li><a href="#appendix">Appendix: Status Flow Reference</a></li>
+  </ol>
+</div>
+
+<!-- ============================================================
+     1. INTRODUCTION
+============================================================ -->
+<h2 id="intro">1. Introduction</h2>
+<p>
+  DCS Records is a web-based system for managing International Publication Award (IPA) applications.
+  Faculty and students upload their publications, fill out the required award forms, and track the
+  review process from start to finish. Administrators review submissions, embed their digital
+  signature, and provide feedback.
+</p>
+<p>This manual covers every step of the system for both user roles.</p>
+
+<!-- ============================================================
+     2. ROLES
+============================================================ -->
+<h2 id="roles">2. User Roles Overview</h2>
+<table>
+  <tr><th>Role</th><th>Who</th><th>Primary Capabilities</th></tr>
+  <tr>
+    <td><strong>Faculty</strong></td>
+    <td>Teaching personnel</td>
+    <td>Manage publications, apply for IPA awards, track submissions</td>
+  </tr>
+  <tr>
+    <td><strong>Student</strong></td>
+    <td>Non-teaching / support staff</td>
+    <td>Same as Faculty (identical interface and feature set)</td>
+  </tr>
+  <tr>
+    <td><strong>Admin</strong></td>
+    <td>Designated administrators</td>
+    <td>Review and sign award applications, manage personnel, configure awards</td>
+  </tr>
+</table>
+<div class="callout note">
+  <span class="callout-label">Note</span>
+  Admin accounts are created separately and are not accessible through the public registration page.
+  Contact your system administrator for Admin access.
+</div>
+
+<!-- ============================================================
+     PART I DIVIDER
+============================================================ -->
+<div class="part-divider" id="part1">
+  <span>Part I</span>
+  Faculty and Student
+</div>
+
+<!-- ============================================================
+     3. REGISTRATION
+============================================================ -->
+<h2 id="f-register">3. Account Registration</h2>
+<p>New users register before logging in. Go to the application URL and click <strong>Create Account</strong> on the login screen.</p>
+
+<ol class="steps">
+  <li>Click <strong>Create Account</strong> on the login page. You will be taken to the Sign Up form.</li>
+  <li>Enter your <strong>Email Address</strong> and choose a <strong>Password</strong>.</li>
+  <li>Select your <strong>Role</strong>:
+    <ul>
+      <li><strong>Faculty</strong> for teaching personnel</li>
+      <li><strong>Student</strong> for non-teaching staff</li>
+    </ul>
+  </li>
+  <li>Fill in your personal details:
+    <ul>
+      <li>First Name, Middle Name (optional), Last Name</li>
+      <li>University, College, Department</li>
+      <li>Contact Number</li>
+      <li>Position</li>
+    </ul>
+  </li>
+  <li>Click <strong>Sign Up</strong>. Your account is created immediately and you will be redirected to the login page.</li>
+</ol>
+
+<div class="callout tip">
+  <span class="callout-label">Tip</span>
+  You can add your Scopus Author ID later in your Profile. It is not required during registration.
+</div>
+
+<!-- ============================================================
+     4. LOGIN
+============================================================ -->
+<h2 id="f-login">4. Logging In</h2>
+
+<ol class="steps">
+  <li>Navigate to the application URL.</li>
+  <li>Enter your registered <strong>Email</strong> and <strong>Password</strong>.</li>
+  <li>Click <strong>Sign In</strong>. You will be redirected to your role-specific dashboard.</li>
+</ol>
+
+<!-- ============================================================
+     5. DASHBOARD
+============================================================ -->
+<h2 id="f-dashboard">5. Dashboard</h2>
+<p>After logging in you land on your <strong>Dashboard</strong>. It provides a summary of your activity.</p>
+
+<h3>5.1 Faculty Dashboard</h3>
+<table>
+  <tr><th>Card</th><th>What it shows</th></tr>
+  <tr><td>My Publications</td><td>Total publications linked to your account</td></tr>
+  <tr><td>Pending Applications</td><td>Applications awaiting admin review</td></tr>
+  <tr><td>Validated Submissions</td><td>Applications approved and signed by an admin</td></tr>
+  <tr><td>Completed Applications</td><td>All submissions with a post-validated status</td></tr>
+</table>
+
+<p>Quick Action buttons navigate to: View Profile, View Publications, View Submissions, and New Application.</p>
+
+<h3>5.2 Student Dashboard</h3>
+<table>
+  <tr><th>Card</th><th>What it shows</th></tr>
+  <tr><td>My Publications</td><td>Total publications linked to your account</td></tr>
+  <tr><td>Pending Applications</td><td>Applications awaiting admin review</td></tr>
+  <tr><td>Validated Submissions</td><td>Applications approved and signed by an admin</td></tr>
+</table>
+
+<p>Quick Action buttons navigate to: View Profile, View Publications, and View Submissions.</p>
+
+<!-- ============================================================
+     6. PROFILE
+============================================================ -->
+<h2 id="f-profile">6. Profile Management</h2>
+<p>Your profile stores your personal information, digital signature, and proof of affiliation. Complete your profile before applying for any awards.</p>
+
+<h3>6.1 Viewing Your Profile</h3>
+<ol class="steps">
+  <li>Click <strong>Profile</strong> in the left sidebar.</li>
+  <li>Your current information, signature, and affiliation are displayed.</li>
+</ol>
+
+<h3>6.2 Editing Your Information</h3>
+<ol class="steps">
+  <li>On the Profile page, click <strong>Edit Profile</strong>.</li>
+  <li>Update any of the following fields:
+    <ul>
+      <li>First Name, Middle Name, Last Name</li>
+      <li>University, College, Department</li>
+      <li>Contact Number, Position</li>
+      <li>Scopus Author ID</li>
+    </ul>
+  </li>
+  <li>Click <strong>Save</strong>.</li>
+</ol>
+
+<div class="callout note">
+  <span class="callout-label">Note</span>
+  Your email address is shown in the profile but cannot be changed through this form.
+</div>
+
+<h3>6.3 Adding Your Scopus Author ID</h3>
+<p>The Scopus Author ID links your account to your Scopus publication record, enabling automatic import of your publications via the crawler.</p>
+
+<ol class="steps">
+  <li>Log in to Scopus.com, navigate to your author profile, and note your Author ID.</li>
+  <li>In DCS Records, go to <strong>Profile</strong> and click <strong>Edit Profile</strong>.</li>
+  <li>Enter the ID in the <strong>Scopus Author ID</strong> field.</li>
+  <li>Click <strong>Save</strong>.</li>
+</ol>
+
+<h3>6.4 Uploading Your Signature</h3>
+<p>Your digital signature is embedded on award forms when you submit an application.</p>
+
+<div class="callout warning">
+  <span class="callout-label">Required</span>
+  You must upload a signature before you can submit any award application.
+</div>
+
+<ol class="steps">
+  <li>Go to <strong>Profile</strong> and click <strong>Edit Profile</strong>.</li>
+  <li>Under <strong>Signature (PNG)</strong>, click the file chooser and select a PNG image of your signature.</li>
+  <li>Click <strong>Save</strong>. A preview of your uploaded signature will appear.</li>
+</ol>
+
+<h3>6.5 Uploading Proof of Affiliation</h3>
+<p>This document verifies your institutional affiliation with the university.</p>
+
+<ol class="steps">
+  <li>Go to <strong>Profile</strong> and click <strong>Edit Profile</strong>.</li>
+  <li>Under <strong>Proof of Affiliation (PNG)</strong>, click the file chooser and select a PNG image of your affiliation document (e.g., appointment letter or ID scan).</li>
+  <li>Click <strong>Save</strong>.</li>
+</ol>
+
+<!-- ============================================================
+     7. PUBLICATIONS
+============================================================ -->
+<h2 id="f-publications">7. Publications</h2>
+<p>The Publications section lists all research outputs linked to your account.</p>
+
+<h3>7.1 Viewing Publications</h3>
+<ol class="steps">
+  <li>Click <strong>Publications</strong> in the left sidebar.</li>
+  <li>Publications are displayed as list items showing Title, Type, Date Published, and Publisher.</li>
+  <li>Click any publication to open a detail panel showing all fields.</li>
+</ol>
+
+<h3>7.2 Sorting and Filtering</h3>
+<ul>
+  <li><strong>Sort</strong> using the Sort dropdown: Ascending Date, Descending Date, Name Ascending (A-Z), or Name Descending (Z-A).</li>
+  <li><strong>Filter by type</strong> using the tab buttons above the list: All, Journal, Book, or Unclassified.</li>
+  <li>Use <strong>Prev</strong> and <strong>Next</strong> to page through results (12 per page).</li>
+</ul>
+
+<h3>7.3 Adding a Publication Manually</h3>
+<ol class="steps">
+  <li>Click <strong>Add Publication</strong> in the top-right of the Publications panel.</li>
+  <li>Fill in the fields:
+    <ul>
+      <li>Type (Journal or Book), Title, Publisher, DOI</li>
+      <li>Date Published, Issue Number, Page Numbers, Volume Number, Journal Name</li>
+    </ul>
+  </li>
+  <li>Optionally, tag co-authors (see Section 7.6).</li>
+  <li>Click <strong>Save</strong>.</li>
+</ol>
+
+<h3>7.4 Editing a Publication</h3>
+<ol class="steps">
+  <li>Click a publication in the list to open its detail view.</li>
+  <li>Click <strong>Edit</strong>.</li>
+  <li>Update the desired fields and tag/untag co-authors as needed.</li>
+  <li>Click <strong>Save</strong>.</li>
+</ol>
+
+<h3>7.5 Deleting a Publication</h3>
+<ol class="steps">
+  <li>Click a publication to open its detail view.</li>
+  <li>Click <strong>Delete</strong>.</li>
+  <li>Confirm the deletion. The publication is permanently removed.</li>
+</ol>
+
+<div class="callout warning">
+  <span class="callout-label">Warning</span>
+  Deletion is permanent and cannot be undone.
+</div>
+
+<h3>7.6 Tagging Co-Authors</h3>
+<p>When adding or editing a publication, you can tag other registered users as co-authors.</p>
+
+<ol class="steps">
+  <li>In the Add or Edit publication form, locate the <strong>Tag Authors</strong> field.</li>
+  <li>Type a name in the search box. A dropdown of matching registered users appears.</li>
+  <li>Click a name to tag them. They appear as a blue chip below the search box.</li>
+  <li>To remove a co-author, click the <strong>x</strong> on their chip.</li>
+  <li>Click <strong>Save</strong> to apply the changes.</li>
+</ol>
+
+<div class="callout note">
+  <span class="callout-label">Note</span>
+  Only registered system users can be tagged. If a co-author has not registered yet, ask them to create an account first.
+</div>
+
+<h3>7.7 Bulk Classification</h3>
+<p>You can classify multiple publications as Journal or Book at once.</p>
+
+<ol class="steps">
+  <li>Check the checkbox on each publication card you want to classify. Use <strong>Select All</strong> to select all currently visible publications.</li>
+  <li>A floating toolbar appears at the bottom of the screen showing how many are selected.</li>
+  <li>Click <strong>Set as Journal</strong> or <strong>Set as Book</strong>.</li>
+  <li>Click <strong>Deselect All</strong> to clear the selection.</li>
+</ol>
+
+<h3>7.8 Fetching Publications Automatically (Scopus Crawler)</h3>
+<p>If you have a Scopus Author ID saved in your profile, you can pull your publications from Scopus directly.</p>
+
+<ol class="steps">
+  <li>Click <strong>Fetch Publications Automatically</strong> in the top-right of the Publications panel.</li>
+  <li>Wait for the process to complete. A summary alert shows how many publications were fetched, added, and linked to your profile.</li>
+  <li>Newly imported publications may appear as <strong>Unclassified</strong>. Use the Filter to find them and classify them as Journal or Book.</li>
+</ol>
+
+<!-- ============================================================
+     8. AWARDS
+============================================================ -->
+<h2 id="f-awards">8. Applying for Awards</h2>
+<p>The system supports two IPA award types:</p>
+
+<table>
+  <tr><th>Award</th><th>Publication Type</th><th>Forms Required</th></tr>
+  <tr>
+    <td>IPA Award - Journal</td>
+    <td>Journal articles</td>
+    <td>Form 4.1 (PDF), Form 4.2 (DOCX), Form 4.3 (DOCX)</td>
+  </tr>
+  <tr>
+    <td>IPA Award - Book</td>
+    <td>Books or book chapters</td>
+    <td>Form 4.4 (PDF), Form 4.3 (DOCX)</td>
+  </tr>
+</table>
+
+<h3>8.1 Step 1 - Select an Award</h3>
+<ol class="steps">
+  <li>Click <strong>Awards</strong> in the left sidebar.</li>
+  <li>Two award cards are shown. Click the award that matches your publication type.</li>
+</ol>
+
+<h3>8.2 Step 2 - Select a Publication</h3>
+<ol class="steps">
+  <li>A list of eligible publications appears (matching the award type and not already submitted for this award).</li>
+  <li>If a draft already exists for a publication, a trash icon appears next to it.
+    <ul>
+      <li>Click the publication title to continue with the existing draft.</li>
+      <li>Click the trash icon and confirm to delete the draft and start fresh, then click the publication again.</li>
+    </ul>
+  </li>
+  <li>Click the publication you want to submit.</li>
+</ol>
+
+<h3>8.3 Step 3 - Complete the Forms</h3>
+<p>The required forms open in the integrated document editor. Each form is pre-filled with your publication and profile data where possible.</p>
+
+<h4>For IPA Award - Journal:</h4>
+<ul>
+  <li><strong>Form 4.1</strong> (PDF): Core publication details. Review all pre-filled fields and fill in any blanks.</li>
+  <li><strong>Form 4.2</strong> (DOCX): Co-author declarations. Each listed co-author must sign this form.</li>
+  <li><strong>Form 4.3</strong> (DOCX): Additional supporting information. Fill in all required text boxes and checkboxes.</li>
+</ul>
+
+<h4>For IPA Award - Book:</h4>
+<ul>
+  <li><strong>Form 4.4</strong> (PDF): Core book publication details.</li>
+  <li><strong>Form 4.3</strong> (DOCX): Additional supporting information (same as above).</li>
+</ul>
+
+<div class="callout tip">
+  <span class="callout-label">Auto-save</span>
+  The document editor saves your progress automatically. You can safely close your browser and resume later without losing work.
+</div>
+
+<h3>8.4 Step 4 - Complete the Submission Checklist</h3>
+<p>Below the forms, tick every item in the <strong>Requirements</strong> checklist before submitting:</p>
+<ul>
+  <li>All authors have signed</li>
+  <li>All necessary textboxes are filled</li>
+  <li>All necessary checkboxes are ticked</li>
+  <li>I certify the information is correct</li>
+</ul>
+<p>The <strong>Submit</strong> button stays disabled until all four items are checked.</p>
+
+<h3>8.5 Step 5 - Upload Supporting Documents</h3>
+<p>Enter a shareable <strong>Google Drive folder link</strong> containing your supporting documents, then tick the items present in that folder.</p>
+
+<h4>For Journal Award:</h4>
+<ul>
+  <li>Copy of the Journal Article</li>
+</ul>
+
+<h4>For Book Award:</h4>
+<ul>
+  <li>Copy of Book / Book Chapter</li>
+  <li>Book Cover</li>
+  <li>Copyright Page</li>
+  <li>Preface</li>
+  <li>Table of Contents</li>
+  <li>List of Contributors or Contributors Notes</li>
+  <li>Proof of Peer Review Process</li>
+</ul>
+
+<h3>8.6 Step 6 - Save as Draft or Submit</h3>
+
+<h4>Save as Draft</h4>
+<ol class="steps">
+  <li>Click <strong>Save as Draft</strong>.</li>
+  <li>Your forms, checklist state, and attachments are saved.</li>
+  <li>The application appears in <strong>Submissions - Drafts</strong> with status <span class="badge badge-draft">DRAFT</span>.</li>
+</ol>
+
+<h4>Submit Application</h4>
+<ol class="steps">
+  <li>Confirm all checklist items are checked.</li>
+  <li>Click <strong>Submit Application</strong> and confirm in the dialog.</li>
+  <li>Your application is sent for admin review. Status changes to <span class="badge badge-pending">PENDING</span>.</li>
+</ol>
+
+<div class="callout warning">
+  <span class="callout-label">Important</span>
+  Once submitted you cannot edit the forms until the Admin validates or returns your application.
+</div>
+
+<!-- ============================================================
+     9. STATUSES
+============================================================ -->
+<h2 id="f-statuses">9. Submission Statuses</h2>
+<p>Every application moves through the following lifecycle:</p>
+
+<table>
+  <tr><th>Status</th><th>Meaning</th><th>Set By</th></tr>
+  <tr>
+    <td><span class="badge badge-draft">DRAFT</span></td>
+    <td>Saved but not yet submitted for review.</td>
+    <td>Faculty / Student</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-pending">PENDING</span></td>
+    <td>Submitted and awaiting admin review.</td>
+    <td>Faculty / Student</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-validated">VALIDATED</span></td>
+    <td>Admin reviewed and digitally signed the forms.</td>
+    <td>Admin</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-returned">RETURNED</span></td>
+    <td>Admin returned the application with remarks for correction.</td>
+    <td>Admin</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-pendsub">PENDING SUBMISSION</span></td>
+    <td>Validated and marked as ready for external submission.</td>
+    <td>Faculty / Student</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-submitted">SUBMITTED</span></td>
+    <td>Submitted externally to the awarding body.</td>
+    <td>Faculty / Student</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-processed">PROCESSED</span></td>
+    <td>Application fully processed and closed.</td>
+    <td>Faculty / Student</td>
+  </tr>
+</table>
+
+<!-- ============================================================
+     10. SUBMISSIONS
+============================================================ -->
+<h2 id="f-submissions">10. Managing Submissions</h2>
+<p>Click <strong>Submissions</strong> in the left sidebar to view all your applications organized by status.</p>
+
+<h3>10.1 Drafts</h3>
+<ol class="steps">
+  <li>Click the <strong>Drafts</strong> tab to see all saved-but-unsubmitted applications.</li>
+  <li>Click any draft to open it.</li>
+  <li>Continue editing forms, update the checklist, and modify the attachments.</li>
+  <li>Click <strong>Save Draft</strong> to save progress, or <strong>Submit</strong> to finalize and send for review.</li>
+  <li>To permanently delete a draft, click <strong>Delete Draft</strong> and confirm.</li>
+</ol>
+
+<h3>10.2 Pending Submissions</h3>
+<ol class="steps">
+  <li>Click the <strong>Pending</strong> tab to see applications awaiting admin review.</li>
+  <li>Click any application to view the submitted forms. This view is read-only.</li>
+</ol>
+
+<div class="callout note">
+  <span class="callout-label">Note</span>
+  Pending applications cannot be edited. Wait for the Admin to validate or return the submission.
+</div>
+
+<h3>10.3 Returned Submissions</h3>
+<p>When an Admin returns your application, it appears under the <strong>Returned</strong> tab with their remarks.</p>
+
+<ol class="steps">
+  <li>Click the <strong>Returned</strong> tab and click the returned application.</li>
+  <li>Read the admin remarks shown at the top of the page.</li>
+  <li>Edit the forms, checklist, and attachments to address the remarks.</li>
+  <li>Click <strong>Resubmit</strong>. The status returns to <span class="badge badge-pending">PENDING</span>.</li>
+</ol>
+
+<h3>10.4 Validated Submissions</h3>
+<p>Once an Admin signs your forms, the application appears under the <strong>Validated</strong> tab.</p>
+
+<ol class="steps">
+  <li>Click the <strong>Validated</strong> tab and click any application to open it.</li>
+  <li>Expand each form section to view the signed documents.</li>
+  <li>Update the submission status using the dropdown in the top-right corner to track external submission progress:
+    <ul>
+      <li><span class="badge badge-pendsub">PENDING SUBMISSION</span> when preparing for external submission</li>
+      <li><span class="badge badge-submitted">SUBMITTED</span> once submitted externally</li>
+      <li><span class="badge badge-processed">PROCESSED</span> once the award process is complete</li>
+    </ul>
+  </li>
+  <li>Click <strong>Edit</strong> in the Supporting Documents section to update the Drive link or document checklist, then click <strong>Save</strong>.</li>
+</ol>
+
+<!-- ============================================================
+     PART II DIVIDER
+============================================================ -->
+<div class="part-divider" id="part2">
+  <span>Part II</span>
+  Admin
+</div>
+
+<!-- ============================================================
+     11. ADMIN DASHBOARD
+============================================================ -->
+<h2 id="a-dashboard">11. Admin Dashboard</h2>
+<p>After logging in as Admin you land on the Admin Dashboard.</p>
+
+<table>
+  <tr><th>Card</th><th>What it shows</th></tr>
+  <tr><td>Total Teaching</td><td>Number of registered Faculty users</td></tr>
+  <tr><td>Total NonTeaching</td><td>Number of registered Student users</td></tr>
+  <tr><td>Pending Reviews</td><td>Number of submissions awaiting admin review</td></tr>
+</table>
+
+<p>Use the left sidebar to navigate between all sections of the admin panel.</p>
+
+<!-- ============================================================
+     12. ADMIN PROFILE
+============================================================ -->
+<h2 id="a-profile">12. Admin Profile and Signature</h2>
+<p>Before you can validate any submission, you must upload your digital signature. Without a signature the Validate action is disabled on every review.</p>
+
+<h3>12.1 Editing Admin Profile</h3>
+<ol class="steps">
+  <li>Click <strong>Profile</strong> in the left sidebar.</li>
+  <li>Click <strong>Edit Profile</strong>.</li>
+  <li>Update your personal and institutional details.</li>
+  <li>Click <strong>Save</strong>.</li>
+</ol>
+
+<h3>12.2 Uploading Your Signature</h3>
+<div class="callout warning">
+  <span class="callout-label">Required</span>
+  Without a signature you cannot sign or validate any submission. A warning banner appears on every review page until a signature is uploaded.
+</div>
+
+<ol class="steps">
+  <li>Go to <strong>Profile</strong> and click <strong>Edit Profile</strong>.</li>
+  <li>Under <strong>Signature (PNG)</strong>, click the file chooser and select a PNG image of your signature.</li>
+  <li>Click <strong>Save</strong>.</li>
+</ol>
+
+<!-- ============================================================
+     13. PERSONNEL
+============================================================ -->
+<h2 id="a-personnel">13. Personnel Management</h2>
+<p>View and search all registered users under <strong>Teaching</strong> (Faculty) and <strong>Non-Teaching</strong> (Student) in the left sidebar.</p>
+
+<h3>13.1 Viewing Personnel</h3>
+<ol class="steps">
+  <li>Click <strong>Teaching</strong> or <strong>Non-Teaching</strong> in the sidebar.</li>
+  <li>A table lists all users with columns: Full Name, Email, Position, Department, Applications Submitted, and Applications Listed On (as co-author).</li>
+</ol>
+
+<h3>13.2 Searching Personnel</h3>
+<ol class="steps">
+  <li>Type in the <strong>Search</strong> box above the table.</li>
+  <li>Results filter in real time by name, email, position, or department.</li>
+</ol>
+
+<!-- ============================================================
+     14. REVIEW
+============================================================ -->
+<h2 id="a-review">14. Reviewing Submissions</h2>
+<p>All PENDING submissions appear in the <strong>To Review</strong> section for admin action.</p>
+
+<h3>14.1 Opening the Review Queue</h3>
+<ol class="steps">
+  <li>Click <strong>To Review</strong> in the left sidebar.</li>
+  <li>A table lists all pending submissions: Applicant name, Publication title, Award name, Date submitted.</li>
+  <li>Click any row to open the review detail page.</li>
+</ol>
+
+<h3>14.2 Reviewing a Submission</h3>
+<p>The review detail page shows applicant information, all submitted forms, supporting documents, and submission history.</p>
+
+<ol class="steps">
+  <li>Click each form section header to expand it:
+    <ul>
+      <li>PDF forms (4.1, 4.4) open inline as a PDF viewer.</li>
+      <li>DOCX forms (4.2, 4.3) open in the document viewer.</li>
+    </ul>
+  </li>
+  <li>Review all form content for accuracy and completeness.</li>
+  <li>Check that all required co-author signatures appear on Form 4.2.</li>
+  <li>Review the Supporting Documents section to confirm the drive link and document checklist are correct.</li>
+</ol>
+
+<div class="callout warning">
+  <span class="callout-label">Signature Required</span>
+  If you have not uploaded a signature to your profile, a warning banner appears and the Validate action is blocked. Go to Profile and upload your signature first.
+</div>
+
+<h3>14.3 Validating (Signing) a Submission</h3>
+<ol class="steps">
+  <li>After reviewing all forms and attachments, click <strong>Validate and Sign</strong>.</li>
+  <li>Confirm the action in the dialog.</li>
+  <li>The system embeds your digital signature on the PDF forms.</li>
+  <li>Status changes to <span class="badge badge-validated">VALIDATED</span> and a log entry is added with your name and date.</li>
+  <li>The submission moves to the <strong>Signed Forms</strong> archive.</li>
+</ol>
+
+<h3>14.4 Returning a Submission with Remarks</h3>
+<ol class="steps">
+  <li>Click <strong>Return with Remarks</strong>.</li>
+  <li>Type your feedback in the text field explaining what needs to be corrected.</li>
+  <li>Click <strong>Confirm Return</strong>.</li>
+  <li>Status changes to <span class="badge badge-returned">RETURNED</span> and a log entry is added including your remarks.</li>
+  <li>The applicant will see the returned submission in their Submissions page with your feedback.</li>
+</ol>
+
+<div class="callout tip">
+  <span class="callout-label">Best practice</span>
+  Write specific, actionable remarks. For example: "Form 4.2 is missing the signature for Dr. Santos. Please obtain and reupload."
+</div>
+
+<!-- ============================================================
+     15. SIGNED FORMS
+============================================================ -->
+<h2 id="a-signed">15. Signed Forms</h2>
+<p>All validated submissions are archived in <strong>Signed Forms</strong> for future reference.</p>
+
+<ol class="steps">
+  <li>Click <strong>Signed Forms</strong> in the left sidebar.</li>
+  <li>A table lists all VALIDATED submissions.</li>
+  <li>Click any row to open the signed form detail view.</li>
+  <li>Expand each form section to view the signed documents.</li>
+</ol>
+
+<!-- ============================================================
+     16. AWARDS CONFIG
+============================================================ -->
+<h2 id="a-awards">16. Award Configuration</h2>
+<p>Admins configure which publication type is accepted for each award.</p>
+
+<ol class="steps">
+  <li>Click <strong>Awards</strong> in the left sidebar under the Settings group.</li>
+  <li>Two award cards are shown: IPA Award - Journal and IPA Award - Book.</li>
+  <li>For each award, select the allowed publication type using the radio buttons: Journal or Book.</li>
+  <li>Click <strong>Save Changes</strong> for each award card individually.</li>
+</ol>
+
+<!-- ============================================================
+     17. SETTINGS
+============================================================ -->
+<h2 id="a-settings">17. Settings</h2>
+<p>Navigate to <strong>Settings</strong> in the left sidebar to configure values that are automatically filled in on award forms (for example, department name, institutional details). Each setting has an input field and a <strong>Save</strong> button.</p>
+
+<!-- ============================================================
+     APPENDIX
+============================================================ -->
+<hr />
+<h2 id="appendix">Appendix: Submission Status Flow Reference</h2>
+
+<table>
+  <tr><th>From Status</th><th>Action</th><th>Next Status</th><th>Who</th></tr>
+  <tr>
+    <td>(new)</td>
+    <td>Save as Draft</td>
+    <td><span class="badge badge-draft">DRAFT</span></td>
+    <td>Faculty / Student</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-draft">DRAFT</span></td>
+    <td>Submit Application</td>
+    <td><span class="badge badge-pending">PENDING</span></td>
+    <td>Faculty / Student</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-pending">PENDING</span></td>
+    <td>Admin validates and signs</td>
+    <td><span class="badge badge-validated">VALIDATED</span></td>
+    <td>Admin</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-pending">PENDING</span></td>
+    <td>Admin returns with remarks</td>
+    <td><span class="badge badge-returned">RETURNED</span></td>
+    <td>Admin</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-returned">RETURNED</span></td>
+    <td>Faculty corrects and resubmits</td>
+    <td><span class="badge badge-pending">PENDING</span></td>
+    <td>Faculty / Student</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-validated">VALIDATED</span></td>
+    <td>Mark as ready for external submission</td>
+    <td><span class="badge badge-pendsub">PENDING SUBMISSION</span></td>
+    <td>Faculty / Student</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-pendsub">PENDING SUBMISSION</span></td>
+    <td>Submit externally</td>
+    <td><span class="badge badge-submitted">SUBMITTED</span></td>
+    <td>Faculty / Student</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-submitted">SUBMITTED</span></td>
+    <td>Award processing complete</td>
+    <td><span class="badge badge-processed">PROCESSED</span></td>
+    <td>Faculty / Student</td>
+  </tr>
+</table>
+
+<div class="footer">
+  DCS Records - Publications and Awards Database &nbsp;&bull;&nbsp; User Manual v1.0 &nbsp;&bull;&nbsp; 2026<br/>
+  Department of Computer Science
+</div>
+
+</body>
+</html>

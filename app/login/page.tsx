@@ -25,6 +25,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#0f1117] text-gray-300 flex items-center justify-center p-4">
+      <a
+        href="/user-manual.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="User Manual"
+        className="fixed top-4 left-4 px-3 py-2 flex items-center justify-center rounded-full border border-gray-500 text-gray-400 hover:border-blue-400 hover:text-blue-400 transition text-sm font-semibold"
+      >
+        User Manual
+      </a>
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
