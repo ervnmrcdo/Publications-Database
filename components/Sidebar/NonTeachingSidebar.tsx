@@ -85,6 +85,18 @@ const NonTeachingSidebar: React.FC = () => {
         </ul>
       </div>
 
+      <div className="mb-6">
+        <h2 className="text-xs uppercase text-gray-500 mb-2">Help</h2>
+        <ul className="space-y-1">
+          <li
+            onClick={() => window.open('/user-manual.html', '_blank')}
+            className="m-[5px] flex items-center space-x-2 px-3 py-2 rounded-lg cursor-pointer transition hover:bg-gray-700 text-gray-300"
+          >
+            <span>User Manual</span>
+          </li>
+        </ul>
+      </div>
+
       <SidebarUserCard onLogout={handleLogout} />
     </aside>
   );
