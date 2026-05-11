@@ -235,6 +235,10 @@ export default function Publications() {
 
 
   const addTaggedAuthor = (userToAdd: TaggableUser) => {
+    if (bookOrJournal === 'JOURNAL' && selectedTaggedAuthors.length >= 6) {
+      alert('Maximum of 6 authors allowed for journal type publications');
+      return;
+    }
     if (!selectedTaggedAuthors.find(a => a.id === userToAdd.id)) {
       setSelectedTaggedAuthors([...selectedTaggedAuthors, userToAdd]);
     }
