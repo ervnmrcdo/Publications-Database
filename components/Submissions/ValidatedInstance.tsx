@@ -2,6 +2,7 @@ import { AcceptedForm, AttachmentData } from "@/lib/types"
 import { ArrowLeft, ChevronDown, ChevronRight, Link, Edit2, Save, X, RotateCcw } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
+import { useChecklistItems } from "@/lib/useChecklistItems";
 import { generateUUID } from "@/lib/uuid";
 
 const STATUS_OPTIONS = [
@@ -484,17 +485,7 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
     const attachments = isJournal ? journalAttachments : bookAttachments;
     const setAttachments = isJournal ? setJournalAttachments : setBookAttachments;
 
-    const JOURNAL_CHECKLIST = ['Copy of the Journal Article'];
-    const BOOK_CHECKLIST = [
-        'Copy of Book / Book Chapter',
-        'Book Cover',
-        'Copyright Page',
-        'Preface',
-        'Table of Contents',
-        'List of Contributors or Contributors Notes',
-        'Proof of Peer Review Process',
-    ];
-    const checklistItems = isJournal ? JOURNAL_CHECKLIST : BOOK_CHECKLIST;
+    const { items: checklistItems } = useChecklistItems(isJournal ? 'JOURNAL' : 'BOOK');
 
     const toggleCheck = (item: string) => {
         setAttachments(prev => ({

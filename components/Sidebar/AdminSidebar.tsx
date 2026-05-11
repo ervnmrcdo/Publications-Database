@@ -12,7 +12,8 @@ type Page =
   | "NonTeaching"
   | "Awards"
   | "Database"
-  | "Publication Types";
+  | "Publication Types"
+  | "Award Checklist";
 
 const AdminSidebar: React.FC = () => {
   const router = useRouter();
@@ -26,6 +27,7 @@ const AdminSidebar: React.FC = () => {
     if (path === "nonteaching") return "NonTeaching";
     if (path === "awards") return "Awards";
     if (path === "publication-types") return "Publication Types";
+    if (path === "award-checklist") return "Award Checklist";
     if (path === "database") return "Database";
     return "Home";
   };
@@ -115,6 +117,12 @@ const AdminSidebar: React.FC = () => {
             className={buttonStyle("Publication Types")}
           >
             <span>Publication Types</span>
+          </li>
+          <li
+            onClick={() => router.push("/admin/settings/award-checklist")}
+            className={buttonStyle("Award Checklist")}
+          >
+            <span>Award Checklist</span>
           </li>
         </ul>
       </div>

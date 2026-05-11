@@ -5,6 +5,7 @@ import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubmissionsFlow } from "@/context/SubmissionsFlowContext";
 import SubmissionChecklist from "../Awards/SubmissionChecklist";
+import { useChecklistItems } from "@/lib/useChecklistItems";
 import { generateUUID } from "@/lib/uuid";
 
 type Props = {
@@ -85,16 +86,6 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
     });
     const [requirements, setRequirements] = useState<string[]>([]);
 
-    const JOURNAL_CHECKLIST_ITEMS = ['Copy of the Journal Article'];
-    const BOOK_CHECKLIST_ITEMS = [
-        'Copy of Book / Book Chapter',
-        'Book Cover',
-        'Copyright Page',
-        'Preface',
-        'Table of Contents',
-        'List of Contributors or Contributors Notes',
-        'Proof of Peer Review Process',
-    ];
     const REQUIRED_CHECKLIST = [
         'All authors have signed',
         'All necessary textboxes are filled',
@@ -111,7 +102,8 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
     };
 
     const isRequirementsComplete = REQUIRED_CHECKLIST.every(item => requirements.includes(item));
-    const isAttachmentsComplete = driveUrl.trim() !== '' && checklist.length > 0;
+    const { items: returnedChecklistItems } = useChecklistItems(isJournal ? 'JOURNAL' : 'BOOK');
+    const isAttachmentsComplete = driveUrl.trim() !== '';
     const isSubmitReady = isRequirementsComplete && isAttachmentsComplete;
 
     const getActorName = () => {
@@ -153,10 +145,6 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
     const handleResubmitForm = async () => {
         if (!driveUrl.trim()) {
             alert('Please provide your Google Drive folder link before resubmitting.');
-            return;
-        }
-        if (checklist.length === 0) {
-            alert('Please check off at least one document included in your folder before resubmitting.');
             return;
         }
         if (!isRequirementsComplete) {
@@ -451,7 +439,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                 <div>
                     <label className="block text-sm text-gray-300 mb-2">Documents included in the folder</label>
                     <div className="space-y-2">
-                        {(isJournal ? JOURNAL_CHECKLIST_ITEMS : BOOK_CHECKLIST_ITEMS).map(item => (
+                        {returnedChecklistItems.map(item => (
                             <label
                                 key={item}
                                 className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition"
