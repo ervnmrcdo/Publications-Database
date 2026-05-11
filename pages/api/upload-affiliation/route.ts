@@ -14,13 +14,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const supabaseAdmin = createServiceRoleClient();
-    const filePath = `${user_id}/${file_name}`;
+    const cleanFileName = file_name.replace(/\.\./g, '').replace(/[<>:"/\\|?*]/g, '_');
+    const filePath = `${user_id}/${cleanFileName}`;
     const buffer = Buffer.from(file_data, 'base64');
+
+    const ext = cleanFileName.split('.').pop()?.toLowerCase();
+    if (ext !== 'pdf') {
+      return res.status(400).json({ error: 'Only PDF files are allowed' });
+    }
 
     const { error } = await supabaseAdmin.storage
       .from('proof-of-affiliation')
       .upload(filePath, buffer, {
-        contentType: 'image/png',
+        contentType: 'application/pdf',
         upsert: true,
       });
 
