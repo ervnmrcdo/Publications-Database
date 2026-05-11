@@ -23,7 +23,9 @@ function SubmissionLogs({ logs }: SubmissionLogsProps) {
             VALIDATED: 'bg-green-900/30 text-green-400',
             RESUBMITTED: 'bg-yellow-900/30 text-yellow-400',
             DRAFT_CREATED: 'bg-purple-900/30 text-purple-400',
-            DRAFT_EDITED: 'bg-orange-900/30 text-orange-400'
+            DRAFT_EDITED: 'bg-orange-900/30 text-orange-400',
+            SUBMITTED_TO_HIGHER_OFFICE: 'bg-cyan-900/30 text-cyan-400',
+            PROCESSED_BY_HIGHER_OFFICE: 'bg-indigo-900/30 text-indigo-400'
         };
         return colors[action];
     }
