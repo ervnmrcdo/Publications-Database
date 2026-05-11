@@ -5,6 +5,7 @@ import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubmissionsFlow } from "@/context/SubmissionsFlowContext";
 import SubmissionChecklist from "../Awards/SubmissionChecklist";
+import { useChecklistItems } from "@/lib/useChecklistItems";
 import { generateUUID } from "@/lib/uuid";
 
 type Props = {
@@ -31,18 +32,6 @@ interface DocumentConfig {
         };
     };
 }
-
-const JOURNAL_CHECKLIST = ['Copy of the Journal Article'];
-
-const BOOK_CHECKLIST = [
-  'Copy of Book / Book Chapter',
-  'Book Cover',
-  'Copyright Page',
-  'Preface',
-  'Table of Contents',
-  'List of Contributors or Contributors Notes',
-  'Proof of Peer Review Process',
-];
 
 const REQUIRED_CHECKLIST = [
   'All authors have signed',
@@ -108,6 +97,9 @@ export default function DraftInstance({ data, onBack }: Props) {
 
     const isRequirementsComplete = REQUIRED_CHECKLIST.every(item => requirements.includes(item));
 
+    const checklistAwardType = awardId === 1 ? 'JOURNAL' : 'BOOK';
+    const { items: checklistItems } = useChecklistItems(checklistAwardType);
+
     const getActorName = () => {
         return profile ? `${profile.first_name} ${profile.last_name}` : 'User';
     };
@@ -148,10 +140,6 @@ export default function DraftInstance({ data, onBack }: Props) {
     const handleSubmitDraft = async () => {
         if (!driveUrl.trim()) {
             alert('Please provide your Google Drive folder link before submitting.');
-            return;
-        }
-        if (checklist.length === 0) {
-            alert('Please check off at least one document included in your folder before submitting.');
             return;
         }
         setIsSubmitting(true);
@@ -331,7 +319,7 @@ export default function DraftInstance({ data, onBack }: Props) {
         token: token,
     }), []);
 
-    const isAttachmentsComplete = driveUrl.trim() !== '' && checklist.length > 0;
+    const isAttachmentsComplete = driveUrl.trim() !== '';
     const isSubmitReady = isRequirementsComplete && isAttachmentsComplete;
 
     return (
@@ -452,7 +440,7 @@ export default function DraftInstance({ data, onBack }: Props) {
                 <div>
                     <label className="block text-sm text-gray-300 mb-2">Documents included in the folder</label>
                     <div className="space-y-2">
-                        {(awardId === 1 ? JOURNAL_CHECKLIST : BOOK_CHECKLIST).map(item => (
+                        {checklistItems.map(item => (
                             <label
                                 key={item}
                                 className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition"

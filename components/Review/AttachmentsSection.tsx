@@ -1,14 +1,6 @@
-const JOURNAL_CHECKLIST = ['Copy of the Journal Article'];
+'use client';
 
-const BOOK_CHECKLIST = [
-  'Copy of Book / Book Chapter',
-  'Book Cover',
-  'Copyright Page',
-  'Preface',
-  'Table of Contents',
-  'List of Contributors or Contributors Notes',
-  'Proof of Peer Review Process',
-];
+import { useChecklistItems } from '@/lib/useChecklistItems';
 
 type AttachmentData = {
   drive_url?: string;
@@ -23,7 +15,7 @@ type Props = {
 
 export default function AttachmentsSection({ isJournal, journal_attachments, book_attachments }: Props) {
   const data = isJournal ? journal_attachments : book_attachments;
-  const allItems = isJournal ? JOURNAL_CHECKLIST : BOOK_CHECKLIST;
+  const { items: allItems } = useChecklistItems(isJournal ? 'JOURNAL' : 'BOOK');
 
   if (!data?.drive_url && !data?.checklist?.length) return null;
 

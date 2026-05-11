@@ -4,6 +4,7 @@ import { FileText, ChevronLeft, Send, Loader2, Link } from 'lucide-react';
 import { useAwardsFlow } from '@/context/AwardsFlowContext';
 import { useState } from 'react';
 import SubmissionChecklist from './SubmissionChecklist';
+import { useChecklistItems } from '@/lib/useChecklistItems';
 
 interface FormReviewProps {
   onSubmit: (attachments: AttachmentData) => void;
@@ -13,20 +14,6 @@ interface FormReviewProps {
   isSubmitting: boolean;
 }
 
-const JOURNAL_CHECKLIST = [
-  'Copy of the Journal Article',
-];
-
-const BOOK_CHECKLIST = [
-  'Copy of Book / Book Chapter',
-  'Book Cover',
-  'Copyright Page',
-  'Preface',
-  'Table of Contents',
-  'List of Contributors or Contributors Notes',
-  'Proof of Peer Review Process',
-];
-
 type AttachmentData = {
   drive_url: string;
   checklist?: string[];
@@ -35,7 +22,7 @@ type AttachmentData = {
 
 export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, isSubmitting }: FormReviewProps) {
   const { setFormStep, checklist, setChecklist } = useAwardsFlow();
-  const checklistItems = isJournal ? JOURNAL_CHECKLIST : BOOK_CHECKLIST;
+  const { items: checklistItems } = useChecklistItems(isJournal ? 'JOURNAL' : 'BOOK');
 
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showSaveDraftConfirm, setShowSaveDraftConfirm] = useState(false);
@@ -209,10 +196,6 @@ return (
               }
               if (!driveUrl.trim()) {
                 alert('Please provide your Google Drive folder link before submitting.');
-                return;
-              }
-              if (driveChecklist.length === 0) {
-                alert('Please check off at least one document included in your folder before submitting.');
                 return;
               }
               onSubmit({ drive_url: driveUrl });
