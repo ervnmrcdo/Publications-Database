@@ -70,6 +70,35 @@ SET default_tablespace = '';
 SET default_table_access_method = "heap";
 
 
+CREATE TABLE IF NOT EXISTS "public"."award_checklist_items" (
+    "id" integer NOT NULL,
+    "award_type" "text" NOT NULL,
+    "item" "text" NOT NULL,
+    "sort_order" integer DEFAULT 0,
+    "is_active" boolean DEFAULT true,
+    CONSTRAINT "award_checklist_items_award_type_check" CHECK (("award_type" = ANY (ARRAY['JOURNAL'::"text", 'BOOK'::"text"])))
+);
+
+
+ALTER TABLE "public"."award_checklist_items" OWNER TO "postgres";
+
+
+CREATE SEQUENCE IF NOT EXISTS "public"."award_checklist_items_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE "public"."award_checklist_items_id_seq" OWNER TO "postgres";
+
+
+ALTER SEQUENCE "public"."award_checklist_items_id_seq" OWNED BY "public"."award_checklist_items"."id";
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."awards" (
     "award_id" integer NOT NULL,
     "title" character varying(200) NOT NULL,
@@ -257,7 +286,7 @@ CREATE TABLE IF NOT EXISTS "public"."submissions" (
     "publication_id" integer,
     "reviewed_by_admin_id" "uuid",
     "date_submitted" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    "status" character varying(20) DEFAULT 'pending'::character varying,
+    "status" "text",
     "remarks" "text",
     "pdf_json_data" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     "logs" "jsonb" DEFAULT '[]'::"jsonb",
@@ -328,6 +357,10 @@ COMMENT ON COLUMN "public"."users"."signature_path" IS 'Image of signature of us
 
 
 
+ALTER TABLE ONLY "public"."award_checklist_items" ALTER COLUMN "id" SET DEFAULT "nextval"('"public"."award_checklist_items_id_seq"'::"regclass");
+
+
+
 ALTER TABLE ONLY "public"."awards" ALTER COLUMN "award_id" SET DEFAULT "nextval"('"public"."awards_award_id_seq"'::"regclass");
 
 
@@ -345,6 +378,11 @@ ALTER TABLE ONLY "public"."publications" ALTER COLUMN "publication_id" SET DEFAU
 
 
 ALTER TABLE ONLY "public"."submissions" ALTER COLUMN "submission_id" SET DEFAULT "nextval"('"public"."submissions_submission_id_seq"'::"regclass");
+
+
+
+ALTER TABLE ONLY "public"."award_checklist_items"
+    ADD CONSTRAINT "award_checklist_items_pkey" PRIMARY KEY ("id");
 
 
 
@@ -698,6 +736,18 @@ GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."award_checklist_items" TO "anon";
+GRANT ALL ON TABLE "public"."award_checklist_items" TO "authenticated";
+GRANT ALL ON TABLE "public"."award_checklist_items" TO "service_role";
+
+
+
+GRANT ALL ON SEQUENCE "public"."award_checklist_items_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."award_checklist_items_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."award_checklist_items_id_seq" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."awards" TO "anon";
 GRANT ALL ON TABLE "public"."awards" TO "authenticated";
 GRANT ALL ON TABLE "public"."awards" TO "service_role";
@@ -865,5 +915,8 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
+
+
+drop extension if exists "pg_net";
 
 
