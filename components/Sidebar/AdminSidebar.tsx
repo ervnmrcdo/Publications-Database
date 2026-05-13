@@ -116,7 +116,7 @@ const AdminSidebar: React.FC = () => {
             onClick={() => router.push("/admin/settings/publication-types")}
             className={buttonStyle("Autofill")}
           >
-            <span>Publication Types</span>
+            <span>Autofill</span>
           </li>
           <li
             onClick={() => router.push("/admin/settings/award-checklist")}
