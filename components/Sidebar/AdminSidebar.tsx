@@ -12,7 +12,7 @@ type Page =
   | "NonTeaching"
   | "Awards"
   | "Database"
-  | "Publication Types"
+  | "Autofill"
   | "Award Checklist";
 
 const AdminSidebar: React.FC = () => {
@@ -26,7 +26,7 @@ const AdminSidebar: React.FC = () => {
     if (path === "teaching") return "Teaching";
     if (path === "nonteaching") return "NonTeaching";
     if (path === "awards") return "Awards";
-    if (path === "publication-types") return "Publication Types";
+    if (path === "publication-types") return "Autofill";
     if (path === "award-checklist") return "Award Checklist";
     if (path === "database") return "Database";
     return "Home";
@@ -44,7 +44,7 @@ const AdminSidebar: React.FC = () => {
     const supabase = createClient()
     await supabase.auth.signOut()
     window.location.href = '/login'
-}
+  }
 
   return (
     <aside className="h-screen w-18 bg-[#1b1e2b] flex flex-col p-8 overflow-y-auto">
@@ -114,7 +114,7 @@ const AdminSidebar: React.FC = () => {
           </li>
           <li
             onClick={() => router.push("/admin/settings/publication-types")}
-            className={buttonStyle("Publication Types")}
+            className={buttonStyle("Autofill")}
           >
             <span>Publication Types</span>
           </li>
