@@ -5,11 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
-const supabase = createClient();
-
 export default function NonteachingDashboard() {
   const router = useRouter();
   const { user, profile } = useAuth();
+  const supabase = createClient();
 
   const [publicationCount, setPublicationCount] = useState<number>(0);
   const [pendingAppCount, setPendingAppCount] = useState<number>(0);

@@ -7,10 +7,10 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { AlertTriangle } from "lucide-react";
 
-const supabase = createClient();
 export default function TeachingDashboard() {
   const router = useRouter();
   const { user, profile } = useAuth();
+  const supabase = createClient();
 
   const [publicationCount, setPublicationCount] = useState<number>(0);
   const [pendingAppCount, setPendingAppCount] = useState<number>(0);

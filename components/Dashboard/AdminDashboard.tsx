@@ -7,22 +7,26 @@ import { useRouter, usePathname } from "next/navigation";
 
 export default function AdminDashboard() {
   const { user, profile } = useAuth()
-  const supabase = createClient()
   const router = useRouter();
+  const supabase = createClient();
 
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [teachingCount, setTeachingCount] = useState<number>(0);
   const [nonTeachingCount, setNonTeachingCount] = useState<number>(0);
 
   useEffect(() => {
+    if (!user) return;
+
     fetch("/api/pendingAwards")
       .then((res) => res.json())
       .then((result) => {
         setPendingCount(result.length || 0);
       });
-  }, []);
+  }, [user]);
 
   useEffect(() => {
+    if (!user) return;
+
     const fetchCounts = async () => {
       const { count: teaching } = await supabase
         .from('users')
@@ -39,7 +43,7 @@ export default function AdminDashboard() {
     };
 
     fetchCounts();
-  }, [supabase]);
+  }, [user, supabase]);
 
   return (
     <div className="flex-1 overflow-auto bg-[#0f1117] text-gray-300 p-8">
