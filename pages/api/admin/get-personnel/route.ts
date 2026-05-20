@@ -10,8 +10,8 @@ interface PersonnelData {
   position: string | null;
   department: string | null;
   role: string;
-  applicationsSubmitted: number;
-  applicationsListedOn: number;
+  awardApplications: number;
+  publications: number;
 }
 
 export default async function getPersonnel(req: NextApiRequest, res: NextApiResponse) {
@@ -59,7 +59,8 @@ export default async function getPersonnel(req: NextApiRequest, res: NextApiResp
     const { data: submissionsData, error: submissionsError } = await supabase
       .from('submissions')
       .select('submitter_id')
-      .in('submitter_id', userIds);
+      .in('submitter_id', userIds)
+      .in('status', ['VALIDATED', 'SUBMITTED_TO_HIGHER_OFFICE', 'PROCESSED_BY_HIGHER_OFFICE']);
 
     if (submissionsError) {
       return res.status(400).json({ error: submissionsError.message });
@@ -97,8 +98,8 @@ export default async function getPersonnel(req: NextApiRequest, res: NextApiResp
       position: user.position,
       department: user.department,
       role: user.role,
-      applicationsSubmitted: submissionsCount[user.id] || 0,
-      applicationsListedOn: publicationAuthorsCount[user.id] || 0,
+      awardApplications: submissionsCount[user.id] || 0,
+      publications: publicationAuthorsCount[user.id] || 0,
     }));
 
     return res.status(200).json(result);

@@ -11,8 +11,8 @@ interface PersonnelData {
   position: string | null;
   department: string | null;
   role: string;
-  applicationsSubmitted: number;
-  applicationsListedOn: number;
+  awardApplications: number;
+  publications: number;
 }
 
 interface PersonnelListProps {
@@ -192,10 +192,10 @@ export default function PersonnelList({ role }: PersonnelListProps) {
                       Department
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Applications Submitted
+                      Signed Applications
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Applications Listed On
+                      Total Publications
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
                       Actions
@@ -227,12 +227,12 @@ export default function PersonnelList({ role }: PersonnelListProps) {
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-900 text-blue-200">
-                          {person.applicationsSubmitted}
+                          {person.awardApplications}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-900 text-green-200">
-                          {person.applicationsListedOn}
+                          {person.publications}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
