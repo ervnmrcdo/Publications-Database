@@ -122,7 +122,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
         action: 'SUBMITTED',
         remarks: '',
         date: new Date().toLocaleString(),
-        actor_name: USER_INFO ? `${USER_INFO.first_name} ${USER_INFO.middle_name} ${USER_INFO.last_name}` : '',
+        actor_name: USER_INFO ? [USER_INFO.first_name, USER_INFO.middle_name, USER_INFO.last_name].filter(Boolean).join(' ') : '',
       }];
 
       const res = await fetch('/api/submit-award/route', {

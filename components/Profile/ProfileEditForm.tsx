@@ -213,7 +213,7 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
             <div>
               <label className="text-sm text-gray-500 uppercase">Full Name</label>
               <p className="text-white font-semibold">
-                {`${first_name || ''} ${last_name || ''}`.trim() || 'Not set'}
+                {[first_name, middle_name, last_name].filter(Boolean).join(' ') || 'Not set'}
               </p>
             </div>
             <div>
