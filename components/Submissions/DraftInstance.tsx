@@ -370,11 +370,18 @@ export default function DraftInstance({ data, onBack }: Props) {
 
             <div className="flex gap-3">
                 <button
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
                     onClick={() => setShowSubmitConfirmDialog(true)}
-                    disabled={!isSubmitReady}
+                    disabled={!isSubmitReady || isSubmitting}
                 >
-                    Submit
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Submitting...
+                        </>
+                    ) : (
+                        'Submit'
+                    )}
                 </button>
             </div>
 
@@ -621,7 +628,7 @@ export default function DraftInstance({ data, onBack }: Props) {
                         </p>
                         <div className="flex justify-end gap-3">
                             <button
-                                className="px-4 py-2 border rounded-md hover:bg-gray-700"
+                                className="px-4 py-2 bg-gray-400 border rounded-md hover:bg-gray-500"
                                 onClick={() => setShowSubmitConfirmDialog(false)}
                             >
                                 Cancel

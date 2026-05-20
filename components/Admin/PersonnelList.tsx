@@ -296,7 +296,7 @@ export default function PersonnelList({ role }: PersonnelListProps) {
             <div className="flex justify-end gap-3">
               <button
                 onClick={handleDeleteCancel}
-                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition"
+                className="px-4 py-2 bg-gray-400 text-gray-800 border rounded hover:bg-gray-500 transition"
               >
                 Cancel
               </button>

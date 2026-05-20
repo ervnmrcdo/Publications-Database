@@ -603,7 +603,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                         </p>
                         <div className="flex justify-end gap-3">
                             <button
-                                className="px-4 py-2 border rounded-md hover:bg-gray-700"
+                                className="px-4 py-2 bg-gray-400 border rounded-md hover:bg-gray-500"
                                 onClick={() => setShowSignConfirmDialog(false)}
                             >
                                 Cancel
