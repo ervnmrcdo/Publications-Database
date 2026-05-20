@@ -37,8 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .single()
     if (!error && data) {
       setProfile(data)
-    } else {
-      setProfile(null)
     }
   }
 
