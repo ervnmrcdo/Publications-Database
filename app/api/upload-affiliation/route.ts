@@ -1,16 +1,12 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/service-role';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const { user_id, file_name, file_data } = req.body;
+    const { user_id, file_name, file_data } = await request.json();
 
     if (!user_id || !file_name || !file_data) {
-      return res.status(400).json({ error: 'user_id, file_name, and file_data are required' });
+      return NextResponse.json({ error: 'user_id, file_name, and file_data are required' }, { status: 400 });
     }
 
     const supabaseAdmin = createServiceRoleClient();
@@ -20,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const ext = cleanFileName.split('.').pop()?.toLowerCase();
     if (ext !== 'pdf') {
-      return res.status(400).json({ error: 'Only PDF files are allowed' });
+      return NextResponse.json({ error: 'Only PDF files are allowed' }, { status: 400 });
     }
 
     const { error } = await supabaseAdmin.storage
@@ -32,12 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) {
       console.error('Upload error:', error);
-      return res.status(400).json({ error: error.message });
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return res.status(200).json({ success: true, path: filePath });
+    return NextResponse.json({ success: true, path: filePath });
   } catch (err) {
     console.error('Server error:', err);
-    return res.status(500).json({ error: String(err) });
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

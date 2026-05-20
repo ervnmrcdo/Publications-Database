@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -8,7 +9,12 @@ export async function GET(request: Request) {
     return Response.json({ error: 'Missing userId' }, { status: 400 })
   }
 
-  const supabase = await createClient()
+  const supabase = await createServerClient()
+  
+  const supabaseAdmin = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   const { data, error } = await supabase
     .from('users')
@@ -26,7 +32,7 @@ export async function GET(request: Request) {
 
   let signatureUrl: string | null = null
   if (data.signature_path) {
-    const { data: signedUrlData } = await supabase.storage
+    const { data: signedUrlData } = await supabaseAdmin.storage
       .from('signatures')
       .createSignedUrl(`${userId}/${userId}.png`, 3600)
     signatureUrl = signedUrlData?.signedUrl ?? null
@@ -34,9 +40,9 @@ export async function GET(request: Request) {
 
   let affiliationUrl: string | null = null
   if (data.affiliation_path) {
-    const { data: signedUrlData } = await supabase.storage
+    const { data: signedUrlData } = await supabaseAdmin.storage
       .from('proof-of-affiliation')
-      .createSignedUrl(`${userId}/${userId}.png`, 3600)
+      .createSignedUrl(`${userId}/${userId}.pdf`, 3600)
     affiliationUrl = signedUrlData?.signedUrl ?? null
   }
 

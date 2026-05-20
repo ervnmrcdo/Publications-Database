@@ -30,6 +30,9 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
   const [affiliationPath, setAffiliationPath] = useState<string | null>(null)
   const [newAffiliationFile, setNewAffiliationFile] = useState<File | null>(null)
 
+  const [clearSignature, setClearSignature] = useState(false)
+  const [clearAffiliation, setClearAffiliation] = useState(false)
+
   const [isEditing, setIsEditing] = useState(false)
 
   const fetchProfile = async () => {
@@ -61,7 +64,9 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
         setPosition(data.position)
         setScopusAuthorId(data.scopus_author_id)
         setSignaturePath(data.signatureUrl || null)
+        console.log('Signature URL:', data.signatureUrl)
         setAffiliationPath(data.affiliationUrl || null)
+        console.log('Affiliation URL:', data.affiliationUrl)
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
@@ -91,7 +96,7 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
         const fileBuffer = await newSignatureFile.arrayBuffer();
         const base64Data = Buffer.from(fileBuffer).toString('base64');
 
-        const response = await fetch('/api/upload-signature/route', {
+        const response = await fetch('/api/upload-signature', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -113,14 +118,14 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
       
       // Upload new proof of affiliation if one was selected
       if (newAffiliationFile && user?.id) {
-        const fileExt = 'png'
+        const fileExt = 'pdf'
         const fileName = `${user.id}.${fileExt}`
 
         // Convert file to base64 for backend upload
         const fileBuffer = await newAffiliationFile.arrayBuffer();
         const base64Data = Buffer.from(fileBuffer).toString('base64');
 
-        const response = await fetch('/api/upload-affiliation/route', {
+        const response = await fetch('/api/upload-affiliation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -163,6 +168,16 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
         updateData.affiliation_path = affiliationUrl
       }
 
+      // Clear signature if requested
+      if (clearSignature) {
+        updateData.signature_path = null
+      }
+
+      // Clear affiliation if requested
+      if (clearAffiliation) {
+        updateData.affiliation_path = null
+      }
+
       const { error } = await supabase.from('users').upsert(updateData)
       if (error) {
         console.error('Supabase error:', error)
@@ -172,6 +187,8 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
       setIsEditing(false)
       setNewSignatureFile(null)
       setNewAffiliationFile(null)
+      setClearSignature(false)
+      setClearAffiliation(false)
       await fetchProfile()
       onSuccess?.()
     } catch (error) {
@@ -227,23 +244,35 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
               <label className="text-sm text-gray-500 uppercase">Scopus Author ID</label>
               <p className="text-white font-semibold">{scopus_author_id}</p>
             </div>
-            {signaturePath && (
-              <div>
-                <label className="text-sm text-gray-500 uppercase">Signature</label>
-                <img src={signaturePath} alt="Signature" className="mt-2 max-w-xs border border-gray-600 rounded-lg bg-white p-2" />
-              </div>
-            )}
-
-            {affiliationPath && (
-              <div>
-                <label className="text-sm text-gray-500 uppercase">Proof of Affiliation</label>
-                <div className="flex items-center gap-2 p-2 border border-gray-600 rounded-lg bg-white max-w-xs mt-2">
-                  <svg className="w-8 h-8 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 9h-2v2H9v-2H7v-2h2V7h2v2h2v2zm1-4V3.5L18.5 9H14z"/>
-                  </svg>
-                  <span className="text-gray-800 text-sm truncate">{affiliationPath.split('/').pop()}</span>
+            {!loading && (
+              <>
+                <div>
+                  <label className="text-sm text-gray-500 uppercase">Signature</label>
+                  {signaturePath ? (
+                    <img src={signaturePath} alt="Signature" className="mt-2 max-w-xs max-h-[150px] border border-gray-600 rounded-lg bg-white p-2" />
+                  ) : (
+                    <p className="text-gray-500 mt-2">No signature uploaded yet</p>
+                  )}
                 </div>
-              </div>
+
+                <div>
+                  <label className="text-sm text-gray-500 uppercase mt-4 block">Proof of Affiliation</label>
+                  {affiliationPath ? (
+                    <a 
+                      href={affiliationPath} 
+                      download 
+                      className="mt-2 block inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Download Proof of Affiliation
+                    </a>
+                  ) : (
+                    <p className="text-gray-500 mt-2">No proof of affiliation uploaded yet</p>
+                  )}
+                </div>
+              </>
             )}
 
             <button
@@ -380,17 +409,33 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
               <label htmlFor="signature-compact" className="block text-sm text-gray-300 mb-2">
                 Signature (PNG)
               </label>
-              {signaturePath && (
+              {signaturePath && !clearSignature && (
                 <div className="mb-2">
                   <p className="text-xs text-gray-400 mb-2">Current signature:</p>
                   <img src={signaturePath} alt="Current Signature" className="max-w-xs border border-gray-600 rounded-lg bg-white p-2 mb-2" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClearSignature(true)
+                      setNewSignatureFile(null)
+                    }}
+                    className="text-xs text-red-400 hover:text-red-300 mt-1"
+                  >
+                    Clear signature
+                  </button>
                 </div>
+              )}
+              {clearSignature && (
+                <p className="text-xs text-yellow-400 mb-2">Signature will be cleared on save</p>
               )}
               <input
                 id="signature-compact"
                 type="file"
                 accept=".png,image/png"
-                onChange={(e) => setNewSignatureFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  setNewSignatureFile(e.target.files?.[0] || null)
+                  setClearSignature(false)
+                }}
                 className="w-full px-4 py-2 bg-[#0f1117] border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition"
               />
               <p className="text-xs text-gray-400 mt-1">Upload a new PNG to replace current signature</p>
@@ -400,7 +445,7 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
               <label htmlFor="affiliation-compact" className="block text-sm text-gray-300 mb-2">
                 Proof of Affiliation (PDF)
               </label>
-              {affiliationPath && (
+              {affiliationPath && !clearAffiliation && (
                 <div className="mb-2">
                   <p className="text-xs text-gray-400 mb-2">Current Proof of Affiliation:</p>
                   <div className="flex items-center gap-2 p-2 border border-gray-600 rounded-lg bg-white max-w-xs">
@@ -409,13 +454,29 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
                     </svg>
                     <span className="text-gray-800 text-sm truncate">{affiliationPath.split('/').pop()}</span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClearAffiliation(true)
+                      setNewAffiliationFile(null)
+                    }}
+                    className="text-xs text-red-400 hover:text-red-300 mt-1"
+                  >
+                    Clear proof of affiliation
+                  </button>
                 </div>
+              )}
+              {clearAffiliation && (
+                <p className="text-xs text-yellow-400 mb-2">Proof of affiliation will be cleared on save</p>
               )}
               <input
                 id="affiliation-compact"
                 type="file"
                 accept=".pdf,application/pdf"
-                onChange={(e) => setNewAffiliationFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  setNewAffiliationFile(e.target.files?.[0] || null)
+                  setClearAffiliation(false)
+                }}
                 className="w-full px-4 py-2 bg-[#0f1117] border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition"
               />
               <p className="text-xs text-gray-400 mt-1">Upload a new PDF to replace current affiliation</p>
