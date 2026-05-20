@@ -1,7 +1,7 @@
 'use client'
-import { useCallback, useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
 import { type User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 
 interface ProfileEditFormProps {
   user: User | null
@@ -32,7 +32,7 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
 
   const [isEditing, setIsEditing] = useState(false)
 
-  const getProfile = useCallback(async () => {
+  const fetchProfile = async () => {
     try {
       setLoading(true)
 
@@ -41,15 +41,12 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
         return
       }
 
-      const { data, error, status } = await supabase
-        .from('users')
-        .select(`first_name, middle_name, last_name, email, university, college, department, contact_number, position, signature_path, affiliation_path, scopus_author_id`)
-        .eq('id', user?.id)
-        .single()
+      const res = await fetch(`/api/profile?userId=${user.id}`)
+      const data = await res.json()
 
-      if (error && status !== 406) {
-        console.error('Profile fetch error:', error)
-        throw error
+      if (!res.ok) {
+        console.error('Profile fetch error:', data.error)
+        return
       }
 
       if (data) {
@@ -63,42 +60,20 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
         setContactNumber(data.contact_number)
         setPosition(data.position)
         setScopusAuthorId(data.scopus_author_id)
-        
-        // Load signature with signed URL if it exists
-        if (data.signature_path && user?.id) {
-          const filePath = `${user.id}/${user.id}.png`
-          const { data: signedUrlData, error: signedError } = await supabase.storage
-            .from('signatures')
-            .createSignedUrl(filePath, 3600)
-          
-          if (!signedError && signedUrlData) {
-            setSignaturePath(signedUrlData.signedUrl)
-          }
-        }
-
-        if (data.affiliation_path && user?.id) {
-          const filePath = `${user.id}/${user.id}.png`
-          const { data: signedUrlData, error: signedError } = await supabase.storage
-            .from('proof-of-affiliation')
-            .createSignedUrl(filePath, 3600)
-          
-          if (!signedError && signedUrlData) {
-            setAffiliationPath(signedUrlData.signedUrl)
-          }
-        }
+        setSignaturePath(data.signatureUrl || null)
+        setAffiliationPath(data.affiliationUrl || null)
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)
       console.error('Error loading user data:', errorMsg)
-      alert(`Error loading user data! ${errorMsg}`)
     } finally {
       setLoading(false)
     }
-  }, [user, supabase])
+  }
 
   useEffect(() => {
-    getProfile()
-  }, [user, getProfile])
+    fetchProfile()
+  }, [user?.id])
 
   async function updateProfile() {
     try {
@@ -197,7 +172,7 @@ export default function ProfileEditForm({ user, onSuccess, compact = false }: Pr
       setIsEditing(false)
       setNewSignatureFile(null)
       setNewAffiliationFile(null)
-      await getProfile() // Reload to get new signed URL
+      await fetchProfile()
       onSuccess?.()
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : JSON.stringify(error)

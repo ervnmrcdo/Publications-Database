@@ -1,16 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from '@/lib/supabase/client'
-import { type User } from '@supabase/supabase-js'
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { AlertTriangle } from "lucide-react";
 
 export default function TeachingDashboard() {
   const router = useRouter();
   const { user, profile } = useAuth();
-  const supabase = createClient();
 
   const [publicationCount, setPublicationCount] = useState<number>(0);
   const [pendingAppCount, setPendingAppCount] = useState<number>(0);
@@ -26,38 +23,23 @@ export default function TeachingDashboard() {
     setCompletedCount(0);
     setShowWarning(false);
 
-    if (!user) {
+    if (!user?.id) {
       setIsLoading(false);
       return;
     }
     const fetchCounts = async () => {
       setIsLoading(true);
       try {
-        const [
-          { count: pubCount },
-          { count: pendingCount },
-          { data: validatedData }
-        ] = await Promise.all([
-          supabase
-            .from('publication_authors')
-            .select('publication_id', { count: 'exact', head: true })
-            .eq('user_id', user.id),
-          supabase
-            .from('submissions')
-            .select('submission_id', { count: 'exact', head: true })
-            .eq('submitter_id', user.id)
-            .eq('status', 'PENDING'),
-          supabase
-            .from('submissions')
-            .select('submission_id, status')
-            .eq('submitter_id', user.id)
-            .in('status', ['VALIDATED', 'SUBMITTED_TO_HIGHER_OFFICE', 'PROCESSED_BY_HIGHER_OFFICE']),
-        ]);
-
-        setPublicationCount(pubCount || 0);
-        setPendingAppCount(pendingCount || 0);
-        setValidCount(validatedData?.filter((s: any) => s.status === 'VALIDATED').length || 0);
-        setCompletedCount(validatedData?.length || 0);
+        const res = await fetch(`/api/dashboard/teaching?userId=${user.id}`);
+        const data = await res.json();
+        if (res.ok && data) {
+          setPublicationCount(data.publicationCount || 0);
+          setPendingAppCount(data.pendingAppCount || 0);
+          setValidCount(data.validCount || 0);
+          setCompletedCount(data.completedCount || 0);
+        }
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
       } finally {
         setIsLoading(false);
       }

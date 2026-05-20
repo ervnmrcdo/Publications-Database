@@ -90,11 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
-          setUser(null)
-          setProfile(null)
-        }
+        await refresh()
       }
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)

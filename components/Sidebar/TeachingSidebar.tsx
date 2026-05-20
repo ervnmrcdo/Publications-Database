@@ -1,6 +1,5 @@
 import { useRouter, usePathname } from "next/navigation";
 import { signOut } from "@/app/actions/auth";
-import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from "react";
 import { useAuth } from '@/context/AuthContext'
 import { AlertTriangle } from "lucide-react";
@@ -23,14 +22,16 @@ const TeachingSidebar: React.FC = () => {
 
   useEffect(() => {
     if (!user?.id) return
-    const supabase = createClient();
     const checkCompleted = async () => {
-      const { data } = await supabase
-        .from('submissions')
-        .select('submission_id')
-        .eq('submitter_id', user.id)
-        .in('status', ['VALIDATED', 'SUBMITTED_TO_HIGHER_OFFICE', 'PROCESSED_BY_HIGHER_OFFICE']);
-      setCompletedCount(data?.length || 0);
+      try {
+        const res = await fetch(`/api/teaching/completed-count?userId=${user.id}`);
+        const data = await res.json();
+        if (res.ok && typeof data.count === 'number') {
+          setCompletedCount(data.count);
+        }
+      } catch (err) {
+        console.error('Failed to fetch completed count:', err);
+      }
     };
     checkCompleted();
   }, [user?.id]);

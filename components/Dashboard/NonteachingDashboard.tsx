@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from '@/lib/supabase/client'
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
 export default function NonteachingDashboard() {
   const router = useRouter();
   const { user, profile } = useAuth();
-  const supabase = createClient();
 
   const [publicationCount, setPublicationCount] = useState<number>(0);
   const [pendingAppCount, setPendingAppCount] = useState<number>(0);
@@ -20,7 +18,7 @@ export default function NonteachingDashboard() {
     setPendingAppCount(0);
     setValidCount(0);
 
-    if (!user) {
+    if (!user?.id) {
       setIsLoading(false);
       return;
     }
@@ -28,27 +26,15 @@ export default function NonteachingDashboard() {
     const fetchCounts = async () => {
       setIsLoading(true);
       try {
-        const [{ count: pubCount }, { count: pendingCount }, { count: validatedCount }] =
-          await Promise.all([
-            supabase
-              .from('publication_authors')
-              .select('publication_id', { count: 'exact', head: true })
-              .eq('user_id', user.id),
-            supabase
-              .from('submissions')
-              .select('submission_id', { count: 'exact', head: true })
-              .eq('submitter_id', user.id)
-              .eq('status', 'PENDING'),
-            supabase
-              .from('submissions')
-              .select('submission_id', { count: 'exact', head: true })
-              .eq('submitter_id', user.id)
-              .eq('status', 'VALIDATED'),
-          ]);
-
-        setPublicationCount(pubCount || 0);
-        setPendingAppCount(pendingCount || 0);
-        setValidCount(validatedCount || 0);
+        const res = await fetch(`/api/dashboard/nonteaching?userId=${user.id}`);
+        const data = await res.json();
+        if (res.ok && data) {
+          setPublicationCount(data.publicationCount || 0);
+          setPendingAppCount(data.pendingAppCount || 0);
+          setValidCount(data.validCount || 0);
+        }
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
       } finally {
         setIsLoading(false);
       }

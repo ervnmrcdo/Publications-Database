@@ -2,6 +2,7 @@ import { Application, SubmissionLog } from "@/lib/types";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 
+
 type Props = {
   onSelect: (data: Application) => void;
 };
@@ -9,8 +10,7 @@ type Props = {
 export default function ListedApplications({ onSelect }: Props) {
   const [data, setData] = useState<Application[]>([]);
 
-
-  useEffect(() => {
+  const fetchApplications = () => {
     fetch("/api/pendingAwards")
       .then((res) => res.json())
       .then((result) => {
@@ -29,15 +29,25 @@ export default function ListedApplications({ onSelect }: Props) {
             form44Url: item.form44Url || null,
             awardId: item.awardId,
             journal_attachments: item.journal_attachments ?? {},
-            book_attachments: item.book_attachments ?? {},  
+            book_attachments: item.book_attachments ?? {},
           })),
         );
       });
+  };
 
-    console.log(data)
+  useEffect(() => {
+    fetchApplications();
   }, []);
 
-  console.log(data)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchApplications();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
   return (
     <>
       <div className="bg-[#1b1e2b] rounded-xl shadow p-6">

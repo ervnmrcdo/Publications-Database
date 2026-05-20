@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/context/AuthContext'
 import { useEffect, useMemo, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client'
 import { SupabasePublication } from '@/lib/types';
 
 type TaggableUser = {
@@ -144,45 +144,26 @@ export default function Publications() {
 
   useEffect(() => {
     fetchPublications();
+  }, [user?.id]);
+
+  useEffect(() => {
     fetchTaggableUsers();
-  }, [user]);
+  }, [user?.id]);
 
   const fetchPublications = async () => {
-    if (!user) {
+    if (!user?.id) {
       setLoading(false);
       return;
     }
 
-    const { data, error } = await supabase
-      .from('publication_authors')
-      .select(`
-          publication_id,
-          publications (
-            publication_id,
-            book_or_journal,
-            title,
-            publisher,
-            publication_status,
-            date_published,
-            issue_number,
-            page_numbers,
-            volume_number,
-            journal_name,
-            doi
-          )
-        `)
-      .eq('user_id', user.id);
-
-    if (!error && data) {
-      type PublicationAuthorRow = {
-        publications: SupabasePublication | SupabasePublication[] | null;
-      };
-
-      const pubs = (data as PublicationAuthorRow[])
-        .flatMap((row) => Array.isArray(row.publications) ? row.publications : [row.publications])
-        .filter((pub): pub is SupabasePublication => Boolean(pub));
-
-      setPublications(pubs);
+    try {
+      const res = await fetch(`/api/publications?userId=${user.id}`);
+      const data = await res.json();
+      if (res.ok && Array.isArray(data)) {
+        setPublications(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch publications:', err);
     }
 
     setLoading(false);
