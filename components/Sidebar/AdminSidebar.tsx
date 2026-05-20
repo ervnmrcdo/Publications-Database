@@ -1,6 +1,6 @@
 import { useRouter, usePathname } from "next/navigation";
+import { signOut } from "@/app/actions/auth";
 import "../../app/globals.css";
-import { createClient } from '@/lib/supabase/client'
 import SidebarUserCard from './SidebarUserCard'
 
 type Page =
@@ -41,9 +41,9 @@ const AdminSidebar: React.FC = () => {
     }`;
 
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    window.location.href = '/login'
+    await signOut()
+    router.push('/login')
+    router.refresh()
   }
 
   return (

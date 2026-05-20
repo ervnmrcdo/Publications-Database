@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -12,8 +13,18 @@ interface Props {
 
 const SidebarUserCard: React.FC<Props> = ({ onLogout }) => {
   const { user, profile } = useAuth()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || user?.email || 'User'
   const roleLabel = ROLE_LABELS[profile?.role ?? ''] ?? 'Non-Teaching'
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      await onLogout()
+    } finally {
+      setIsLoggingOut(false)
+    }
+  }
 
   return (
     <div className="mt-auto">
@@ -22,10 +33,15 @@ const SidebarUserCard: React.FC<Props> = ({ onLogout }) => {
         <span className="text-xs text-blue-400">{roleLabel}</span>
       </div>
       <button
-        onClick={onLogout}
-        className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 rounded-lg transition"
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+        className={`w-full font-semibold py-2 px-3 rounded-lg transition ${
+          isLoggingOut
+            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+            : 'bg-red-600 hover:bg-red-700 text-white'
+        }`}
       >
-        Sign Out
+        {isLoggingOut ? 'Signing out...' : 'Sign Out'}
       </button>
     </div>
   )

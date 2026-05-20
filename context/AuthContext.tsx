@@ -87,9 +87,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          setUser(null)
+          setProfile(null)
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      supabase.auth.getSession()
+    }
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
   const refresh = async () => {
-    if (!user) return
-    await fetchProfile(user.id)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      setUser(null)
+      setProfile(null)
+      return
+    }
+    if (session.user) {
+      setUser(session.user)
+      await fetchProfile(session.user.id)
+    }
   }
 
   return (
