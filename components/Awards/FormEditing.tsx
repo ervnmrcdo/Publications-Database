@@ -49,6 +49,23 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     setFormStep(nextStep as any);
   };
 
+  const handleFormBack = () => {
+    if (isJournalType) {
+      if (formStep === 'form42') setFormStep('form41');
+      else if (formStep === 'form43') setFormStep('form42');
+      else if (formStep === 'review') setFormStep('form43');
+    } else if (isBookType) {
+      if (formStep === 'form43') setFormStep('form44');
+      else if (formStep === 'review') setFormStep('form43');
+    }
+  };
+
+  const canGoBack = () => {
+    if (isJournalType) return formStep !== 'form41';
+    if (isBookType) return formStep !== 'form44';
+    return false;
+  };
+
   const autoSaveRequirements = async () => {
     try {
       await fetch('/api/save-as-draft/route', {
@@ -275,7 +292,13 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
                   onToggle={toggleChecklist}
                 />
               </div>
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex justify-between">
+                <button
+                  onClick={handleFormBack}
+                  className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                >
+                  ← Back
+                </button>
                 <button
                   onClick={() => handleNext('form43')}
                   className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -341,7 +364,13 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
                   onToggle={toggleChecklist}
                 />
               </div>
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex justify-between">
+                <button
+                  onClick={handleFormBack}
+                  className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                >
+                  ← Back
+                </button>
                 <button
                   onClick={() => handleNext('review')}
                   className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
