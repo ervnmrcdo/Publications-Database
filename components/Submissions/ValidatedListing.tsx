@@ -69,7 +69,7 @@ export default function AcceptedListing({ onSelect }: Props) {
                             <div>
                                 <p className="font-bold text-lg text-white">{item.publication_title || 'Untitled Publication'}</p>
                                 <p className="text-sm text-gray-300">{item.first_name + ' ' + item.last_name} &middot; {item.award_title}</p>
-                                <p className="text-xs text-gray-400">{new Date(item.date_submitted).toLocaleString()}</p>
+                                <p className="text-xs text-gray-400">{new Date(item.date_submitted).toLocaleString('en-PH', {timeZone: 'Asia/Manila'})}</p>
                             </div>
                             <ChevronRight className="text-gray-400" />
                         </div>

@@ -244,7 +244,7 @@ export default function PendingInstance({ data, onBack }: Props) {
             <div className="p-4 bg-[#252836] rounded-lg">
                 <p className="font-bold text-lg text-white">{data.name}</p>
                 <p className="text-sm text-gray-300">{data.award_title}</p>
-                <p className="text-xs text-gray-400">{new Date(data.date_submitted).toLocaleString()}</p>
+                <p className="text-xs text-gray-400">{new Date(data.date_submitted).toLocaleString('en-PH', {timeZone: 'Asia/Manila'})}</p>
                 <span className="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded-full bg-yellow-900/30 text-yellow-400">
                     {data.status}
                 </span>

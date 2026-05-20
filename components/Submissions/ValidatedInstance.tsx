@@ -349,7 +349,7 @@ export default function AcceptedFormInstance({ data, onBack }: Props) {
             <div className="p-4 bg-[#252836] rounded-lg">
                 <p className="font-bold text-lg text-white">{data.first_name + ' ' + data.last_name}</p>
                 <p className="text-sm text-gray-300">{data.award_title}</p>
-                <p className="text-xs text-gray-400">{new Date(data.date_submitted).toLocaleString()}</p>
+                <p className="text-xs text-gray-400">{new Date(data.date_submitted).toLocaleString('en-PH', {timeZone: 'Asia/Manila'})}</p>
             </div>
 
             {hasForm41 && (

@@ -23,6 +23,7 @@ const AdminSidebar: React.FC = () => {
     if (path === "home") return "Home";
     if (path === "profile") return "Profile";
     if (path === "to-review") return "To Review";
+    if (path === "signed-forms") return "Signed Forms";
     if (path === "teaching") return "Teaching";
     if (path === "nonteaching") return "NonTeaching";
     if (path === "awards") return "Awards";
