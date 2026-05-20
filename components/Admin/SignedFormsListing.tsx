@@ -56,7 +56,7 @@ export default function SignedFormsListing({ adminId, onSelect }: Props) {
             <h2 className="text-xl font-bold mb-4 text-white">Signed Forms</h2>
 
             {signedData.length === 0 ? (
-                <p className="text-gray-400">No signed forms yet.</p>
+                <p className="text-gray-400 text-sm">No signed forms at this time.</p>
             ) : (
                 <div className="space-y-4">
                     {signedData.map((item) => (

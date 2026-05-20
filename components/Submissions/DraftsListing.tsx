@@ -85,36 +85,40 @@ export default function DraftsListing({ onSelect }: Props) {
 
 
             <div className="space-y-4">
-                {draftsData.map((item) => (
-                    <div
-                        key={item.submission_id}
-                        className="p-4 rounded-lg bg-[#252836] hover:bg-gray-600 cursor-pointer flex justify-between items-center transition"
-                        onClick={() => { onSelect(item) }}
-                    >
-                        <div className="flex-1">
-                            <p className="font-semibold text-lg text-white">{item.publication_title}</p>
-                            <p className="text-sm text-gray-300">{item.award_title}</p>
-                            <p className="text-xs text-gray-400">{(item.date_submitted) ? ` ${new Date(item.date_submitted).toLocaleDateString()}` : ''}</p>
+                {draftsData.length === 0 ? (
+                    <p className="text-gray-400 text-sm">No drafts at this time.</p>
+                ) : (
+                    draftsData.map((item) => (
+                        <div
+                            key={item.submission_id}
+                            className="p-4 rounded-lg bg-[#252836] hover:bg-gray-600 cursor-pointer flex justify-between items-center transition"
+                            onClick={() => { onSelect(item) }}
+                        >
+                            <div className="flex-1">
+                                <p className="font-semibold text-lg text-white">{item.publication_title}</p>
+                                <p className="text-sm text-gray-300">{item.award_title}</p>
+                                <p className="text-xs text-gray-400">{(item.date_submitted) ? ` ${new Date(item.date_submitted).toLocaleDateString()}` : ''}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowDeleteConfirm({
+                                            submissionId: Number(item.submission_id),
+                                            publicationId: Number(item.publication_id),
+                                            awardId: Number(item.award_id),
+                                        });
+                                    }}
+                                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded transition"
+                                    title="Delete draft"
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+                                <ChevronRight className="text-gray-400" />
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowDeleteConfirm({
-                                        submissionId: Number(item.submission_id),
-                                        publicationId: Number(item.publication_id),
-                                        awardId: Number(item.award_id),
-                                    });
-                                }}
-                                className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded transition"
-                                title="Delete draft"
-                            >
-                                <Trash2 className="w-5 h-5" />
-                            </button>
-                            <ChevronRight className="text-gray-400" />
-                        </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         </div>
 

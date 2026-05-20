@@ -45,21 +45,25 @@ export default function ListedApplications({ onSelect }: Props) {
 
 
         <div className="space-y-4">
-          {data.map((item) => (
-            <div
-              key={item.application_id}
-              className="p-4 rounded-lg bg-[#252836] hover:bg-gray-600 cursor-pointer flex justify-between items-center transition"
-              onClick={() => onSelect(item)}
-            >
-              <div>
-                <p className="font-semibold text-lg text-white">{item.publicationTitle}</p>
-                <p className="text-sm text-gray-300">Applicant: {item.name}</p>
-                <p className="text-sm text-gray-300">{item.award}</p>
-                <p className="text-xs text-gray-400">{new Date(item.dateSubmitted).toLocaleString()}</p>
+          {data.length === 0 ? (
+            <p className="text-gray-400 text-sm">No submissions to review at this time.</p>
+          ) : (
+            data.map((item) => (
+              <div
+                key={item.application_id}
+                className="p-4 rounded-lg bg-[#252836] hover:bg-gray-600 cursor-pointer flex justify-between items-center transition"
+                onClick={() => onSelect(item)}
+              >
+                <div>
+                  <p className="font-semibold text-lg text-white">{item.publicationTitle}</p>
+                  <p className="text-sm text-gray-300">Applicant: {item.name}</p>
+                  <p className="text-sm text-gray-300">{item.award}</p>
+                  <p className="text-xs text-gray-400">{new Date(item.dateSubmitted).toLocaleString()}</p>
+                </div>
+                <ChevronRight className="text-gray-400" />
               </div>
-              <ChevronRight className="text-gray-400" />
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
       </div>

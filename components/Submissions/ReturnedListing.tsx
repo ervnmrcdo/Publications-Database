@@ -55,21 +55,25 @@ export default function ReturnedListing({ onSelect }: Props) {
 
 
             <div className="space-y-4">
-                {returnedData.map((item) => (
-                    <div
-                        key={item.submission_id}
-                        className="p-4 rounded-lg bg-[#252836] hover:bg-gray-600 cursor-pointer flex justify-between items-center transition"
-                        onClick={() => { onSelect(item) }}
-                    >
-                        <div>
-                            <p className="font-semibold text-lg text-white">{item.publication_title}</p>
-                            <p className="text-sm text-gray-300">Applicant: {item.first_name} {item.last_name}</p>
-                            <p className="text-sm text-gray-300">{item.award_title}</p>
-                            <p className="text-xs text-red-400">{(item.remarks) ? ` ${item.remarks}` : ''}</p>
+                {returnedData.length === 0 ? (
+                    <p className="text-gray-400 text-sm">No returned submissions at this time.</p>
+                ) : (
+                    returnedData.map((item) => (
+                        <div
+                            key={item.submission_id}
+                            className="p-4 rounded-lg bg-[#252836] hover:bg-gray-600 cursor-pointer flex justify-between items-center transition"
+                            onClick={() => { onSelect(item) }}
+                        >
+                            <div>
+                                <p className="font-semibold text-lg text-white">{item.publication_title}</p>
+                                <p className="text-sm text-gray-300">Applicant: {item.first_name} {item.last_name}</p>
+                                <p className="text-sm text-gray-300">{item.award_title}</p>
+                                <p className="text-xs text-red-400">{(item.remarks) ? ` ${item.remarks}` : ''}</p>
+                            </div>
+                            <ChevronRight className="text-gray-400" />
                         </div>
-                        <ChevronRight className="text-gray-400" />
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         </div>
 
