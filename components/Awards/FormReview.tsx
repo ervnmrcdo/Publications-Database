@@ -21,14 +21,11 @@ type AttachmentData = {
 };
 
 export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, isSubmitting }: FormReviewProps) {
-  const { setFormStep, checklist, setChecklist } = useAwardsFlow();
+  const { setFormStep, checklist, setChecklist, driveChecklist, setDriveChecklist, driveUrl, setDriveUrl } = useAwardsFlow();
   const { items: checklistItems } = useChecklistItems(isJournal ? 'JOURNAL' : 'BOOK');
 
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showSaveDraftConfirm, setShowSaveDraftConfirm] = useState(false);
-
-  const [driveUrl, setDriveUrl] = useState('');
-  const [driveChecklist, setDriveChecklist] = useState<string[]>([]);
 
   const toggleChecklist = (item: string) => {
     if (checklist.includes(item)) {
@@ -186,7 +183,7 @@ return (
                 alert('Please provide your Google Drive folder link before submitting.');
                 return;
               }
-              onSubmit({ drive_url: driveUrl });
+              onSubmit({ drive_url: driveUrl, checklist: driveChecklist, requirements: checklist });
             }}
             disabled={isSubmitting}
             className="flex items-center px-8 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"

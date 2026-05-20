@@ -11,6 +11,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { publicationId, awardId, userId, logs, attachments } = req.body;
 
+    const checklist = attachments?.requirements || [];
+    const driveChecklist = attachments?.checklist || [];
+
     if (!publicationId || !awardId || !userId) {
       return res.status(400).json({ error: "publicationId, awardId, and userId are required" });
     }
@@ -218,11 +221,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const isJournalType = awardIdNum === 1;
-    const cleanAttachments = { drive_url: attachments?.drive_url || '' };
+    const cleanAttachments = { 
+      drive_url: attachments?.drive_url || '',
+      checklist: driveChecklist,
+    };
     Object.assign(updateData, isJournalType
       ? { journal_attachments: cleanAttachments }
       : { book_attachments: cleanAttachments }
     );
+
+    if (checklist.length > 0 || driveChecklist.length > 0) {
+      updateData.pdf_json_data = {
+        checklist: checklist,
+        driveChecklist: driveChecklist,
+      };
+    }
 
     const { error: updateError } = await supabaseAdmin
       .from("submissions")

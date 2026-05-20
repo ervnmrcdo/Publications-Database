@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { publicationId, awardId, user_id, attachments, checklist } = req.body;
+    const { publicationId, awardId, user_id, attachments, checklist, driveChecklist } = req.body;
 
     if (!publicationId || !awardId || !user_id) {
       return res
@@ -198,7 +198,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .eq("submission_id", submission_id);
     }
 
-    if (checklist && checklist.length > 0) {
+    if ((checklist && checklist.length > 0) || (driveChecklist && driveChecklist.length > 0)) {
       const { data: existingData } = await supabaseAdmin
         .from("submissions")
         .select("pdf_json_data")
@@ -206,10 +206,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .single();
       
       const existingJson = existingData?.pdf_json_data || {};
-      const updatedJson = {
+      const updatedJson: Record<string, any> = {
         ...existingJson,
-        checklist,
       };
+      
+      if (checklist && checklist.length > 0) {
+        updatedJson.checklist = checklist;
+      }
+      if (driveChecklist && driveChecklist.length > 0) {
+        updatedJson.driveChecklist = driveChecklist;
+      }
       
       await supabaseAdmin
         .from("submissions")

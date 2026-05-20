@@ -7,7 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { submission_id, user_id, logs } = req.body;
+    const { submission_id, user_id, logs, requirements, driveChecklist } = req.body;
 
     if (!submission_id || !user_id) {
       return res.status(400).json({ error: "submission_id and user_id are required" });
@@ -135,12 +135,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const attachments = req.body.attachments;
     if (attachments) {
-      const cleanAttachments = { drive_url: attachments.drive_url || '' };
+      const cleanAttachments = { 
+        drive_url: attachments.drive_url || '',
+        checklist: driveChecklist || [],
+      };
       if (isJournalType) {
         updateData.journal_attachments = cleanAttachments;
       } else {
         updateData.book_attachments = cleanAttachments;
       }
+    }
+
+    if ((requirements && requirements.length > 0) || (driveChecklist && driveChecklist.length > 0)) {
+      updateData.pdf_json_data = {
+        checklist: requirements || [],
+        driveChecklist: driveChecklist || [],
+      };
     }
 
     const { error: updateError } = await supabaseAdmin

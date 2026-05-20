@@ -80,8 +80,7 @@ export default function DraftInstance({ data, onBack }: Props) {
         (awardId === 1 ? data.journal_attachments?.drive_url : data.book_attachments?.drive_url) || ''
     );
     const [checklist, setChecklist] = useState<string[]>(() => {
-        const attachments = awardId === 1 ? data.journal_attachments : data.book_attachments;
-        return (attachments?.checklist || []) as string[];
+        return (data.pdf_json_data?.driveChecklist || []) as string[];
     });
     const [requirements, setRequirements] = useState<string[]>(() => {
         return (data.pdf_json_data?.checklist || []) as string[];
@@ -111,8 +110,9 @@ export default function DraftInstance({ data, onBack }: Props) {
             const isJournal = awardId === 1;
             const payload = {
                 submission_id: submissionId,
-                journal_attachments: isJournal ? { drive_url: driveUrl } : undefined,
-                book_attachments: !isJournal ? { drive_url: driveUrl } : undefined,
+                journal_attachments: isJournal ? { drive_url: driveUrl, checklist: checklist } : undefined,
+                book_attachments: !isJournal ? { drive_url: driveUrl, checklist: checklist } : undefined,
+                driveChecklist: checklist,
             };
 
             const response = await fetch('/api/update-attachments/route', {
@@ -156,6 +156,8 @@ export default function DraftInstance({ data, onBack }: Props) {
                 user_id: user?.id,
                 logs: [submissionLog],
                 attachments: { drive_url: driveUrl },
+                requirements: requirements,
+                driveChecklist: checklist,
             }
 
             const response = await fetch('/api/submit-from-draft/route', {
@@ -319,13 +321,29 @@ export default function DraftInstance({ data, onBack }: Props) {
         token: token,
     }), []);
 
+    const handleBack = async () => {
+        try {
+            await fetch('/api/update-attachments/route', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    submission_id: submissionId,
+                    requirements: requirements,
+                }),
+            });
+        } catch (err) {
+            console.error('Failed to save requirements:', err);
+        }
+        onBack();
+    };
+
     const isAttachmentsComplete = driveUrl.trim() !== '';
     const isSubmitReady = isRequirementsComplete && isAttachmentsComplete;
 
     return (
         <div className="bg-[#1b1e2b] rounded-xl shadow p-6 space-y-4">
             <button
-                onClick={onBack}
+                onClick={handleBack}
                 className="flex items-center text-gray-400 hover:text-white mb-2"
             >
                 <ArrowLeft className="mr-2" /> Back
@@ -383,8 +401,7 @@ export default function DraftInstance({ data, onBack }: Props) {
                             <button
                                 onClick={() => {
                                     setDriveUrl((awardId === 1 ? data.journal_attachments?.drive_url : data.book_attachments?.drive_url) || '');
-                                    const attachments = awardId === 1 ? data.journal_attachments : data.book_attachments;
-                                    setChecklist([...(attachments?.checklist || [])]);
+                                    setChecklist([...(data.pdf_json_data?.driveChecklist || [])]);
                                     setIsEditingAttachments(false);
                                 }}
                                 className="flex items-center px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
@@ -443,7 +460,7 @@ export default function DraftInstance({ data, onBack }: Props) {
                         {checklistItems.map(item => (
                             <label
                                 key={item}
-                                className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition"
+                                className={`flex items-center gap-3 p-3 bg-gray-800 rounded-lg ${isEditingAttachments ? 'cursor-pointer hover:bg-gray-700' : 'cursor-default'} transition`}
                             >
                                 <input
                                     type="checkbox"
@@ -453,6 +470,7 @@ export default function DraftInstance({ data, onBack }: Props) {
                                             prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
                                         );
                                     }}
+                                    disabled={!isEditingAttachments}
                                     className="w-4 h-4 accent-blue-500"
                                 />
                                 <span className="text-sm text-gray-300">{item}</span>

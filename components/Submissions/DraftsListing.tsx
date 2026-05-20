@@ -42,6 +42,7 @@ export default function DraftsListing({ onSelect }: Props) {
                 status: item.status,
                 journal_attachments: item.journal_attachments || {},
                 book_attachments: item.book_attachments || {},
+                pdf_json_data: item.pdf_json_data,
             })))
         })
     }

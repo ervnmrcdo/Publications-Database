@@ -44,8 +44,35 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
 
   const isChecklistComplete = REQUIRED_CHECKLIST.every(item => checklist.includes(item));
 
-  const handleNext = (nextStep: string) => {
+  const handleNext = async (nextStep: string) => {
+    autoSaveRequirements();
     setFormStep(nextStep as any);
+  };
+
+  const autoSaveRequirements = async () => {
+    try {
+      await fetch('/api/save-as-draft/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          publicationId: selectedPublication.publication_id,
+          awardId: selectedAward.id,
+          user_id: userId,
+          checklist: checklist,
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to save requirements:', err);
+    }
+  };
+
+  const handleBackToAwards = async () => {
+    await autoSaveRequirements();
+    setDraftUrls({});
+    setDraftId(null);
+    setChecklist([]);
+    setFormStep('form41');
+    setStep("awards");
   };
 
   useEffect(() => {
@@ -121,6 +148,7 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
         awardId: selectedAward.id,
         user_id: userId,
         checklist: attachments.requirements || checklist,
+        driveChecklist: attachments.checklist || [],
       };
 
       for (const [formType, url] of Object.entries(draftUrls)) {
@@ -147,7 +175,11 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
       });
 
       alert('Draft saved successfully! You can continue editing later.');
-      handleBack();
+      setDraftUrls({});
+      setDraftId(null);
+      setChecklist([]);
+      setFormStep('form41');
+      setStep("awards");
     } catch (err) {
       console.error('Failed to save draft:', err);
       alert(err instanceof Error ? err.message : 'Failed to save draft. Please try again.');
@@ -170,26 +202,10 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
     <>
       <div className="flex justify-between items-start mb-4">
         <button
-          onClick={() => {
-            if (formStep === 'form41') {
-              handleBack();
-            } else if (formStep === 'form42') {
-              setFormStep('form41');
-            } else if (formStep === 'form44') {
-              handleBack();
-            } else if (formStep === 'form43') {
-              if (isJournalType) {
-                setFormStep('form42');
-              } else {
-                setFormStep('form44');
-              }
-            } else if (formStep === 'review') {
-              setFormStep('form43');
-            }
-          }}
+          onClick={handleBackToAwards}
           className="text-sm text-blue-600 hover:underline"
         >
-          ← Back to {formStep === 'form41' || formStep === 'form44' ? 'Publications' : 'Previous Form'}
+          ← Back to Awards
         </button>
       </div>
 

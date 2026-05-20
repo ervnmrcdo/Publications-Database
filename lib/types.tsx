@@ -142,7 +142,7 @@ export interface DraftForm {
   journal_attachments?: Record<string, string>;
   book_attachments?: Record<string, string>;
   status: string;
-  pdf_json_data?: { checklist?: string[] };
+  pdf_json_data?: { checklist?: string[]; driveChecklist?: string[] };
 }
 
 export interface PendingAward {
