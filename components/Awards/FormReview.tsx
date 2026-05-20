@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, ChevronLeft, Send, Loader2, Link } from 'lucide-react';
+import { FileText, Send, Loader2, Link } from 'lucide-react';
 import { useAwardsFlow } from '@/context/AwardsFlowContext';
 import { useState } from 'react';
 import SubmissionChecklist from './SubmissionChecklist';
@@ -38,11 +38,6 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
     }
   };
 
-  const handleBack = () => {
-    setFormStep('form43');
-    onBack();
-  };
-
   const toggleDriveCheck = (item: string) => {
     setDriveChecklist(prev =>
       prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
@@ -66,7 +61,6 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
           <p className="font-medium text-white">Form 4.1 - IPA Award Application</p>
           <p className="text-sm text-gray-400">PDF Document</p>
         </div>
-        <span className="ml-auto text-green-400 text-sm">✓ Completed</span>
       </div>
       <div className="flex items-center p-4 bg-gray-800 rounded-lg">
         <FileText className="w-6 h-6 text-blue-400 mr-3" />
@@ -74,7 +68,6 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
           <p className="font-medium text-white">Form 4.2 - Journal Certification</p>
           <p className="text-sm text-gray-400">DOCX Document</p>
         </div>
-        <span className="ml-auto text-green-400 text-sm">✓ Completed</span>
       </div>
       <div className="flex items-center p-4 bg-gray-800 rounded-lg">
         <FileText className="w-6 h-6 text-blue-400 mr-3" />
@@ -82,7 +75,6 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
           <p className="font-medium text-white">Form 4.3 - Certification</p>
           <p className="text-sm text-gray-400">DOCX Document</p>
         </div>
-        <span className="ml-auto text-green-400 text-sm">✓ Completed</span>
       </div>
     </>
   ) : (
@@ -93,7 +85,6 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
           <p className="font-medium text-white">Form 4.4 - Book Certification</p>
           <p className="text-sm text-gray-400">DOCX Document</p>
         </div>
-        <span className="ml-auto text-green-400 text-sm">✓ Completed</span>
       </div>
       <div className="flex items-center p-4 bg-gray-800 rounded-lg">
         <FileText className="w-6 h-6 text-blue-400 mr-3" />
@@ -101,7 +92,6 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
           <p className="font-medium text-white">Form 4.3 - Certification</p>
           <p className="text-sm text-gray-400">DOCX Document</p>
         </div>
-        <span className="ml-auto text-green-400 text-sm">✓ Completed</span>
       </div>
     </>
   );
@@ -109,17 +99,10 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
 return (
     <div className="mb-8 flex flex-col gap-4">
       <div className="flex-1">
-        <button
-          onClick={handleBack}
-          className="flex items-center text-gray-400 hover:text-white mb-4"
-        >
-          <ChevronLeft className="w-5 h-5 mr-1" /> Back to Form 4.3
-        </button>
-
         <h2 className="text-2xl font-bold text-white mb-6">Review Your Application</h2>
 
         <div className="space-y-4 mb-6">
-          <p className="text-gray-300 font-medium">Completed Forms:</p>
+          <p className="text-gray-300 font-medium">Forms:</p>
           {formsList}
         </div>
 
@@ -169,6 +152,11 @@ return (
           </div>
         </div>
 
+        <SubmissionChecklist
+        checkedItems={checklist}
+        onToggle={toggleChecklist}
+      />
+
         <div className="mt-6 p-4 bg-blue-900/30 border border-blue-800 rounded-lg">
           <p className="text-blue-300 text-sm">
             <strong>Note:</strong> Once you submit, all forms will be sent for review. 
@@ -217,11 +205,6 @@ return (
           </button>
         </div>
       </div>
-
-      <SubmissionChecklist
-        checkedItems={checklist}
-        onToggle={toggleChecklist}
-      />
     </div>
   );
 }

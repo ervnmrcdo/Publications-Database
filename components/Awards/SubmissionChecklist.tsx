@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckSquare, Square } from 'lucide-react';
+import { CheckSquare } from 'lucide-react';
 
 interface SubmissionChecklistProps {
   checkedItems: string[];
@@ -34,18 +34,12 @@ export default function SubmissionChecklist({ checkedItems, onToggle, disabled }
               disabled ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => onToggle(item)}
-              className="shrink-0"
-            >
-              {checkedItems.includes(item) ? (
-                <CheckSquare className="w-5 h-5 text-green-500" />
-              ) : (
-                <Square className="w-5 h-5 text-gray-500" />
-              )}
-            </button>
+            <input
+              type="checkbox"
+              checked={checkedItems.includes(item)}
+              onChange={() => !disabled && onToggle(item)}
+              className="w-5 h-5 accent-green-500 cursor-pointer shrink-0"
+            />
             <span className={`text-sm whitespace-nowrap ${checkedItems.includes(item) ? 'text-green-400' : 'text-gray-400'}`}>
               {item}
             </span>
