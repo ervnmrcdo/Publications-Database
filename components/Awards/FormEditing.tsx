@@ -27,7 +27,7 @@ interface FormEditingProps {
 
 export default function FormEditing({ handleBack, selectedAward, selectedPublication, userId }: FormEditingProps) {
   const USER_INFO = useAuth().profile
-  const { formStep, setFormStep, setIsJournal, draftUrls, setDraftUrls, setDraftId, checklist, setChecklist, setStep } = useAwardsFlow();
+  const { formStep, setFormStep, setIsJournal, draftUrls, setDraftUrls, setDraftId, draftId, checklist, setChecklist, setStep } = useAwardsFlow();
 
   const isJournalType = selectedAward.id === 1;
   const isBookType = selectedAward.id === 2;
@@ -45,7 +45,6 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
   const isChecklistComplete = REQUIRED_CHECKLIST.every(item => checklist.includes(item));
 
   const handleNext = async (nextStep: string) => {
-    autoSaveRequirements();
     setFormStep(nextStep as any);
   };
 
@@ -84,7 +83,9 @@ export default function FormEditing({ handleBack, selectedAward, selectedPublica
   };
 
   const handleBackToAwards = async () => {
-    await autoSaveRequirements();
+    if (draftId) {
+      await autoSaveRequirements();
+    }
     setDraftUrls({});
     setDraftId(null);
     setChecklist([]);
