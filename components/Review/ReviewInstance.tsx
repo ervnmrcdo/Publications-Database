@@ -1,11 +1,12 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { ArrowLeft, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Loader2, Link } from "lucide-react";
 import { Application, SubmissionLog } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 import { useReviewFlow } from "@/context/ReviewFlowContext";
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import AttachmentsSection from '@/components/Review/AttachmentsSection';
 import { generateUUID } from "@/lib/uuid";
+import { useChecklistItems } from "@/lib/useChecklistItems";
 
 type Props = {
   data: Application;
@@ -58,6 +59,17 @@ export default function ReviewInstance({ data, onBack }: Props) {
   const [showSignatureWarning, setShowSignatureWarning] = useState<boolean>(false);
   const [signatureWarningDismissed, setSignatureWarningDismissed] = useState<boolean>(false);
   const [isSigning, setIsSigning] = useState<boolean>(false);
+  const [isReturning, setIsReturning] = useState<boolean>(false);
+
+  const [driveUrl, setDriveUrl] = useState<string>(
+    data.book_attachments?.drive_url || ''
+  );
+  const [driveChecklist, setDriveChecklist] = useState<string[]>(
+    (data.book_attachments?.checklist || []) as string[]
+  );
+
+  const { items: checklistItems } = useChecklistItems('BOOK');
+  const isReady = driveUrl.trim() !== '';
 
   const [expandedForm41, setExpandedForm41] = useState<boolean>(true);
   const [expandedForm42, setExpandedForm42] = useState<boolean>(true);
@@ -135,18 +147,18 @@ export default function ReviewInstance({ data, onBack }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      
+
       const result = await response.json() as {
         error?: string;
         results?: Record<string, { success: boolean; error?: string; path?: string }>;
       };
-      
+
       if (response.ok) {
         // Build success/failure message based on results
         const results = result.results;
         const successForms: string[] = [];
         const failedForms: string[] = [];
-        
+
         if (results) {
           Object.entries(results).forEach(([form, res]) => {
             if (res.success) {
@@ -156,7 +168,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
             }
           });
         }
-        
+
         let message = 'Form Signed and Returned';
         if (successForms.length > 0) {
           message += `\n\nSuccessfully processed: ${successForms.join(', ')}`;
@@ -164,7 +176,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
         if (failedForms.length > 0) {
           message += `\n\nFailed to process: ${failedForms.join(', ')}`;
         }
-        
+
         alert(message);
         setSelected(null);
       } else {
@@ -184,6 +196,7 @@ export default function ReviewInstance({ data, onBack }: Props) {
       alert(err)
     } finally {
       setIsSigning(false);
+      setShowSignConfirmDialog(false);
     }
   }
 
@@ -193,17 +206,18 @@ export default function ReviewInstance({ data, onBack }: Props) {
       return;
     }
 
-    const returnedLog: SubmissionLog = {
-      action: 'RETURNED',
-      remarks: errorRemarks,
-      date: new Date().toISOString(),
-      actor_name: getActorName(),
-    }
-
-    const newLogs = [...data.logs]
-    newLogs.push(returnedLog)
-
+    setIsReturning(true);
     try {
+      const returnedLog: SubmissionLog = {
+        action: 'RETURNED',
+        remarks: errorRemarks,
+        date: new Date().toISOString(),
+        actor_name: getActorName(),
+      }
+
+      const newLogs = [...data.logs]
+      newLogs.push(returnedLog)
+
       const payload = {
         admin_id: user?.id,
         submission_id: data.application_id,
@@ -221,6 +235,10 @@ export default function ReviewInstance({ data, onBack }: Props) {
       }
     } catch (err) {
       alert(err)
+    } finally {
+      setIsReturning(false);
+      setShowErrorDialog(false);
+      setErrorRemarks("");
     }
   }
 
@@ -496,6 +514,14 @@ export default function ReviewInstance({ data, onBack }: Props) {
         >Return with Errors</button>
       </div>
 
+      <AttachmentsSection
+        isJournal={data.awardId === 1}
+        journal_attachments={data.journal_attachments}
+        book_attachments={data.book_attachments}
+      />
+
+
+
       {hasForm41 && (
         <div className="border rounded-lg overflow-hidden">
           <button
@@ -627,12 +653,6 @@ export default function ReviewInstance({ data, onBack }: Props) {
         </div>
       )}
 
-      <AttachmentsSection
-        isJournal={data.awardId === 1}
-        journal_attachments={data.journal_attachments}
-        book_attachments={data.book_attachments}
-      />
-
       {
         showErrorDialog && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -659,11 +679,18 @@ export default function ReviewInstance({ data, onBack }: Props) {
                   Cancel
                 </button>
                 <button
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50"
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 flex items-center"
                   onClick={returnPDF}
-                  disabled={!errorRemarks.trim()}
+                  disabled={!errorRemarks.trim() || isReturning}
                 >
-                  Submit Errors
+                  {isReturning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Returning...
+                    </>
+                  ) : (
+                    'Submit Errors'
+                  )}
                 </button>
               </div>
             </div>
@@ -689,7 +716,6 @@ export default function ReviewInstance({ data, onBack }: Props) {
                 <button
                   className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   onClick={() => {
-                    setShowSignConfirmDialog(false);
                     acceptPDF();
                   }}
                   disabled={isSigning}

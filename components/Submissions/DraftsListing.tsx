@@ -98,7 +98,7 @@ export default function DraftsListing({ onSelect }: Props) {
                             <div className="flex-1">
                                 <p className="font-semibold text-lg text-white">{item.publication_title}</p>
                                 <p className="text-sm text-gray-300">{item.award_title}</p>
-                                <p className="text-xs text-gray-400">{(item.date_submitted) ? ` ${new Date(item.date_submitted).toLocaleDateString()}` : ''}</p>
+                                <p className="text-xs text-gray-400">{(item.date_submitted) ? ` ${new Date(item.date_submitted).toLocaleString('en-PH', {timeZone: 'Asia/Manila'})}` : ''}</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button

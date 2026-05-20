@@ -324,7 +324,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                 <p className="font-bold text-lg text-white">{data.publication_title}</p>
                 <p className="text-sm text-gray-300">{data.award_title}</p>
                 <p className="text-sm text-gray-300">{data.first_name + ' ' + data.last_name}</p>
-                <p className="text-xs text-gray-400">{data.date_submitted}</p>
+                <p className="text-xs text-gray-400">{new Date(data.date_submitted).toLocaleString('en-PH', {timeZone: 'Asia/Manila'})}</p>
             </div>
 
             <div className="p-4 bg-[#252836] rounded-lg">
