@@ -1,10 +1,9 @@
 import { RejectedForm } from "@/lib/types"
-import { ArrowLeft, ChevronDown, ChevronRight, Link, Edit2, Save, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Link, Edit2, Save, X, Loader2 } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubmissionsFlow } from "@/context/SubmissionsFlowContext";
-import SubmissionChecklist from "../Awards/SubmissionChecklist";
 import { useChecklistItems } from "@/lib/useChecklistItems";
 import { generateUUID } from "@/lib/uuid";
 
@@ -53,6 +52,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
     const [loadingForm44, setLoadingForm44] = useState<boolean>(false);
 
     const [showSignConfirmDialog, setShowSignConfirmDialog] = useState<boolean>(false);
+    const [isResubmitting, setIsResubmitting] = useState<boolean>(false);
 
     const [isEditingAttachments, setIsEditingAttachments] = useState<boolean>(false);
     const [journalAttachments, setJournalAttachments] = useState<Record<string, string>>(
@@ -84,27 +84,10 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
         const attachments = isJournal ? data.journal_attachments : data.book_attachments;
         return (attachments?.checklist || []) as string[];
     });
-    const [requirements, setRequirements] = useState<string[]>([]);
 
-    const REQUIRED_CHECKLIST = [
-        'All authors have signed',
-        'All necessary textboxes are filled',
-        'All necessary checkboxes are ticked',
-        'I certify the information is correct',
-    ];
-
-    const toggleRequirements = (item: string) => {
-        if (requirements.includes(item)) {
-            setRequirements(requirements.filter(i => i !== item));
-        } else {
-            setRequirements([...requirements, item]);
-        }
-    };
-
-    const isRequirementsComplete = REQUIRED_CHECKLIST.every(item => requirements.includes(item));
     const { items: returnedChecklistItems } = useChecklistItems(isJournal ? 'JOURNAL' : 'BOOK');
     const isAttachmentsComplete = driveUrl.trim() !== '';
-    const isSubmitReady = isRequirementsComplete && isAttachmentsComplete;
+    const isSubmitReady = isAttachmentsComplete;
 
     const getActorName = () => {
         return profile ? `${profile.first_name} ${profile.last_name}` : 'User';
@@ -147,10 +130,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
             alert('Please provide your Google Drive folder link before resubmitting.');
             return;
         }
-        if (!isRequirementsComplete) {
-            alert('Please complete all requirements before resubmitting.');
-            return;
-        }
+        setIsResubmitting(true);
         try {
             const resubmissionLog = {
                 action: 'RESUBMITTED',
@@ -167,7 +147,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                 publicationId,
                 awardId,
                 submitterId,
-                attachments: { drive_url: driveUrl, checklist, requirements },
+                attachments: { drive_url: driveUrl, checklist },
             }
 
             const response = await fetch('/api/resubmit-award-from-drafts/route', {
@@ -177,6 +157,7 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
             })
 
             if (response.ok) {
+                setShowSignConfirmDialog(false);
                 alert('Form Resubmitted')
                 setSelected(null)
             } else {
@@ -185,6 +166,8 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
         } catch (err) {
             console.error('Error resubmitting:', err)
             alert('Failed to resubmit form')
+        } finally {
+            setIsResubmitting(false);
         }
     }
 
@@ -358,11 +341,6 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                     Resubmit
                 </button>
             </div>
-
-            <SubmissionChecklist
-                checkedItems={requirements}
-                onToggle={toggleRequirements}
-            />
 
             {/* Attachments Section */}
             <div className="p-4 bg-[#252836] rounded-lg">
@@ -603,19 +581,25 @@ export default function ReturnedFormInstance({ data, onBack }: Props) {
                         </p>
                         <div className="flex justify-end gap-3">
                             <button
-                                className="px-4 py-2 bg-gray-400 border rounded-md hover:bg-gray-500"
+                                className="px-4 py-2 bg-gray-400 border rounded-md hover:bg-gray-500 disabled:opacity-50"
                                 onClick={() => setShowSignConfirmDialog(false)}
+                                disabled={isResubmitting}
                             >
                                 Cancel
                             </button>
                             <button
-                                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                                onClick={() => {
-                                    setShowSignConfirmDialog(false);
-                                    handleResubmitForm();
-                                }}
+                                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 flex items-center"
+                                onClick={() => handleResubmitForm()}
+                                disabled={isResubmitting}
                             >
-                                Confirm Resubmit
+                                {isResubmitting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Resubmitting...
+                                    </>
+                                ) : (
+                                    'Confirm Resubmit'
+                                )}
                             </button>
                         </div>
                     </div>

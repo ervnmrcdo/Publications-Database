@@ -2,7 +2,7 @@
 
 import { FileText, Send, Loader2, Link } from 'lucide-react';
 import { useAwardsFlow } from '@/context/AwardsFlowContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SubmissionChecklist from './SubmissionChecklist';
 import { useChecklistItems } from '@/lib/useChecklistItems';
 
@@ -26,6 +26,19 @@ export default function FormReview({ onSubmit, onSaveDraft, onBack, isJournal, i
 
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showSaveDraftConfirm, setShowSaveDraftConfirm] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+  useEffect(() => {
+    if (isSavingDraft && !isSubmitting) {
+      setShowSaveDraftConfirm(false);
+      setIsSavingDraft(false);
+    }
+  }, [isSavingDraft, isSubmitting]);
+
+  const handleSaveDraft = () => {
+    setIsSavingDraft(true);
+    onSaveDraft({ drive_url: driveUrl, checklist: driveChecklist, requirements: checklist });
+  };
 
   const toggleChecklist = (item: string) => {
     if (checklist.includes(item)) {
@@ -163,14 +176,21 @@ return (
 
         <div className="flex justify-between mt-6">
           <button
-            onClick={() => {
-              onSaveDraft({ drive_url: driveUrl, checklist: driveChecklist, requirements: checklist });
-            }}
+            onClick={() => setShowSaveDraftConfirm(true)}
             disabled={isSubmitting}
             className="flex items-center px-6 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
           >
-            <Loader2 className="w-4 h-4 mr-2" />
-            Save as Draft
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Loader2 className="w-4 h-4 mr-2" />
+                Save as Draft
+              </>
+            )}
           </button>
 
           <button
@@ -201,6 +221,41 @@ return (
             )}
           </button>
         </div>
+
+        {/* Save as Draft Confirmation Dialog */}
+        {showSaveDraftConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-[#1b1e2b] rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-white">Confirm Save as Draft</h3>
+              <p className="text-sm text-gray-300 mb-6">
+                Are you sure you want to save this form as a draft? You can continue editing later.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  className="px-4 py-2 bg-gray-400 border rounded-md hover:bg-gray-500 disabled:opacity-50"
+                  onClick={() => setShowSaveDraftConfirm(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50 flex items-center"
+                  onClick={() => handleSaveDraft()}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Confirm Save'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
